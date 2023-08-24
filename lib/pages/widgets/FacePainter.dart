@@ -1,5 +1,5 @@
-import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:flutter/material.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
 
 class FacePainter extends CustomPainter {
   FacePainter({required this.imageSize, required this.face});
@@ -35,6 +35,7 @@ class FacePainter extends CustomPainter {
             scaleX: scaleX ?? 1,
             scaleY: scaleY ?? 1),
         paint);
+
   }
 
   @override

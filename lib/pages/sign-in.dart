@@ -1,4 +1,6 @@
 import 'dart:async';
+
+import 'package:camera/camera.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/pages/models/user.model.dart';
 import 'package:face_net_authentication/pages/widgets/auth_button.dart';
@@ -7,9 +9,8 @@ import 'package:face_net_authentication/pages/widgets/camera_header.dart';
 import 'package:face_net_authentication/pages/widgets/signin_form.dart';
 import 'package:face_net_authentication/pages/widgets/single_picture.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
-import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:face_net_authentication/services/face_detector_service.dart';
-import 'package:camera/camera.dart';
+import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:flutter/material.dart';
 
 class SignIn extends StatefulWidget {
@@ -29,6 +30,8 @@ class SignInState extends State<SignIn> {
   bool _isPictureTaken = false;
   bool _isInitializing = false;
 
+  String namaReconized = "UNRECONIZE";
+
   @override
   void initState() {
     super.initState();
@@ -43,6 +46,8 @@ class SignInState extends State<SignIn> {
     super.dispose();
   }
 
+ 
+
   Future _start() async {
     setState(() => _isInitializing = true);
     await _cameraService.initialize();
@@ -56,16 +61,51 @@ class SignInState extends State<SignIn> {
         .startImageStream((CameraImage image) async {
       if (processing) return; // prevents unnecessary overprocessing.
       processing = true;
-      await _predictFacesFromImage(image: image);
+      await _predictFacesDetect(image: image);
+      
+
+
+
+
+
+
+
+
+
+
       processing = false;
     });
   }
 
-  Future<void> _predictFacesFromImage({@required CameraImage? image}) async {
+  Future<void> _predictFacesDetect({@required CameraImage? image}) async {
     assert(image != null, 'Image is null');
     await _faceDetectorService.detectFacesFromImage(image!);
     if (_faceDetectorService.faceDetected) {
       _mlService.setCurrentPrediction(image, _faceDetectorService.faces[0]);
+
+
+
+//---------
+
+      if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||_faceDetectorService.faces[0].headEulerAngleY! < -10) {
+        print("=== POSISI MUKA TIDAK BAGUS=== ");
+    
+    } else {
+       print("POSISI MUKA BAGUS");
+    RECONIZE_FACE();
+    }
+// RECONIZE_FACE();
+
+    //--------
+
+
+
+
+
+
+
+
+
     }
     if (mounted) setState(() {});
   }
@@ -79,6 +119,16 @@ class SignInState extends State<SignIn> {
           context: context,
           builder: (context) =>
               AlertDialog(content: Text('No face detected!')));
+    }
+  }
+
+  RECONIZE_FACE() async {
+      if (_faceDetectorService.faceDetected) {
+      User? user = await _mlService.predict();
+      namaReconized = user?.user ?? "UNRECONIZE";
+      // var bottomSheetController = scaffoldKey.currentState!
+      //     .showBottomSheet((context) => signInSheet(user: user));
+      // bottomSheetController.closed.whenComplete(_reload);
     }
   }
 
@@ -98,6 +148,7 @@ class SignInState extends State<SignIn> {
       var bottomSheetController = scaffoldKey.currentState!
           .showBottomSheet((context) => signInSheet(user: user));
       bottomSheetController.closed.whenComplete(_reload);
+      
     }
   }
 
@@ -110,7 +161,7 @@ class SignInState extends State<SignIn> {
 
   @override
   Widget build(BuildContext context) {
-    Widget header = CameraHeader("LOGIN", onBackPressed: _onBackPressed);
+    Widget header = CameraHeader(namaReconized, onBackPressed: _onBackPressed);
     Widget body = getBodyWidget();
     Widget? fab;
     if (!_isPictureTaken) fab = AuthButton(onTap: onTap);
@@ -135,4 +186,43 @@ class SignInState extends State<SignIn> {
           ),
         )
       : SignInSheet(user: user);
+
+
+  //        void startRecognitionLoop() {
+  //   if (!_isRecognizing) {
+  //     _isRecognizing = true;
+  //     _continuousRecognitionLoop();
+  //   }
+  // }
+
+  //   void _continuousRecognitionLoop() async {
+  //   while (_isRecognizing) {
+  //     try {
+  //       bool faceDetected = await widget.onPressed();
+  //       if (faceDetected) {
+  //         if (widget.isLogin) {
+  //           var user = await _predictUser();
+  //           if (user != null) {
+  //             this.predictedUser = user;
+  //             // Automatically perform sign-in logic
+  //             _signIn(context);
+  //           }
+  //         }
+  //         // ... Show bottom sheet ...
+  //       }
+  //     } catch (e) {
+  //       print(e);
+  //     }
+  //   }
+  // }
+
+  //  void stopRecognitionLoop() {
+  //   _isRecognizing = false;
+  // }
+
+
+
+
 }
+
+

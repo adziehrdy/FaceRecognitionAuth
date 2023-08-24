@@ -1,9 +1,9 @@
+import 'package:camera/camera.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
-import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:flutter/material.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
 
 class FaceDetectorService {
   CameraService _cameraService = locator<CameraService>();
@@ -18,15 +18,16 @@ class FaceDetectorService {
   void initialize() {
     _faceDetector = GoogleMlKit.vision.faceDetector(
       FaceDetectorOptions(
-        performanceMode: FaceDetectorMode.accurate,
+        performanceMode: FaceDetectorMode.fast,
       ),
     );
-
-    // _faceDetector = FaceDetector(
-    //     options: FaceDetectorOptions(
-    //         performanceMode: FaceDetectorMode.fast,
-    //         enableContours: true,
-    //         enableClassification: true));
+// ====
+    _faceDetector = FaceDetector(
+        options: FaceDetectorOptions(
+            performanceMode: FaceDetectorMode.fast,
+            enableContours: false,
+            enableClassification: false));
+            // /====
   }
 
   Future<void> detectFacesFromImage(CameraImage image) async {
@@ -36,8 +37,10 @@ class FaceDetectorService {
 
       // inputImageFormat: InputImageFormat.yuv_420_888,
 
-      inputImageFormat: InputImageFormatValue.fromRawValue(image.format.raw)
-          // InputImageFormatMethods.fromRawValue(image.format.raw) for new version
+      inputImageFormat: 
+      InputImageFormatValue.fromRawValue(image.format.raw)
+          // InputImageFormatMethods.fromRawValue(image.format.raw) 
+          //for new version
           ??
           InputImageFormat.yuv_420_888,
       size: Size(image.width.toDouble(), image.height.toDouble()),
@@ -72,7 +75,7 @@ class FaceDetectorService {
   Future<List<Face>> detect(CameraImage image, InputImageRotation rotation) {
     final faceDetector = GoogleMlKit.vision.faceDetector(
       FaceDetectorOptions(
-        performanceMode: FaceDetectorMode.accurate,
+        performanceMode: FaceDetectorMode.fast,
         enableLandmarks: true,
       ),
     );
