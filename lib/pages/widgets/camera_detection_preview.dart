@@ -12,10 +12,25 @@ class CameraDetectionPreview extends StatelessWidget {
   final FaceDetectorService _faceDetectorService =
       locator<FaceDetectorService>();
 
+  bool is_landscape = false;
+
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    return Transform.scale(
+    
+    return OrientationBuilder(
+      builder: (context, orientation) {
+        if (orientation == Orientation.landscape) {
+          is_landscape = true;
+          return landscapeLayout(context);
+        } else {
+          is_landscape = false;
+          return portraitLayout(context);
+        }
+      });
+}
+Widget portraitLayout(BuildContext context) {
+  final width = MediaQuery.of(context).size.width;
+return Transform.scale(
       scale: 1.0,
       child: AspectRatio(
         aspectRatio: MediaQuery.of(context).size.aspectRatio,
@@ -45,5 +60,39 @@ class CameraDetectionPreview extends StatelessWidget {
         ),
       ),
     );
-  }
 }
+
+Widget landscapeLayout(BuildContext context) {
+  final height = MediaQuery.of(context).size.height;
+return Transform.scale(
+    scale: 1.0,
+    child: AspectRatio(
+      aspectRatio: MediaQuery.of(context).size.aspectRatio,
+      child: OverflowBox(
+        alignment: Alignment.center,
+        child: FittedBox(
+          fit: BoxFit.fitWidth,
+          child: Container(
+            width: height * _cameraService.cameraController!.value.aspectRatio,
+            height: height,
+            child: Stack(
+                fit: StackFit.expand,
+                children: <Widget>[
+                  CameraPreview(_cameraService.cameraController!),
+                  if (_faceDetectorService.faceDetected)
+                    CustomPaint(
+                      painter: FacePainter(
+                        face: _faceDetectorService.faces[0],
+                        imageSize: _cameraService.getImageSize(),
+                      ),
+                    )
+                ],
+              ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+}
+

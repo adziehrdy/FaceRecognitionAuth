@@ -1,7 +1,9 @@
+
 import 'dart:ui';
 
 import 'package:camera/camera.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CameraService {
   CameraController? _cameraController;
@@ -12,14 +14,27 @@ class CameraService {
 
   String? _imagePath;
   String? get imagePath => this._imagePath;
+  bool landscape_mode = false;
 
   Future<void> initialize() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    landscape_mode = prefs.getBool("LANDSCAPE_MODE") ?? false;
+
+    
     if (_cameraController != null) return;
     CameraDescription description = await _getCameraDescription();
-    await _setupCameraController(description: description);
+    if(landscape_mode){
+      await _setupCameraController(description: description);
+    this._cameraRotation = rotationIntToImageRotation(
+      0,
+    );
+    }else{
+       await _setupCameraController(description: description);
     this._cameraRotation = rotationIntToImageRotation(
       description.sensorOrientation,
     );
+    }
+    
   }
 
   Future<CameraDescription> _getCameraDescription() async {
@@ -64,10 +79,17 @@ class CameraService {
     assert(_cameraController != null, 'Camera controller not initialized');
     assert(
         _cameraController!.value.previewSize != null, 'Preview size is null');
-    return Size(
+    if(landscape_mode){
+      return Size(
+      _cameraController!.value.previewSize!.width,
+      _cameraController!.value.previewSize!.height,
+    );
+    }else{
+      return Size(
       _cameraController!.value.previewSize!.height,
       _cameraController!.value.previewSize!.width,
     );
+    }
   }
 
   dispose() async {

@@ -1,0 +1,423 @@
+import 'package:face_net_authentication/constants/constants.dart';
+import 'package:face_net_authentication/globals.dart';
+import 'package:face_net_authentication/locator.dart';
+import 'package:face_net_authentication/pages/Approval/approval_main_page.dart';
+import 'package:face_net_authentication/pages/history_absensi.dart';
+import 'package:face_net_authentication/pages/list_karyawan.dart';
+import 'package:face_net_authentication/pages/register_pin.dart';
+import 'package:face_net_authentication/pages/sign-in.dart';
+import 'package:face_net_authentication/pages/widgets/home_menu.dart';
+import 'package:face_net_authentication/pages/widgets/home_wiget.dart';
+import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
+import 'package:face_net_authentication/pages/widgets/user-banner.dart';
+import 'package:face_net_authentication/repo/global_repos.dart';
+import 'package:face_net_authentication/services/camera.service.dart';
+import 'package:face_net_authentication/services/face_detector_service.dart';
+import 'package:face_net_authentication/services/ml_service.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:lottie/lottie.dart';
+
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  MLService _mlService = locator<MLService>();
+  FaceDetectorService _mlKitService = locator<FaceDetectorService>();
+  CameraService _cameraService = locator<CameraService>();
+  int? waitingApproval = 0;
+
+  double _progress = 0.0;
+  String _progressMessage = "Initializing...";
+  bool _loading_init = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    //GET MASTER DATA FOR REGIST FORM
+    GlobalRepo().getMasterRegister();
+
+    getPIN().then((value) {
+      setState(() {
+        if (value == null) {
+          Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => RegisterPin(),
+              ));
+        }
+      });
+    });
+
+    // AuthModel repo = AuthModel();
+    // repo.login(context, GlobalKey(), "110796", "123123", false);
+
+    initializeDateFormatting('id');
+    // initLocalNotification();
+    // initFirebaseMessaging();
+
+    if (COSTANT_VAR.EMULATOR_MODE) {
+      _loading_init = false;
+    } else {
+      _initializeServices();
+    }
+
+    GlobalRepo().getLatestVersion(context);
+
+
+  }
+
+  // _initializeServices() async {
+
+  //   await _mlService.initialize();
+  //   await _cameraService.initialize();
+  //   _mlKitService.initialize();
+  // }
+
+  _initializeServices() async {
+    try {
+      // Simulate initialization for demonstration purposes
+      await Future.delayed(Duration(seconds: 1));
+
+      _updateProgress(0.33, "Initializing Face Engine...");
+      await _mlService.initialize();
+
+      await Future.delayed(Duration(seconds: 1));
+      _updateProgress(0.67, "Initializing Camera Service...");
+      await _cameraService.initialize();
+
+      await Future.delayed(Duration(seconds: 1));
+      _updateProgress(0.80, "Initializing Face Engine...");
+
+      // All services initialized successfully
+
+      _mlKitService.initialize();
+      _updateProgress(1.0, "Initialization complete");
+
+      setState(() {
+        _loading_init = false;
+      });
+    } catch (e) {
+      // An error occurred during initialization
+      setState(() {
+        _progressMessage = "Error Inisialisasi Face Recognition";
+      });
+    }
+  }
+
+  _updateProgress(double progress, String message) {
+    setState(() {
+      _progress = progress;
+      _progressMessage = message;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading_init) {
+      return Scaffold(
+        body: Center(
+          
+          child: 
+          
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+               Lottie.asset(
+                      'assets/lottie/gear.json',
+                      width: 400,
+                      height: 400,
+                      fit: BoxFit.fill,
+                    ),
+              Text(_progressMessage),
+            ],
+          ),
+        ),
+      );
+    } else {
+      return Scaffold(
+        body: 
+        SingleChildScrollView(
+          child: Column(
+          children: <Widget>[
+            Container(
+              height: 295,
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(30),
+                        bottomLeft: Radius.circular(30)),
+                    child: Container(
+                      height: MediaQuery.of(context).size.width / 360 * 160,
+                      width: MediaQuery.of(context).size.width,
+                      decoration: BoxDecoration(
+                          // image: DecorationImage(
+                          //     image: AssetImage("assets/images/gedung_bukopin.jpg"),
+                          //     fit: BoxFit.cover,
+                          //     alignment: Alignment.topCenter
+                          // ),
+                          ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [
+                              Color.fromRGBO(0, 113, 182, 1),
+                              Color.fromRGBO(0, 113, 182, .9),
+                              Color.fromRGBO(0, 113, 182, .8),
+                            ])),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Padding(
+                              padding: const EdgeInsets.only(top: 70.0),
+                            ),
+                            //ADZIEHRDY
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: UserBanner(),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  new HomeWiget(),
+                ],
+              ),
+            ),
+            Container(
+                height: MediaQuery.of(context).size.height - 295, // Untuk menyesuaikan tinggi GridView
+                    child: GridView.count(
+                      crossAxisCount: 3,
+                      
+                      childAspectRatio: 1,
+                      crossAxisSpacing: 5,
+                      padding: EdgeInsets.all(13),
+                      children: <Widget>[
+                        new HomeMenu(
+                          "Absen Masuk",
+                          "assets/images/absent_in.png",
+                          -1,
+                          callback: (p0) {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => SignIn(MODE: "MASUK")));
+                          },
+                        ),
+                        new HomeMenu(
+                          "Absen Keluar",
+                          "assets/images/absent_out_menu.png",
+                          -1,
+                          callback: (p0) {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => SignIn(MODE: "KELUAR")));
+                          },
+                        ),
+                        new HomeMenu(
+                          "Daftar Karyawan",
+                          "assets/images/absent_personal.png",
+                          -1,
+                          callback: (p0) {
+                             PinInputDialog.show(context, (p0) {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => ListKaryawan()));
+                             });
+                          },
+                        ),
+                        new HomeMenu(
+                          "History Absensi",
+                          "assets/images/absent_shift.png",
+                          waitingApproval!,
+                          callback: (p0) {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => HistoryAbsensi()));
+                          },
+                        ),
+                        new HomeMenu(
+                          "Approval",
+                          "assets/images/absent_approval.png",
+                          waitingApproval!,
+                          callback: (p0) {
+                            PinInputDialog.show(context, (p0) {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => approval_main_page()));
+                              // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
+                            });
+                          },
+                        ),
+                        // new HomeMenu(
+                        //   "Testing Button",
+                        //   "assets/images/absent_register.png",
+                        //   -1,
+                        //   callback: (p0) {
+                        //     // Navigator.push(context, MaterialPageRoute( builder: (BuildContext context) => ForceUpgrade(isLoged: true,currentVersion: "1.0.0",latestVersion: "1.0.0",)));
+                        //     Navigator.push(
+                        //         context,
+                        //         MaterialPageRoute(
+                        //             builder: (BuildContext context) =>
+                        //                 SwitchSupperAttendance()));
+                        //   },
+                        // ),
+
+
+                        // new HomeMenu("Shift", "assets/images/absent_shift.png",-1, callback: (p0) {
+                        //   Navigator.push(context, MaterialPageRoute( builder: (BuildContext context) => ScheduleListPage()));
+                        //   },
+                        // ),
+
+                        //   buildMenuCard(MdiIcons.accountArrowLeft, "ABSEN", "MASUK", (){
+                        //     showAlert(
+                        //         context: context,
+                        //         body: "Apakah anda berada di lokasi kantor?",
+                        //         actions: [
+                        //           AlertAction(text: 'IYA', onPressed: () => Navigator.of(context).push(
+                        //               MaterialPageRoute(builder: (context) => WFOPage(WFOPageType.WFO))
+                        //           )),
+                        //           AlertAction(text: 'TIDAK', onPressed: () => Navigator.of(context).push(
+                        //               MaterialPageRoute(builder: (context) => WFHPage(WFHPageType.WOO))
+                        //           ))
+                        //         ]
+                        //     );
+                        //   }),
+                        //   /*buildMenuCard(MdiIcons.toolboxOutline, "WORK", "OUT OF OFFICE", ()=>Navigator.of(context).push(
+                        //   MaterialPageRoute(builder: (context) => WFHPage(WFHPageType.WOO))
+                        // )),*/
+                        //   buildMenuCard(MdiIcons.accountArrowRight, "ABSEN", "KELUAR", () => Navigator.of(context).push(
+                        //       MaterialPageRoute(builder: (context) => WFHPage(WFHPageType.WFH))
+                        //   )),
+                        //   buildMenuCard(MdiIcons.accountDetailsOutline, "ABSENSI", "PERSONAL", ()=> Navigator.of(context).push(
+                        //       MaterialPageRoute(builder: (context) => AbsenceListPage())
+                        //   )),
+                        //   //buildMenuCard(MdiIcons.accountGroupOutline, "ABSENSI", "KARYAWAN", (){}),
+                        //   buildMenuCardWithBadge(MdiIcons.clipboardCheckMultipleOutline, "APPROVAL", "ABSENSI", () async{
+                        //     await Navigator.of(context).push(
+                        //         MaterialPageRoute(builder: (context) => ApprovalListPage())
+                        //     );
+                        //     countWaiting();
+                        //   }, waitingApproval!),
+                        //   buildMenuCard(MdiIcons.faceRecognition  , "DAFTAR", "WAJAH", ()=> Navigator.of(context).push(
+                        //       MaterialPageRoute(builder: (context) => AbsenceListPage())
+                        //   )),
+                        //   buildMenuCard(MdiIcons.timetable  , "JADWAL", "SHIFT", ()=> Navigator.of(context).push(
+                        //       MaterialPageRoute(builder: (context) => ScheduleListPage())
+                        //   )),
+                        // buildMenuCard(MdiIcons.playlistEdit, "WORKING", "REPORT",()=>Navigator.of(context).push(
+                        //   MaterialPageRoute(builder: (context) => WorkListPage())
+                        // )),
+                        // buildMenuCard(MdiIcons.googleClassroom, "MEETING", " ", ()=>Navigator.of(context).push(
+                        //   MaterialPageRoute(builder: (context) => MeetingPage())
+                        // )),
+                      ],
+                    ))
+          ],
+        ),)
+      );
+    }
+  }
+
+  Padding buildMenuCard(
+      IconData icon, String text1, String text2, Function onTap) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: InkWell(
+        onTap: onTap as void Function()?,
+        child: Card(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          elevation: 5,
+          child: Container(
+            decoration: BoxDecoration(
+                gradient: LinearGradient(colors: [
+                  Color.fromRGBO(0, 113, 184, 1),
+                  Color.fromRGBO(0, 113, 184, .8)
+                ], stops: [
+                  0.1,
+                  0.7
+                ], begin: Alignment.bottomRight, end: Alignment.topLeft),
+                borderRadius: BorderRadius.circular(10)),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Icon(icon, color: Colors.white, size: 25),
+                  ),
+                  Text(text1,
+                      style: TextStyle(color: Colors.white, fontSize: 10)),
+                  text2 == null
+                      ? Container()
+                      : Text(text2,
+                          style: TextStyle(fontSize: 10, color: Colors.white))
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Padding buildMenuCardWithBadge(IconData icon, String text1, String text2,
+      Function onTap, int badgeCount) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: InkWell(
+          onTap: onTap as void Function()?,
+          child: Card(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            elevation: 5,
+            child: Container(
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [
+                    Color.fromRGBO(0, 113, 184, 1),
+                    Color.fromRGBO(0, 113, 184, .8)
+                  ], stops: [
+                    0.1,
+                    0.7
+                  ], begin: Alignment.bottomRight, end: Alignment.topLeft),
+                  borderRadius: BorderRadius.circular(10)),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Icon(
+                        icon,
+                        color: Colors.white,
+                        size: 25,
+                      ),
+                    ),
+                    Text(text1,
+                        style: TextStyle(color: Colors.white, fontSize: 10)),
+                    text2 == null
+                        ? Container()
+                        : Text(text2,
+                            style: TextStyle(fontSize: 10, color: Colors.white))
+                  ],
+                ),
+              ),
+            ),
+          )),
+    );
+  }
+
+  @override
+  void dispose() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight
+    ]);
+    super.dispose();
+  }
+}

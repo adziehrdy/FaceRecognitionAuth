@@ -32,8 +32,7 @@ class FaceDetectorService {
 
   Future<void> detectFacesFromImage(CameraImage image) async {
     InputImageData _firebaseImageMetadata = InputImageData(
-      imageRotation:
-          _cameraService.cameraRotation ?? InputImageRotation.rotation0deg,
+      imageRotation:_cameraService.cameraRotation ?? InputImageRotation.rotation0deg,
 
       // inputImageFormat: InputImageFormat.yuv_420_888,
 

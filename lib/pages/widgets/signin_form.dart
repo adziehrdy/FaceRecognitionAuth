@@ -1,5 +1,5 @@
 import 'package:face_net_authentication/locator.dart';
-import 'package:face_net_authentication/pages/models/user.model.dart';
+import 'package:face_net_authentication/pages/models/user.dart';
 import 'package:face_net_authentication/pages/profile.dart';
 import 'package:face_net_authentication/pages/widgets/app_button.dart';
 import 'package:face_net_authentication/pages/widgets/app_text_field.dart';
@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 class SignInSheet extends StatelessWidget {
   SignInSheet({Key? key, required this.user}) : super(key: key);
   final User user;
+
 
   final _passwordController = TextEditingController();
   final _cameraService = locator<CameraService>();
@@ -44,7 +45,7 @@ class SignInSheet extends StatelessWidget {
         children: [
           Container(
             child: Text(
-              'Welcome back, ' + user.user + '.',
+              'Welcome back, ' + (user.employee_name ?? "UNDIFINED") + '.',
               style: TextStyle(fontSize: 20),
             ),
           ),

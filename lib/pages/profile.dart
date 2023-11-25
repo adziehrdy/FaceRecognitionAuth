@@ -1,10 +1,10 @@
 import 'dart:io';
 
+import 'package:face_net_authentication/pages/home_page.dart';
 import 'package:face_net_authentication/pages/widgets/app_button.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'home.dart';
 
 class Profile extends StatelessWidget {
   const Profile(this.username, {Key? key, required this.imagePath})
@@ -116,7 +116,7 @@ class Profile extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => MyHomePage()),
+                    MaterialPageRoute(builder: (context) => HomePage()),
                   );
                 },
                 icon: Icon(
