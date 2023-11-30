@@ -137,16 +137,16 @@ class _SettingPageState extends State<SettingPage> {
               label: _delayTimeout.toString(),
             ),
             SizedBox(height: 20),
-            Row(children: [
-              Text("Mode Landscape"),
-              Switch(value: landscapeMode, onChanged: (value) async {
-                 SharedPreferences prefs = await SharedPreferences.getInstance();
-                prefs.setBool("LANDSCAPE_MODE", value);
-                setState(() {
-                  landscapeMode = value;
-                });
-              },)
-            ],),
+            // Row(children: [
+            //   Text("Mode Landscape"),
+            //   Switch(value: landscapeMode, onChanged: (value) async {
+            //      SharedPreferences prefs = await SharedPreferences.getInstance();
+            //     prefs.setBool("LANDSCAPE_MODE", value);
+            //     setState(() {
+            //       landscapeMode = value;
+            //     });
+            //   },)
+            // ],),
                         SizedBox(height: 20),
             ElevatedButton(
               onPressed: () async {

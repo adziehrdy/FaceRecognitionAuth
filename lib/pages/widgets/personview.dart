@@ -1,5 +1,6 @@
 import 'package:face_net_authentication/pages/models/user.dart';
 import 'package:face_net_authentication/pages/sign-up.dart';
+import 'package:face_net_authentication/pages/widgets/dialog_detail_employee.dart';
 import 'package:flutter/material.dart';
 
 // ignore: must_be_immutable
@@ -44,10 +45,6 @@ class _PersonViewState extends State<PersonView> {
   @override
   Widget build(BuildContext context) {
     return 
-    
-    
-    
-    
     Column(children: [
 
       TextField(
@@ -105,7 +102,23 @@ class _PersonViewState extends State<PersonView> {
           print(widget.personList[index].check_out);
           print(widget.personList[index].check_out);
 
-          return SizedBox(
+          return 
+          InkWell(
+            onTap: () async {
+
+              await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return widget_detail_employee(user_detail: widget.personList[index],);
+      },
+      
+    );
+        widget.onFinish();
+
+            },
+            child: 
+
+          SizedBox(
               child: Card(
                   child: Container(
             padding: EdgeInsets.all(5),
@@ -165,7 +178,7 @@ class _PersonViewState extends State<PersonView> {
                           height: 5,
                         ),
                         Text(
-                          widget.personList[index].employee_position ?? "",
+                          widget.personList[index].shift_id ?? "Shift Belum Di Assign",
                           style: TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                       ],
@@ -212,7 +225,7 @@ class _PersonViewState extends State<PersonView> {
                 // ),
               ],
             ),
-          )));
+          ))));
         })
       
       ),

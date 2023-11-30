@@ -138,7 +138,7 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
             ),
             Row(
               children: [
-                widget.data.is_uploaded ?? false ?
+                widget.data.is_uploaded == "0" ?
                 IconButton(
                   icon: Icon(Icons.delete),
                   onPressed: () async {

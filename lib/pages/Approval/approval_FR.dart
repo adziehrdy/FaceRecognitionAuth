@@ -1,4 +1,3 @@
-import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/pages/models/user.dart';
@@ -94,25 +93,6 @@ class _ApprovalFRState extends State<ApprovalFR> {
    }
   }
 
-    Widget checkFrPhoto(String? file){
-
-    try{
-      return Image.memory(
-            decodeToBase64ToImage(file!),
-
-            fit: BoxFit.cover, // Sesuaikan sesuai kebutuhan Anda
-          );
-    }catch(e){
-
-      return Image.network(COSTANT_VAR.BASE_URL_PUBLIC + file!);
-
-
-    }
-
-
-
-
-  }
 
   Future<void> _loadUserData() async {
     user_list = await _dataBaseHelper.queryAllUsersNotVerifFR();

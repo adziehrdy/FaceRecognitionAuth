@@ -60,6 +60,8 @@ class UserRepo {
     }
   }
 
+
+
   Future registerFcmToken(User user, String token) async {
     try {
       await callApi(ApiMethods.POST, '/notification/set-token', data: {
@@ -84,23 +86,6 @@ class UserRepo {
     }
   }
 
-  Future<String> getDeviceId() async {
-    // DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
-    // if(Platform.isAndroid){
-    //   AndroidDeviceInfo info = await deviceInfoPlugin.androidInfo;
-    //   return info.id;
-    // } else if(Platform.isIOS){
-    //   IosDeviceInfo info = await deviceInfoPlugin.iosInfo;
-    //   return info.identifierForVendor ?? "IOS";
-    // }
-    // else{
-    //   return ("cant find device id");
-    // }
-
-    //BYPASS DEVICE ID
-
-    return "f9fccbf3a669cab4";
-  }
 
   Future<void> hitLogin(context, id, String password, String versionLabel) async {
     showDialog(
@@ -187,15 +172,19 @@ class UserRepo {
   Future<bool> hitApproveFR(String employee_id) async{
     
     String id_superIntendent = await getActiveSuperIntendentID();
+         
 
     List<String> list_id = [employee_id];
+
+    
     try {
       Response res = await callApi(ApiMethods.POST, '/employee/approval-fr', data: {
         "employee_id": list_id,
-         "approved_by": list_id,
+         "approved_by": id_superIntendent,
           "is_approved": true,
       });
-      print(res.data);
+
+
 
       if(res.statusCode == 200){
          return true;
@@ -223,8 +212,6 @@ class UserRepo {
       }else{
         return false;
       }
-      
-
     } catch (e) {
       showToast("Terjadi Kesalahan Saat Approve FR ke Server");
       throw e;

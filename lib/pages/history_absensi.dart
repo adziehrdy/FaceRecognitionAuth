@@ -82,9 +82,9 @@ class _HistoryAbsensiState extends State<HistoryAbsensi> {
                         PinInputDialog.show(context, (p0) async {
               try {
                           await _deleteEntryAndRefresh(_attendanceList[index]);
-                          showToast("Terhapus");
+                          showToastShort("Terhapus"); 
                         } catch (e) {
-                          showToast("Data Sudah Terhapus");
+                          showToastShort("Data Sudah Terhapus");
                         }
                }
                );
@@ -108,7 +108,7 @@ class _HistoryAbsensiState extends State<HistoryAbsensi> {
     for (var index = 0; index < totalCount; index++) {
       
       var data = _attendanceList[index];
-      if(data.is_uploaded == false){
+      if(data.is_uploaded == "0"){
 String mode = data.type_absensi == "MASUK" ? "checkin" : "checkout";
 
       try {

@@ -131,24 +131,20 @@ $employee_fr_image TEXT
     }
   }
 
-Future<List<User>> queryAllUsersNotVerifFR() async {
-  Database db = await instance.database;
-  try{
- List<Map<String, dynamic>> users = await db.rawQuery(
-    'SELECT * FROM $table WHERE ' +
-    '$employee_fr_image IS NOT NULL AND ' +
-    'is_verif_fr = 0 AND ' +
-    '$employee_fr_template IS NOT NULL'
-  );
-          return users.map((u) => User.fromMap(u)).toList();
-  }catch(e){
-    print(e);
-    return [];
-
+  Future<List<User>> queryAllUsersNotVerifFR() async {
+    Database db = await instance.database;
+    try {
+      List<Map<String, dynamic>> users = await db.rawQuery(
+          'SELECT * FROM $table WHERE ' +
+              '$employee_fr_image IS NOT NULL AND ' +
+              'is_verif_fr = 0 AND ' +
+              '$employee_fr_template IS NOT NULL');
+      return users.map((u) => User.fromMap(u)).toList();
+    } catch (e) {
+      print(e);
+      return [];
+    }
   }
-  
-  
-}
 
   Future<List<User>> queryAllUsersNotVerifRegister() async {
     Database db = await instance.database;
@@ -158,9 +154,7 @@ Future<List<User>> queryAllUsersNotVerifFR() async {
     return users.map((u) => User.fromMap(u)).toList();
   }
 
-
-    Future<void> approveFR(String? employeeId) async {
-
+  Future<void> approveFR(String? employeeId) async {
     try {
       Database db = await instance.database;
 
@@ -177,18 +171,45 @@ Future<List<User>> queryAllUsersNotVerifFR() async {
     }
   }
 
-    Future<List<User>> queryAllUsersForMLKit() async {
+    Future<void> updateShift(String? employeeId, String id_shift, String cin, String cout ) async {
+    try {
+      Database db = await instance.database;
+
+      await db.update(
+        table,
+        {
+          shift_id : id_shift,
+          check_in :cin,
+          check_out : cout
+
+        },
+        where: 'employee_id = ?',
+        whereArgs: [employeeId],
+      );
+    } catch (e) {
+      showToast("error saat Update shift - " + e.toString());
+    }
+  }
+
+  Future<List<User>> queryAllUsersForMLKit() async {
     Database db = await instance.database;
-    try{
-       List<Map<String, dynamic>> users = await db
-        .rawQuery('SELECT * FROM $table WHERE ('+employee_fr_template+' is NOT NULL ) AND ('+is_verif_fr+" = '1' ) AND ( "+ check_out +' is NOT NULL ) AND ( '+check_in+ " is NOT NULL )" );
-    // List<Map<String, dynamic>> users = await db.rawQuery('SELECT * FROM $table WHERE is_verif_fr = 0');
-    // print(users.length);
-    return users.map((u) => User.fromMap(u)).toList();
-    }catch(e){
+    try {
+      List<Map<String, dynamic>> users = await db.rawQuery(
+          'SELECT * FROM $table WHERE (' +
+              employee_fr_template +
+              ' is NOT NULL ) AND (' +
+              is_verif_fr +
+              " = '1' ) AND ( " +
+              check_out +
+              ' is NOT NULL ) AND ( ' +
+              check_in +
+              " is NOT NULL )");
+      // List<Map<String, dynamic>> users = await db.rawQuery('SELECT * FROM $table WHERE is_verif_fr = 0');
+      // print(users.length);
+      return users.map((u) => User.fromMap(u)).toList();
+    } catch (e) {
       print(e);
       return [];
     }
-   
   }
 }

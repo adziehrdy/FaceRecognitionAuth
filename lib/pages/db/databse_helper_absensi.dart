@@ -82,18 +82,25 @@ class DatabaseHelperAbsensi {
         $columnEmployeeName TEXT,
         $columnTypeAbsensi TEXT,
         $note_status TEXT,
-        $is_uploaded BOOLEAN,
+        $is_uploaded TEXT,
         $approval_employee_id TEXT
       )
     ''');
   }
 
   Future<String> insertAttendance(Attendance attendance, String MODE) async {
-    final db = await database;
+
+    try{
+final db = await database;
 
     bool canAbsense = false;
 
-    String hariIni = DateFormat("ddMM").format(DateTime.now());
+    DateTime now = DateTime.now();
+    String hariIni = DateFormat("ddMM").format(now);
+    // DateTime yesterday = now.subtract(Duration(days: 1));
+    // String kemarin = DateFormat("ddMM").format(yesterday);
+
+    
     List<Attendance> allRecord =
         await getAllAttendancesByType(attendance.employee_id!, MODE);
 
@@ -105,12 +112,15 @@ class DatabaseHelperAbsensi {
       for (var data in allRecord) {
         String tanggalAbsen = DateFormat("ddMM").format(data.attendanceDate!);
 
-        if (tanggalAbsen != hariIni) {
+
+    if(tanggalAbsen != hariIni) {
           canAbsense = true;
         } else {
           canAbsense = false;
           break;
         }
+        
+       
       }
 
       if (canAbsense) {
@@ -128,6 +138,13 @@ class DatabaseHelperAbsensi {
     //     conflictAlgorithm: ConflictAlgorithm.replace);
     //     print("SUSKSES ABSENSI");
     //     return "SUCCESS";
+    }catch(e){
+
+      print(e.toString);
+      return("ERROR INSERT DB");
+
+    }
+    
   }
 
   Future<List<Attendance>> getAllAttendances() async {
@@ -179,6 +196,7 @@ class DatabaseHelperAbsensi {
     });
   }
 
+
   Future<void> approveAbsensi(int attendanceId,String id_approval) async {
     final db = await database;
     try {
@@ -203,7 +221,7 @@ class DatabaseHelperAbsensi {
       await db.update(
         tableName,
         {
-          is_uploaded: true,
+          is_uploaded: "1",
         },
         where: 'attendance_id = ?',
         whereArgs: [attendanceId],

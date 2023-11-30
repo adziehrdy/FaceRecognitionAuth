@@ -65,8 +65,8 @@ class _RegisterPinState extends State<RegisterPin> {
                   fit: BoxFit.fill,
                 ) : Lottie.asset(
                   'assets/lottie/pin_regis.json',
-                  width: 80,
-                  height: 80,
+                  width: 120,
+                  height: 120,
                   fit: BoxFit.fill,
                 ),
                 SizedBox(

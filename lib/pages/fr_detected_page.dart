@@ -136,9 +136,6 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Report Absensi'),
-      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -275,7 +272,7 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
       "type_absensi": widget.type_absensi,
       "note_status": note_status,
       "check_in_status": note_status,
-      "is_uploaded" : false
+      "is_uploaded" : "0"
     };
     Attendance dataAbsen = Attendance.fromMap(sampleData);
 
@@ -327,7 +324,7 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
       "type_absensi": widget.type_absensi,
       "note_status": note_status,
       "check_out_status": note_status,
-      "is_uploaded" : false
+      "is_uploaded" : "0"
     };
 
     Attendance dataAbsen = Attendance.fromMap(sampleData);
@@ -397,7 +394,10 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
     return progressbutt;
   }
 
-  insertToLocalDB(Attendance dataAbsen) async {
+insertToLocalDB(Attendance dataAbsen) async {
+
+  // bool isOvernight = checkShiftIsOvernight(widget.user.check_in!,widget.user.check_out!);
+
     DatabaseHelperAbsensi databaseHelperAbsensi =
         DatabaseHelperAbsensi.instance;
     String statusDb = await databaseHelperAbsensi.insertAttendance(

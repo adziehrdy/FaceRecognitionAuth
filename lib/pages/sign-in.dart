@@ -121,8 +121,6 @@ class SignInState extends State<SignIn> {
 
         //SET FACE
 
-
-
         print("POSISI MUKA BAGUS");
         RECONIZE_FACE(image);
       }

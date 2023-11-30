@@ -152,7 +152,7 @@ class MLService {
             currDist.toString());
         ;
 
-        if (currDist <= threshold && currDist < minDist) {
+        if (currDist <= threshold && currDist < minDist && currDist != 0.0) {
           minDist = currDist;
           print("FR- FINAL DISTANCE" + currDist.toString());
           predictedResult = u;

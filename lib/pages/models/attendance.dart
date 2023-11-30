@@ -28,7 +28,7 @@ class Attendance {
   String? employee_name;
   String? type_absensi;
   String? note_status;
-  bool? is_uploaded;
+  String? is_uploaded;
   String? approval_employee_id;
 
   Attendance();

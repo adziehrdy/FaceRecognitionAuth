@@ -15,7 +15,6 @@ import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/face_detector_service.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:lottie/lottie.dart';
 
@@ -33,13 +32,15 @@ class _HomePageState extends State<HomePage> {
   double _progress = 0.0;
   String _progressMessage = "Initializing...";
   bool _loading_init = true;
+  int itemPerRow = 3;
 
   @override
   void initState() {
     super.initState();
 
     //GET MASTER DATA FOR REGIST FORM
-    GlobalRepo().getMasterRegister();
+    // GlobalRepo().getMasterRegister();
+    GlobalRepo().hitApiGetMsterShift();
 
     getPIN().then((value) {
       setState(() {
@@ -118,6 +119,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    _setItemPerRow();
     if (_loading_init) {
       return Scaffold(
         body: Center(
@@ -195,7 +197,7 @@ class _HomePageState extends State<HomePage> {
             Container(
                 height: MediaQuery.of(context).size.height - 295, // Untuk menyesuaikan tinggi GridView
                     child: GridView.count(
-                      crossAxisCount: 3,
+                      crossAxisCount: itemPerRow,
                       
                       childAspectRatio: 1,
                       crossAxisSpacing: 5,
@@ -410,14 +412,20 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _setItemPerRow() {
+  if (MediaQuery.of(context).orientation == Orientation.landscape) {
+    setState(() {
+      itemPerRow = 5; // Mengatur nilai itemPerRow jika orientasi adalah landscape
+    });
+  } else {
+    setState(() {
+      itemPerRow = 3; // Mengatur nilai itemPerRow jika orientasi adalah portrait (opsional)
+    });
+  }
+}
+
   @override
   void dispose() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitDown,
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight
-    ]);
     super.dispose();
   }
 }

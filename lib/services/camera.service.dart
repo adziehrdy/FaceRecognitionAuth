@@ -18,8 +18,7 @@ class CameraService {
 
   Future<void> initialize() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    landscape_mode = prefs.getBool("LANDSCAPE_MODE") ?? false;
-
+    landscape_mode = await prefs.getBool("LANDSCAPE_MODE") ?? false;
     
     if (_cameraController != null) return;
     CameraDescription description = await _getCameraDescription();

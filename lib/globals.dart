@@ -1,15 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/pages/force_upgrade.dart';
 import 'package:face_net_authentication/pages/login.dart';
 import 'package:face_net_authentication/pages/models/login_model.dart';
+import 'package:face_net_authentication/pages/models/model_master_shift.dart';
 import 'package:face_net_authentication/repo/custom_exception.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image/image.dart' as img;
 import 'package:image/image.dart' as imglib;
@@ -19,6 +23,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:trust_location/trust_location.dart';
+import 'package:unique_identifier/unique_identifier.dart';
 
 String? endpointUrl;
 late String publicUrl;
@@ -31,6 +36,17 @@ void showToast(String msg){
       Fluttertoast.showToast(
         msg: msg,
         toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 1,
+        backgroundColor: Colors.blue,
+        textColor: Colors.white,
+        fontSize: 16.0);
+}
+
+void showToastShort(String msg){
+      Fluttertoast.showToast(
+        msg: msg,
+        toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.BOTTOM,
         timeInSecForIosWeb: 1,
         backgroundColor: Colors.blue,
@@ -108,17 +124,19 @@ BaseOptions options = BaseOptions(
 );
 Dio dio = Dio(options);
 
-Future<void> getEndpointURL() async {
-  if (endpointUrl == null) {
-    if (kReleaseMode) {
-      endpointUrl = COSTANT_VAR.BASE_URL_API;
-      publicUrl = COSTANT_VAR.BASE_URL_PUBLIC;
-    } else {
-      endpointUrl = COSTANT_VAR.BASE_URL_API;
-      publicUrl = COSTANT_VAR.BASE_URL_PUBLIC;
-    }
-  }
-}
+// Future<void> getEndpointURL() async {
+//   if (endpointUrl == null) {
+//     if (kReleaseMode) {
+//       endpointUrl = COSTANT_VAR.BASE_URL_API;
+//       publicUrl = COSTANT_VAR.BASE_URL_PUBLIC;
+//     } else {
+//       endpointUrl = COSTANT_VAR.BASE_URL_API;
+//       publicUrl = COSTANT_VAR.BASE_URL_PUBLIC;
+//     }
+
+//     print(endpointUrl);
+//   }
+// }
 
 // Future<Response> callApi(ApiMethods method, String url, {Map<String, dynamic>? data}) async {
 //   await getEndpointURL();
@@ -163,18 +181,23 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url, {Map<String, dy
   final dio = Dio();
 
   try {
-    await getEndpointURL();
+    // await getEndpointURL();
+    url = COSTANT_VAR.BASE_URL_API + "" + url;
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     await getUserLoginData().then((value) => token = value.accessToken!);
 
-    print("PAYLOAD = "+data.toString());
+    
+
+    print("PAYLOAD = "+jsonEncode(data));
     
 
     Map<String, dynamic> headers;
 
-    url = endpointUrl! + "" + url;
+
+    print("HITTED ENDPOINT - "+url);
+
     if (token != null) {
       headers = {
         "Content-Type": "application/json",
@@ -231,14 +254,18 @@ Future<Response<dynamic>> callApiWithoutToken(ApiMethods method, String url, {Ma
 
   try {
 
-      await getEndpointURL();
+      // await getEndpointURL();
+
+
 
     Map<String, dynamic> headers = {
       "Content-Type": "application/json",
       "Accept": "application/json",
     };
 
-    url = endpointUrl! + "" + url;
+    url = COSTANT_VAR.BASE_URL_API + "" + url;
+
+    print(url);
     
     dio.options.headers = headers;
 
@@ -631,6 +658,111 @@ bool checkShiftIsOvernight(String checkin, String checkout) {
     return false;
   }
 }
+
+//  Future<String> getDeviceId() async {
+
+//   if(!COSTANT_VAR.EMULATOR_MODE){
+
+  
+//     DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+//     if(Platform.isAndroid){
+//       AndroidDeviceInfo info = await deviceInfoPlugin.androidInfo;
+//       return info.id;
+//     } else if(Platform.isIOS){
+//       IosDeviceInfo info = await deviceInfoPlugin.iosInfo;
+//       return info.identifierForVendor ?? "IOS";
+//     }
+//     else{
+//       return ("cant find device id");
+//     }
+//   }else{
+//  return "f9fccbf3a669cab4";
+//   }
+
+//     // BYPASS DEVICE ID
+
+   
+//   }
+
+
+Future<String> getDeviceId() async {
+  DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+  String? deviceId;
+
+  if (Platform.isAndroid) {
+    deviceId = await UniqueIdentifier.serial;
+  } else if (Platform.isIOS) {
+    IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+    deviceId = iosInfo.identifierForVendor; // Gunakan salah satu ID yang tersedia
+  }
+  if(deviceId != null){
+    return deviceId;
+  }else{
+    return "UNABLE TO GET DEVICE ID";
+  }
+  
+}
+
+
+Future<void> setDeviceOrientationByDevice() async {
+DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+
+  String? deviceType;
+  if (Platform.isAndroid) {
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    deviceType =  androidInfo.id;
+  } else if (Platform.isIOS) {
+    IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+    deviceType = iosInfo.identifierForVendor;
+}
+
+print(deviceType);
+
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  if(deviceType == "TP1A.220624.014"){
+    await prefs.setBool("LANDSCAPE_MODE",true);
+     SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+]);
+  }else{
+      SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+]);
+  }
+}
+
+
+    Widget checkFrPhoto(String? file){
+
+      if(file == null){
+        return Image.asset("assets/images/blank-profile-pic.png");
+      }else{
+            try{
+      return Image.memory(
+            decodeToBase64ToImage(file!),
+
+            fit: BoxFit.cover, // Sesuaikan sesuai kebutuhan Anda
+          );
+    }catch(e){
+      return Image.network(COSTANT_VAR.BASE_URL_PUBLIC + file!);
+    }
+      }
+  }
+
+  Future<List<ShiftData>> getMasterShift() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    
+    String? stringMastershift = prefs.getString("MASTER_SHIFT");
+    if(stringMastershift != null){
+      model_master_shift shift = model_master_shift.fromJson(jsonDecode(stringMastershift));
+      return shift.data;
+    }else{
+      return [];
+    }
+
+  }
+
+
 
 
 // Image imageFromCameraImage(CameraImage cameraImage) {

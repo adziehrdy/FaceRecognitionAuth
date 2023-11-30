@@ -41,7 +41,7 @@ class _ListKaryawanState extends State<ListKaryawan> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daftar Karyawan'),
-        toolbarHeight: 70,
+        toolbarHeight: 30,
         centerTitle: true,
         actions: [PopupMenuButton(
           itemBuilder: (context){
@@ -154,7 +154,7 @@ class _ListKaryawanState extends State<ListKaryawan> {
         content: SingleChildScrollView(
           child: ListBody(
             children: <Widget>[
-              Text('Anda yakin ingin memperbarui data karyawan? data wajah sebelumnya akan terhapus'),
+              Text('Anda yakin ingin memperbarui data karyawan?'),
             ],
           ),
         ),

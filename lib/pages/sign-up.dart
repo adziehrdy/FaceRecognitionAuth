@@ -43,7 +43,7 @@ class SignUpState extends State<SignUp> {
   bool _saving = false;
   bool _bottomSheetVisible = false;
   XFile? photoTakenFile;
-
+  bool _loading = false; // Variable untuk menampilkan loading
 
   // service injection
   FaceDetectorService _faceDetectorService = locator<FaceDetectorService>();
@@ -75,7 +75,6 @@ class SignUpState extends State<SignUp> {
   }
 
   Future<bool> onShot() async {
-
     if (faceDetected == null) {
       showDialog(
         context: context,
@@ -83,7 +82,6 @@ class SignUpState extends State<SignUp> {
           return AlertDialog(
             content: Text('Wajah Tidak Ditemukan, Mohon Coba kembali'),
           );
-         
         },
       );
 
@@ -92,16 +90,24 @@ class SignUpState extends State<SignUp> {
       _saving = true;
       // await Future.delayed(Duration(milliseconds: 500));
       // await Future.delayed(Duration(milliseconds: 200));
-      showToast("Uploading Face..");
+      
+      // showDialog(
+      //   context: context,
+      //   barrierDismissible:
+      //       true, // Menyembunyikan dialog saat pengguna menyentuh di luar dialog
+      //   builder: (BuildContext context) {
+      //     return Center(
+      //       child:
+      //           CircularProgressIndicator(), // Tampilkan CircularProgressIndicator
+      //     );
+      //   },
+      // );
       photoTakenFile = await _cameraService.takePicture();
-      await _cameraService.cameraController?.pausePreview();
+      showToastShort("Scaning..");
       imagePath = photoTakenFile?.path;
 
-      
-
-      setState(() {
-
-        enroll_face(context);
+      setState(() async {
+        await enroll_face(context);
       });
 
       return true;
@@ -112,9 +118,7 @@ class SignUpState extends State<SignUp> {
     imageSize = _cameraService.getImageSize();
 
     _cameraService.cameraController?.startImageStream((image) async {
-
-       img = image;
-
+      img = image;
 
       if (_cameraService.cameraController != null) {
         if (_detectingFaces) return;
@@ -126,11 +130,13 @@ class SignUpState extends State<SignUp> {
 
           if (_faceDetectorService.faces.isNotEmpty) {
             setState(() {
-              faceDetected = _faceDetectorService.faces[0];
-
+              if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
+                  _faceDetectorService.faces[0].headEulerAngleY! < -10) {
+               
+              } else {
+                faceDetected = _faceDetectorService.faces[0];
+              }
               // faceDetectedJPG = faceDetected!.detectedFaceAsImage()
-
-
             });
             if (_saving) {
               _mlService.setCurrentPrediction(image, faceDetected);
@@ -164,6 +170,7 @@ class SignUpState extends State<SignUp> {
       pictureTaken = false;
     });
     this._start();
+    _start();
   }
 
   @override
@@ -195,17 +202,16 @@ class SignUpState extends State<SignUp> {
 
     if (!_initializing && !pictureTaken) {
       body = OrientationBuilder(
-      builder: (context, orientation) {
-        if (orientation == Orientation.landscape) {
-          is_landscape = true;
-          return landscapeLayout(context);
-        } else {
-          is_landscape = false;
-          return portraitLayout(context);
-        }
-      },
-    
-  );
+        builder: (context, orientation) {
+          if (orientation == Orientation.landscape) {
+            is_landscape = true;
+            return landscapeLayout(context);
+          } else {
+            is_landscape = false;
+            return portraitLayout(context);
+          }
+        },
+      );
     }
 
     return Scaffold(
@@ -229,8 +235,10 @@ class SignUpState extends State<SignUp> {
   }
 
   Future enroll_face(context) async {
+    await _cameraService.cameraController?.pausePreview();
+
     List predictedData = _mlService.predictedData;
-    String base64face = encode_FR_ToBase64(predictedData);
+    // String base64face = encode_FR_ToBase64(predictedData);
     String ImagePhoto = "";
     // print(base64face);
 
@@ -238,17 +246,37 @@ class SignUpState extends State<SignUp> {
       // await convertXFIleToImage(photoTakenFile!).then((value) async {
       //   ImagePhoto = await imageToBase64(value);
       // });
+      
 
-      ImagePhoto = convertImagelibToBase64JPG(_mlService.cropFace(img!, faceDetected!));
+              
+      String frTemplateBase64 = encode_FR_ToBase64(predictedData);
 
-      bool success_upload_fr = await repo.uploadFR(widget.user.employee_id!,
-          encode_FR_ToBase64(predictedData), ImagePhoto);
+        // frTemplateBase64 = "W10=";
+
+
+
+      if (frTemplateBase64 == "W10=" || frTemplateBase64.length < 50) {
+        throw Exception('Hasil prediksi error');
+      }
+
+
+      ImagePhoto =
+          convertImagelibToBase64JPG(_mlService.cropFace(img!, faceDetected!));
+
+
+
+      //JIKA HASIL PREDICTED ERROR
+
+
+
+      bool success_upload_fr = await repo.uploadFR(
+          widget.user.employee_id!, frTemplateBase64, ImagePhoto);
 
       if (success_upload_fr) {
         await _dataBaseHelper.updateFaceTemplate(
             widget.user.employee_id!, predictedData, ImagePhoto);
         this._mlService.setPredictedData([]);
-        showToast("Registrasi wajah sukses");
+        showToast("Registrasi wajah sukses !");
         Navigator.pop(context);
       } else {
         showToast("Kesalahan Saat Upload FR Ke server");
@@ -256,85 +284,91 @@ class SignUpState extends State<SignUp> {
       }
     } catch (e) {
       print(e);
-      showToast("Gagal registrasi wajah, Mohon coba Kembali");
+      showToastShort("GAGAL Saat registrasi wajah, Mohon coba Kembali");
+      //  Navigator.pop(context);
+       _reload();
       await _cameraService.cameraController?.resumePreview();
-      Navigator.pop(context);
+
     }
   }
 
   Widget landscapeLayout(BuildContext context) {
-  double height = MediaQuery.of(context).size.height;
-  // Kode untuk tampilan landscape
-  return Transform.scale(
-    scale: 1.0,
-    child: AspectRatio(
-      aspectRatio: MediaQuery.of(context).size.aspectRatio,
-      child: OverflowBox(
-        alignment: Alignment.center,
-        child: FittedBox(
-          fit: BoxFit.fitWidth,
-          child: Container(
-            width: height * _cameraService.cameraController!.value.aspectRatio,
-            height: height,
-            child: Stack(
-              fit: StackFit.expand,
-              children: <Widget>[
-                CameraPreview(_cameraService.cameraController!),
-                CustomPaint(
-                  child: Center(
-                    child: Container(
-                      padding: EdgeInsets.all(100),
-                      child: Image.asset("assets/images/face.png"),
+    double height = MediaQuery.of(context).size.height;
+    // Kode untuk tampilan landscape
+    return Transform.scale(
+      scale: 1.0,
+      child: AspectRatio(
+        aspectRatio: MediaQuery.of(context).size.aspectRatio,
+        child: OverflowBox(
+          alignment: Alignment.center,
+          child: FittedBox(
+            fit: BoxFit.fitWidth,
+            child: Container(
+              width:
+                  height * _cameraService.cameraController!.value.aspectRatio,
+              height: height,
+              child: Stack(
+                fit: StackFit.expand,
+                children: <Widget>[
+                  CameraPreview(_cameraService.cameraController!),
+                  CustomPaint(
+                    child: Center(
+                      child: Container(
+                        padding: EdgeInsets.all(100),
+                        child: Image.asset("assets/images/face.png"),
+                      ),
+                    ),
+                    painter: FacePainter(
+                      face: faceDetected,
+                      imageSize: imageSize!,
                     ),
                   ),
-                  painter: FacePainter(
-                    face: faceDetected,
-                    imageSize: imageSize!,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-Widget portraitLayout(BuildContext context) {
-  double width = MediaQuery.of(context).size.width;
-  // Kode untuk tampilan potret
-  return Transform.scale(
-    scale: 1.0,
-    child: AspectRatio(
-      aspectRatio: MediaQuery.of(context).size.aspectRatio,
-      child: OverflowBox(
-        alignment: Alignment.center,
-        child: FittedBox(
-          fit: BoxFit.fitHeight,
-          child: Container(
-            width: width,
-            height: width * _cameraService.cameraController!.value.aspectRatio,
-            child: Stack(
-              fit: StackFit.expand,
-              children: <Widget>[
-                CameraPreview(_cameraService.cameraController!),
-                CustomPaint(
-                  child: Center(
-                    
-                    child: Container(padding: EdgeInsets.all(90), child: Image.asset("assets/images/face.png"),),
+  Widget portraitLayout(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+    // Kode untuk tampilan potret
+    return Transform.scale(
+      scale: 1.0,
+      child: AspectRatio(
+        aspectRatio: MediaQuery.of(context).size.aspectRatio,
+        child: OverflowBox(
+          alignment: Alignment.center,
+          child: FittedBox(
+            fit: BoxFit.fitHeight,
+            child: Container(
+              width: width,
+              height:
+                  width * _cameraService.cameraController!.value.aspectRatio,
+              child: Stack(
+                fit: StackFit.expand,
+                children: <Widget>[
+                  CameraPreview(_cameraService.cameraController!),
+                  CustomPaint(
+                    child: Center(
+                      child: Container(
+                        padding: EdgeInsets.all(90),
+                        child: Image.asset("assets/images/face.png"),
+                      ),
+                    ),
+                    painter: FacePainter(
+                      face: faceDetected,
+                      imageSize: imageSize!,
+                    ),
                   ),
-                  painter: FacePainter(
-                    face: faceDetected,
-                    imageSize: imageSize!,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

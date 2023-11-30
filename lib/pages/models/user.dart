@@ -43,7 +43,7 @@ class User {
     employee_email = map['employee_email'];
     employee_status = map['employee_status'];
     employee_birth_date =
-        DateFormat('yyyy-MM-dd').parse(map['employee_birth_date']);
+        DateFormat('yyyy-MM').parse(map['employee_birth_date']);
     employee_position = map['employee_position'];
     if (map['employee_photo'] == null || map['employee_photo'].length == 0) {
       employee_photo = AssetImage('assets/images/blank-profile-pic.png');
@@ -90,7 +90,7 @@ class User {
       'employee_email': employee_email,
       'employee_status': employee_status,
       'employee_birth_date':
-          DateFormat('yyyy-MM-dd').format(employee_birth_date!),
+          DateFormat('yyyy-MM').format(employee_birth_date!),
       'employee_position': employee_position,
       // profileImage cannot be directly converted to a map.
       'branch_id': branch_id,

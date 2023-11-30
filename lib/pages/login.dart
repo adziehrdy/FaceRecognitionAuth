@@ -1,3 +1,4 @@
+import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/repo/user_repos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,15 +27,13 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
 
+    setDeviceOrientationByDevice();
+
     
     rememberMe = true;
     showPassword = false;
     nipCtrl = TextEditingController();
     passCtrl = TextEditingController();
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
 
     
     getPackageLabel();
@@ -51,7 +50,8 @@ class _LoginPageState extends State<LoginPage> {
 
   getPackageLabel() async {
     PackageInfo info = await PackageInfo.fromPlatform();
-    deviceID = await repo.getDeviceId();
+
+    deviceID = await getDeviceId();
 
     setState(() {
       versionLabel = 'v.' + info.version;
@@ -79,7 +79,7 @@ Widget build(BuildContext context) {
                 "assets/images/image_login.png",
                 width: MediaQuery.of(context).size.width,
                 fit: BoxFit.fitHeight,
-                height: 400,
+                height: 250,
               ),
             ),
             Padding(
@@ -229,12 +229,6 @@ Widget build(BuildContext context) {
 
   @override
   void dispose() {
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeRight,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.portraitDown,
-    ]);
     _focusUsername.dispose();
     super.dispose();
   }
