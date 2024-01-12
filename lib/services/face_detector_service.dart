@@ -19,14 +19,17 @@ class FaceDetectorService {
     _faceDetector = GoogleMlKit.vision.faceDetector(
       FaceDetectorOptions(
         performanceMode: FaceDetectorMode.fast,
+        minFaceSize: 0.1
+        ,
       ),
     );
 // ====
     _faceDetector = FaceDetector(
         options: FaceDetectorOptions(
             performanceMode: FaceDetectorMode.fast,
-            enableContours: false,
-            enableClassification: false));
+            minFaceSize: 0.9,
+            enableContours: true,
+            enableClassification: true));
             // /====
   }
 
@@ -75,7 +78,10 @@ class FaceDetectorService {
     final faceDetector = GoogleMlKit.vision.faceDetector(
       FaceDetectorOptions(
         performanceMode: FaceDetectorMode.fast,
-        enableLandmarks: true,
+        // enableLandmarks: true,
+        enableContours: true,
+        // enableTracking: true,
+        enableClassification: true
       ),
     );
     final WriteBuffer allBytes = WriteBuffer();

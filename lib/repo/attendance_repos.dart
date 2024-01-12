@@ -29,14 +29,21 @@ class AttendanceRepos {
     Future verifyAbsensi(Attendance attendance, String? mode, String id) async{
      Map <String, dynamic> data ={
       "attendance": attendance.toCreateMapForHitAPI(),
-      "attendanceApproval": attendance.toCreateMapForHit_Approval(),
-      "outOfficeApproval": null
+      "attendanceApprovalIn": attendance.toCreateMapForHit_Approval_in(),
+      "attendanceApprovalOut": attendance.toCreateMapForHit_Approval_out(),
+      //       "attendanceApprovalIn": null,
+      // "attendanceApprovalOut": null,
     };
 
-    print(jsonEncode(data));
+    String param = jsonEncode(data);
+
+    // stderr.writeln(param);
 
 
-    return await callApi(ApiMethods.POST, '/attendance/demo/wfoinput/$mode', data: data);
+    
+
+
+    return await callApi(ApiMethods.POST, '/attendance/demo/wfoinput/', data: data);
   }
 
   Future verifyAbsensiWFH(File image, Attendance attendance, AttendanceApproval? attendanceApproval, String? mode) async{
@@ -73,6 +80,7 @@ class AttendanceRepos {
       if(attendanceApproval != null){
         req.fields["attendanceApproval"] = json.encode(attendanceApproval.toMap());
       }
+
 
       http.StreamedResponse res = await req.send();
       if(res.statusCode == 200){

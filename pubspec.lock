@@ -185,14 +185,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.10.1"
-  device_imei:
+  date_picker_timeline:
     dependency: "direct main"
     description:
-      name: device_imei
-      sha256: deaa9360d97111378f9ca142bccfe95f611ef5a8828d8e870edf3f86550bf9c4
+      name: date_picker_timeline
+      sha256: d92956ddd6eb3070f5637b1514201342e739b6ed1ad830c365d64f9349f4f682
       url: "https://pub.dev"
     source: hosted
-    version: "0.0.4+1"
+    version: "1.2.3"
+  date_time_picker:
+    dependency: "direct main"
+    description:
+      name: date_time_picker
+      sha256: "6923c568bcb67a66ab7e083708d0adbcae8214b41bb84d49febc17e89e06fc4a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   device_info_plus:
     dependency: "direct main"
     description:
@@ -291,6 +299,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_udid:
+    dependency: "direct main"
+    description:
+      name: flutter_udid
+      sha256: "3b25da919eee10cc757d47c2c59d96958b86a17418ae3775b7aef090929cfffb"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.1"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
@@ -536,6 +552,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.3.0"
+  imei:
+    dependency: "direct main"
+    description:
+      name: imei
+      sha256: c4d1db06c9e6c7b92b1268adf4ba8b81ee31f042189c622e515cd48277f3f64d
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
   internet_connection_checker:
     dependency: "direct main"
     description:
@@ -548,10 +572,10 @@ packages:
     dependency: "direct main"
     description:
       name: intl
-      sha256: "3bc132a9dbce73a7e4a21a17d06e1878839ffbf975568bc875c60537824b0c4d"
+      sha256: "910f85bce16fb5c6f614e117efa303e85a1731bb0081edf3604a2ae6e9a3cc91"
       url: "https://pub.dev"
     source: hosted
-    version: "0.18.1"
+    version: "0.17.0"
   js:
     dependency: transitive
     description:
@@ -628,10 +652,10 @@ packages:
     dependency: "direct main"
     description:
       name: one_clock
-      sha256: b0e334e68e3c8aca94ec742602b47f35420548d7844709408a4519c75725ef37
+      sha256: a27ca4d357ce6194bb74a1dfce9ca4a4bb3b32b05e056a280d975ca92bc5df1d
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.9"
+    version: "1.0.8"
   package_info_plus:
     dependency: "direct main"
     description:

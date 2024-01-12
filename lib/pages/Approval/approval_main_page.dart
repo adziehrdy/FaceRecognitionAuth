@@ -1,6 +1,5 @@
 
 import 'package:face_net_authentication/pages/Approval/approval_FR.dart';
-import 'package:face_net_authentication/pages/Approval/approval_terlambat.dart';
 import 'package:flutter/material.dart';
 
 
@@ -15,7 +14,8 @@ class _approval_main_pageState extends State<approval_main_page>
 with SingleTickerProviderStateMixin {
   late TabController controller;
 
-  List<String> TAB = ["Terlambat","Face Recognition"];
+  // List<String> TAB = ["Terlambat","Face Recognition"];
+    List<String> TAB = ["Face Recognition"];
 
   @override
   void initState() {
@@ -44,7 +44,7 @@ with SingleTickerProviderStateMixin {
           controller: controller,
           tabs: [
             Tab(text: TAB[0]),
-            Tab(text: TAB[1]),
+            // Tab(text: TAB[1]),
             // Tab(text: TAB[2]),
           ],
         ),
@@ -52,7 +52,7 @@ with SingleTickerProviderStateMixin {
       body: TabBarView(
         controller: controller,
         children: [
-          ApprovalTerlambat(),
+          // ApprovalTerlambat(),
           ApprovalFR(),
           // ApprovalRegister(),
           // SecondPage(),

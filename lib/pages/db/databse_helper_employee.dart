@@ -26,7 +26,7 @@ class DatabaseHelperEmployee {
   static final employeeEmail = "employee_email";
   static final employeeStatus = "employee_status";
 
-  static final employeeBirthday = "employee_birth_date";
+  // static final employeeBirthday = "employee_birth_date";
   static final employeePosition = "employee_position";
   static final profileImage = "employee_photo";
   static final branchId = "branch_id";
@@ -42,6 +42,14 @@ class DatabaseHelperEmployee {
   static final check_in = "check_in";
   static final check_out = "check_out";
   static final employee_fr_image = "employee_fr_image";
+
+  //RELIEF
+
+  static final status_relief = "status_relief";
+  static final relief_id = "relief_id";
+  static final from_branch = "from_branch";
+  static final to_branch = "to_branch";
+  static final relief_status = "relief_status";
 
   DatabaseHelperEmployee._privateConstructor();
   static final DatabaseHelperEmployee instance =
@@ -72,7 +80,7 @@ $employeeName TEXT,
 $employeePhone TEXT,
 $employeeEmail TEXT,
 $employeeStatus TEXT,
-$employeeBirthday TEXT,
+
 $employeePosition TEXT,
 $profileImage TEXT,
 $branchId TEXT,
@@ -85,7 +93,12 @@ $is_verif_fr TEXT,
 $shift_id TEXT,
 $check_in TEXT,
 $check_out TEXT,
-$employee_fr_image TEXT
+$employee_fr_image TEXT,
+$status_relief TEXT,
+$relief_id TEXT,
+$from_branch TEXT,
+$to_branch TEXT,
+$relief_status TEXT
           )
           ''');
   }

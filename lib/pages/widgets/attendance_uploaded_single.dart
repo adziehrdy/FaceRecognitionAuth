@@ -1,14 +1,13 @@
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
 import 'package:face_net_authentication/pages/models/attendance.dart';
-import 'package:face_net_authentication/pages/widgets/dialog_approval_absensi.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 typedef void OnDeleteCallback(String deleteType);
 
-class AttendanceSingle extends StatefulWidget {
-  const AttendanceSingle({Key? key, required this.data, required this.onDelete})
+class AttendanceUploadedSingle extends StatefulWidget {
+  const AttendanceUploadedSingle({Key? key, required this.data, required this.onDelete})
       : super(key: key);
 
   final Attendance data;
@@ -16,10 +15,10 @@ class AttendanceSingle extends StatefulWidget {
   final OnDeleteCallback onDelete; // Gunakan tipe OnDeleteCallback
 
   @override
-  _AttendanceSingleState createState() => _AttendanceSingleState();
+  _AttendanceUploadedSingleState createState() => _AttendanceUploadedSingleState();
 }
 
-class _AttendanceSingleState extends State<AttendanceSingle> {
+class _AttendanceUploadedSingleState extends State<AttendanceUploadedSingle> {
 
   DatabaseHelperAbsensi _dataBaseHelper = DatabaseHelperAbsensi.instance;
 
@@ -58,7 +57,7 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
             ),
             Container(
               // color: Colors.blue.shade50,
-              height: 35,
+              height: 20,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -70,7 +69,7 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                         style: TextStyle(
                             overflow: TextOverflow.ellipsis,
                             fontWeight: FontWeight.bold,
-                            fontSize: 20),
+                            fontSize: 15),
                       ),
                       SizedBox(
                         width: 10,
@@ -82,20 +81,7 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                       )
                     ],
                   ),
-                  Row(
-                    children: [
-                      widget.data.is_uploaded == "0"
-                          ? SizedBox()
-                          : IconButton(
-                              iconSize: 20,
-                              icon: Icon(Icons.cloud_circle),
-                              color: Colors.green,
-                              onPressed: () async {
-                                showToast("Data Ini Sudah Diupload Ke server");
-                              },
-                            ),
-                    ],
-                  ),
+                  
                 ],
               ),
             ),
@@ -120,7 +106,7 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                     Container(
                       color: Colors.black,
                       width: 0.5,
-                      height: 75,
+                      height: 15,
                     ),
                     single_absensi_keluar(jam_out, bulan_out, tanggal_out,
                         "ABSEN KELUAR", Colors.deepOrange.shade500, status_out),
@@ -161,20 +147,16 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        Tanggal,
-                        style: TextStyle(color: Colors.white, fontSize: 25),
+                        Tanggal +" "+bulan,
+                        style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
-                      Text(
-                        bulan,
-                        style: TextStyle(color: Colors.white, fontSize: 11),
-                      )
                     ],
                   ),
                 ),
                 Column(
                   children: <Widget>[
                     Padding(
-                      padding: EdgeInsets.all(10),
+                      padding: EdgeInsets.symmetric(horizontal: 10),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -186,17 +168,6 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
-                                    // Text(
-                                    //   (widget.data.employee_name ??
-                                    //           "NAME NOT FOUND")
-                                    //       .toUpperCase(),
-                                    //   style: TextStyle(
-                                    //       overflow: TextOverflow.ellipsis,
-                                    //       color: Theme.of(context)
-                                    //           .colorScheme
-                                    //           .primary,
-                                    //       fontSize: 15),
-                                    // ),
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
@@ -208,41 +179,17 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                           style: TextStyle(
                                               overflow: TextOverflow.ellipsis,
                                               color: bg_color,
-                                              fontSize: 13),
+                                              fontSize: 10),
                                         ),
-                                        Container(
-                                          height: 20,
-                                          child: Row(
-                                            children: [
-                                              (widget.data.attendanceAddressOut ==
-                                                          null) &&
-                                                      (widget.data
-                                                              .is_uploaded ==
-                                                          "0")
-                                                  ? IconButton(
-                                                      iconSize: 20,
-                                                      padding:
-                                                          EdgeInsets.all(0),
-                                                      icon: Icon(Icons.delete),
-                                                      onPressed: () async {
-                                                        setState(() {
-                                                          widget.onDelete(
-                                                              "MASUK");
-                                                        });
-                                                      },
-                                                    )
-                                                  : SizedBox()
-                                            ],
-                                          ),
-                                        )
+                                        
                                       ],
                                     ),
                                     Container(
                                       padding:
-                                          EdgeInsets.symmetric(vertical: 5),
+                                          EdgeInsets.symmetric(vertical: 0),
                                       child: Row(
                                         children: [
-                                          Icon(Icons.timer_outlined),
+                                          Icon(Icons.timer_outlined,size: 15,),
                                           SizedBox(
                                             width: 5,
                                           ),
@@ -250,7 +197,7 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                             jam,
                                             style: TextStyle(
                                                 fontWeight: FontWeight.bold,
-                                                fontSize: 26,
+                                                fontSize: 20,
                                                 color: Colors.black),
                                           ),
                                           SizedBox(
@@ -268,69 +215,24 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                           ),
                                           Container(
                                             height: 25,
-                                            child: (status != "") &&
-                                                    (widget.data
-                                                            .approval_status_in ==
-                                                        null) &&
-                                                    (widget.data.is_uploaded ==
-                                                        "0")
-                                                ? ElevatedButton(
-                                                    style: ButtonStyle(
-                                                        backgroundColor:
-                                                            MaterialStateColor
-                                                                .resolveWith(
-                                                                    (states) =>
-                                                                        Colors
-                                                                            .blue)),
-                                                    onPressed: () {
-                                                      showDialog(
-                                                        context: context,
-                                                        builder: (BuildContext
-                                                            context) {
-                                                          return dialog_approval_absensi(
-                                                              onSelected:
-                                                                  (value) async {
-
-                                                                     await _dataBaseHelper.approveAbsensi(widget.data.attendanceId!,await getActiveSuperIntendentID(),value[1],true,value[0]);
-                                                                     setState(() {
-                                                                       _refreshView();
-                                                                     });
-
-                                                                  });
-                                                        },
-                                                      );
-                                                    },
-                                                    child: 
-                                                    Text(
-                                                      "APPROVAL",
-                                                      style: TextStyle(
-                                                          fontSize: 11,
-                                                          color: Colors.white),
-                                                    ))
-                                                : 
+                                            child:
                                                 InkWell(
                                                   onTap: (){
                                                     showToast("Notes : "+(widget.data.attendanceNoteIn ?? "-") );
                                                   },
                                                   child: Row(
                                                   children: [
-                                                    Icon(Icons.notes_sharp),
+                                                    Icon(Icons.notes_sharp,size: 15,),
                                                     SizedBox(width: 5,),
                                                     Text(
                                                         (widget.data.approval_status_in ??
-                                                            ""),style: TextStyle(fontWeight: FontWeight.bold),),
+                                                            ""),style: TextStyle(fontWeight: FontWeight.bold,fontSize: 10),),
                                                   ],
                                                 ),)
                                           )
                                         ],
                                       ),
                                     ),
-                                    // Text(
-                                    //   (Tipe),
-                                    //   style: TextStyle(
-                                    //       fontWeight: FontWeight.bold,
-                                    //       color: typeColor),
-                                    // ),
                                   ],
                                 ),
                               ),
@@ -343,24 +245,6 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                 ),
               ],
             ),
-            // Row(
-            //   children: [
-            //     widget.data.is_uploaded == "0"
-            //         ? IconButton(
-            //             icon: Icon(Icons.delete),
-            //             onPressed: () async {
-            //               widget.onDelete();
-            //             },
-            //           )
-            //         : IconButton(
-            //             icon: Icon(Icons.cloud_circle),
-            //             color: Colors.green,
-            //             onPressed: () async {
-            //               showToast("Data Ini Sudah Diupload Ke server");
-            //             },
-            //           ),
-            //   ],
-            // ),
           ],
         ));
   }
@@ -394,20 +278,16 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        Tanggal,
-                        style: TextStyle(color: Colors.white, fontSize: 25),
+                        Tanggal +" "+bulan,
+                        style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
-                      Text(
-                        bulan,
-                        style: TextStyle(color: Colors.white, fontSize: 11),
-                      )
                     ],
                   ),
                 ),
                 Column(
                   children: <Widget>[
                     Padding(
-                      padding: EdgeInsets.all(10),
+                      padding: EdgeInsets.symmetric(horizontal: 10),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -419,17 +299,6 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: <Widget>[
-                                    // Text(
-                                    //   (widget.data.employee_name ??
-                                    //           "NAME NOT FOUND")
-                                    //       .toUpperCase(),
-                                    //   style: TextStyle(
-                                    //       overflow: TextOverflow.ellipsis,
-                                    //       color: Theme.of(context)
-                                    //           .colorScheme
-                                    //           .primary,
-                                    //       fontSize: 15),
-                                    // ),
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
@@ -441,39 +310,17 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                           style: TextStyle(
                                               overflow: TextOverflow.ellipsis,
                                               color: bg_color,
-                                              fontSize: 13),
+                                              fontSize: 10),
                                         ),
-                                        Container(
-                                          height: 20,
-                                          child: Row(
-                                            children: [
-                                              (widget.data.is_uploaded == "0" &&
-                                                      widget.data.checkOut !=
-                                                          null)
-                                                  ? IconButton(
-                                                      iconSize: 20,
-                                                      padding:
-                                                          EdgeInsets.all(0),
-                                                      icon: Icon(Icons.delete),
-                                                      onPressed: () async {
-                                                        setState(() {
-                                                          widget.onDelete(
-                                                              "KELUAR");
-                                                        });
-                                                      },
-                                                    )
-                                                  : SizedBox()
-                                            ],
-                                          ),
-                                        )
+                                        
                                       ],
                                     ),
                                     Container(
                                       padding:
-                                          EdgeInsets.symmetric(vertical: 5),
+                                          EdgeInsets.symmetric(vertical: 0),
                                       child: Row(
                                         children: [
-                                          Icon(Icons.timer_outlined),
+                                          Icon(Icons.timer_outlined,size: 15,),
                                           SizedBox(
                                             width: 5,
                                           ),
@@ -481,7 +328,7 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                             jam,
                                             style: TextStyle(
                                                 fontWeight: FontWeight.bold,
-                                                fontSize: 26,
+                                                fontSize: 20,
                                                 color: Colors.black),
                                           ),
                                           SizedBox(
@@ -498,69 +345,25 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                             width: 40,
                                           ),
                                           Container(
-                                              height: 25,
-                                              child: (status != "") &&
-                                                      (widget.data
-                                                              .approval_status_out ==
-                                                          null) &&
-                                                      (widget.data
-                                                              .is_uploaded ==
-                                                          "0")
-                                                  ? ElevatedButton(
-                                                      style: ButtonStyle(
-                                                          backgroundColor:
-                                                              MaterialStateColor
-                                                                  .resolveWith(
-                                                                      (states) =>
-                                                                          Colors
-                                                                              .blue)),
-                                                      onPressed: () async {
-                                                       showDialog(
-                                                        context: context,
-                                                        builder: (BuildContext
-                                                            context) {
-                                                          return dialog_approval_absensi(
-                                                              onSelected:
-                                                                  (value) async {
-
-                                                                     await _dataBaseHelper.approveAbsensi(widget.data.attendanceId!,await getActiveSuperIntendentID(),value[1],false,value[0]);
-                                                                     setState(() {
-                                                                       _refreshView();
-                                                                     });
-
-                                                                  });
-                                                        },
-                                                      );
-                                                      },
-                                                      child: Text(
-                                                        "APPROVAL",
-                                                        style: TextStyle(
-                                                            fontSize: 11,
-                                                            color:
-                                                                Colors.white),
-                                                      ))
-                                                  : InkWell(
+                                            height: 25,
+                                            child:
+                                                InkWell(
                                                   onTap: (){
                                                     showToast("Notes : "+(widget.data.attendanceNoteOut ?? "-") );
                                                   },
                                                   child: Row(
                                                   children: [
-                                                    Icon(Icons.notes_sharp),
+                                                    Icon(Icons.notes_sharp,size: 15,),
                                                     SizedBox(width: 5,),
                                                     Text(
                                                         (widget.data.approval_status_out ??
-                                                            ""),style: TextStyle(fontWeight: FontWeight.bold),),
+                                                            ""),style: TextStyle(fontWeight: FontWeight.bold,fontSize: 10),),
                                                   ],
-                                                ),),)
+                                                ),)
+                                          )
                                         ],
                                       ),
                                     ),
-                                    // Text(
-                                    //   (Tipe),
-                                    //   style: TextStyle(
-                                    //       fontWeight: FontWeight.bold,
-                                    //       color: typeColor),
-                                    // ),
                                   ],
                                 ),
                               ),
@@ -573,24 +376,6 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                 ),
               ],
             ),
-            // Row(
-            //   children: [
-            //     widget.data.is_uploaded == "0"
-            //         ? IconButton(
-            //             icon: Icon(Icons.delete),
-            //             onPressed: () async {
-            //               widget.onDelete();
-            //             },
-            //           )
-            //         : IconButton(
-            //             icon: Icon(Icons.cloud_circle),
-            //             color: Colors.green,
-            //             onPressed: () async {
-            //               showToast("Data Ini Sudah Diupload Ke server");
-            //             },
-            //           ),
-            //   ],
-            // ),
           ],
         ));
   }

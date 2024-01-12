@@ -2,8 +2,9 @@ import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/pages/Approval/approval_main_page.dart';
-import 'package:face_net_authentication/pages/history_absensi.dart';
+import 'package:face_net_authentication/pages/history_absensi_mainPage.dart';
 import 'package:face_net_authentication/pages/list_karyawan.dart';
+import 'package:face_net_authentication/pages/management_karyawan/relief_form.dart';
 import 'package:face_net_authentication/pages/register_pin.dart';
 import 'package:face_net_authentication/pages/sign-in.dart';
 import 'package:face_net_authentication/pages/widgets/home_menu.dart';
@@ -221,6 +222,15 @@ class _HomePageState extends State<HomePage> {
                                 builder: (context) => SignIn(MODE: "KELUAR")));
                           },
                         ),
+                                                new HomeMenu(
+                          "History Absensi",
+                          "assets/images/absent_shift.png",
+                          waitingApproval!,
+                          callback: (p0) {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => HistoryAbsensiMainPage()));
+                          },
+                        ),
                         new HomeMenu(
                           "Daftar Karyawan",
                           "assets/images/absent_personal.png",
@@ -232,15 +242,7 @@ class _HomePageState extends State<HomePage> {
                              });
                           },
                         ),
-                        new HomeMenu(
-                          "History Absensi",
-                          "assets/images/absent_shift.png",
-                          waitingApproval!,
-                          callback: (p0) {
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => HistoryAbsensi()));
-                          },
-                        ),
+
                         new HomeMenu(
                           "Approval",
                           "assets/images/absent_approval.png",
@@ -249,6 +251,19 @@ class _HomePageState extends State<HomePage> {
                             PinInputDialog.show(context, (p0) {
                               Navigator.of(context).push(MaterialPageRoute(
                                   builder: (context) => approval_main_page()));
+                              // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
+                            });
+                          },
+                        ),
+
+                        new HomeMenu(
+                          "Relief",
+                          "assets/images/absent_approval.png",
+                          waitingApproval!,
+                          callback: (p0) {
+                            PinInputDialog.show(context, (p0) {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => ReliefForm()));
                               // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
                             });
                           },

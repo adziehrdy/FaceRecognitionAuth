@@ -5,7 +5,10 @@ class COSTANT_VAR {
   // static String BASE_URL_PUBLIC = "https://dev.rentas.co.id/sikap/sikap-api";
   // static String BASE_URL_API = "https://dev.rentas.co.id/sikap/sikap-api/api";
 
+  static double DEFAULT_TRESHOLD = 0.75;
+
   //STAGING EDPOINT
   static String BASE_URL_PUBLIC = "https://pdc-api.smart-check.id";
   static String BASE_URL_API = "https://pdc-api.smart-check.id/api";
 }
+ 

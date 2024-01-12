@@ -30,6 +30,9 @@ class Attendance {
   String? note_status;
   String? is_uploaded;
   String? approval_employee_id;
+  String? shift;
+  String? approval_status_in;
+  String? approval_status_out;
 
   Attendance();
   
@@ -65,6 +68,9 @@ attendanceId = map["attendance_id"];
     note_status = map['note_status'];
     is_uploaded = map['is_uploaded'];
     approval_employee_id = map['approval_employee_id'];
+    shift = map['shift_id'];
+    approval_status_in = map['approval_status_in'];
+    approval_status_out = map['approval_status_out'];
   }
 
   Map<String, dynamic> toCreateMap(){
@@ -90,11 +96,17 @@ attendanceId = map["attendance_id"];
     if(attendancePhotoOut != null) map["attendance_photo_out"] = attendancePhotoOut;
     if(employee_name != null) map["employee_name"] = employee_name;
     if(type_absensi != null) map["type_absensi"] = type_absensi;
+    if(type_absensi != null) map["type_absensi"] = type_absensi;
     
     map["company_id"] = companyId;
     map['note_status'] = note_status;
     map['is_uploaded'] = is_uploaded;
     map['approval_employee_id'] = approval_employee_id;
+    map['shift_id'] = shift;
+    map['approval_status_in'] = approval_status_in;
+    map['approval_status_out'] = approval_status_out;
+    
+
     
     return map;
   }
@@ -119,14 +131,44 @@ Map<String, dynamic> toCreateMapForHitAPI(){
     if(attendanceAddressOut != null) map["attendance_address_out"] = attendanceAddressOut;
     if(attendanceNoteOut != null) map["attendance_note_out"] = attendanceNoteOut;
     if(attendancePhotoIn != null) map["attendance_photo_in"] = attendancePhotoIn;
-    if(attendancePhotoOut != null) map["attendance_photo_out"] = attendancePhotoOut;
+    if(shift != null) map["shift_id"] = shift;
     map["company_id"] = companyId;
     
     return map;
   }
 
 
-  Map<String, dynamic>? toCreateMapForHit_Approval(){
+  Map<String, dynamic>? toCreateMapForHit_Approval_in(){
+    Map<String, dynamic> map = {};
+    
+    if(approval_employee_id != null){
+      map["approval_employee_id"] = approval_employee_id;
+       map["employee_id"] = approval_employee_id;
+
+      if(attendanceDate != null) map["approval_date"] = DateFormat("yyyy-MM-dd").format(attendanceDate!);
+
+
+       map["updated_by"] = approval_employee_id;
+
+       
+   
+    if(checkInActual != null) map["check_in_actual"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkInActual!);
+
+     map["company_id"] = companyId;
+
+
+    if(checkInStatus != null) map["check_in_status"] = checkInStatus;
+    if(approval_status_in != null) map["approval_status_in"] = approval_status_in;
+    
+    return map;
+    }else{
+      return null;
+    }
+    
+    
+  }
+
+  Map<String, dynamic>? toCreateMapForHit_Approval_out(){
     Map<String, dynamic> map = {};
 
     if(approval_employee_id != null){
@@ -140,16 +182,13 @@ Map<String, dynamic> toCreateMapForHitAPI(){
 
        
    
-    if(checkInActual != null) map["check_in_actual"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkInActual!);
     if(checkOutActual != null) map["check_out_actual"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkOutActual!);
 
      map["company_id"] = companyId;
 
 
-        if(checkInStatus != null) map["check_in_status"] = checkInStatus;
     if(checkOutStatus != null) map["check_out_status"] = checkOutStatus;
-
-        map["approval_status"] = "APPROVED";
+    if(approval_status_out != null) map["approval_status_out"] = approval_status_out;
     
     return map;
     }else{
