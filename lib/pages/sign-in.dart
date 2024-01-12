@@ -158,6 +158,12 @@ class SignInState extends State<SignIn> {
         pauseCameraAndMLKit();
        imglib.Image faceImage =  _mlService.cropFace(image, _faceDetectorService.faces[0]);
 
+      //  //TESTING ABSENSI
+
+      //  textJamAbsensi = "2024-01-04 01:51:46";
+      //  jamAbsensi = DateTime.parse(textJamAbsensi!);
+
+      //  //TESTING ABSENSI
 
         await Navigator.push(
             context,

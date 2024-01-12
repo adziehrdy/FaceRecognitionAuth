@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/pages/home_page.dart';
 import 'package:face_net_authentication/pages/widgets/app_button.dart';
 import 'package:flutter/material.dart';
@@ -88,7 +89,7 @@ class Profile extends StatelessWidget {
                         alignment: Alignment.center,
                         padding:
                             EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                        width: MediaQuery.of(context).size.width * 0.8,
+                        width: MediaQuery.of(context).size.width * COSTANT_VAR.DEFAULT_TRESHOLD,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

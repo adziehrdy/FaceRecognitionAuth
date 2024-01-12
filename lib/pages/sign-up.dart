@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -45,12 +46,18 @@ class SignUpState extends State<SignUp> {
   XFile? photoTakenFile;
   bool _loading = false; // Variable untuk menampilkan loading
 
+  int counterForPrintLiveness = 0;
+
+
+
   // service injection
   FaceDetectorService _faceDetectorService = locator<FaceDetectorService>();
   CameraService _cameraService = locator<CameraService>();
   MLService _mlService = locator<MLService>();
 
   UserRepo repo = UserRepo();
+
+   Queue<double> dataQueue = Queue<double>();
 
   @override
   void initState() {
@@ -115,54 +122,164 @@ class SignUpState extends State<SignUp> {
   }
 
   _frameFaces() {
-    imageSize = _cameraService.getImageSize();
+  imageSize = _cameraService.getImageSize();
 
-    _cameraService.cameraController?.startImageStream((image) async {
-      img = image;
+  _cameraService.cameraController?.startImageStream((image) async {
+    img = image;
 
-      if (_cameraService.cameraController != null) {
-        if (_detectingFaces) return;
+    if (_cameraService.cameraController != null) {
+      if (_detectingFaces) return;
 
-        _detectingFaces = true;
+      _detectingFaces = true;
 
-        try {
-          await _faceDetectorService.detectFacesFromImage(img!);
+      try {
+        await _faceDetectorService.detectFacesFromImage(img!);
 
-          if (_faceDetectorService.faces.isNotEmpty) {
-            setState(() {
-              if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
-                  _faceDetectorService.faces[0].headEulerAngleY! < -10) {
-               
-              } else {
-                faceDetected = _faceDetectorService.faces[0];
-              }
-              // faceDetectedJPG = faceDetected!.detectedFaceAsImage()
-            });
-            if (_saving) {
-              _mlService.setCurrentPrediction(image, faceDetected);
-              setState(() {
-                _saving = false;
-              });
-            }
+        if (_faceDetectorService.faces.isNotEmpty) {
+          double rightEyeProbability = _faceDetectorService.faces[0].rightEyeOpenProbability ?? 0.0;
+          double leftEyeProbability = _faceDetectorService.faces[0].leftEyeOpenProbability ?? 0.0;
+
+
+          print( "HEAD Y " + (_faceDetectorService.faces[0].headEulerAngleY!).toString()) ;
+
+                    addData(_faceDetectorService.faces[0].headEulerAngleY! + rightEyeProbability);
+
+         
+
+          // Liveness detection logic based on eye probabilities
+          if(rightEyeProbability != 0.0){
+             print("EYE RIGHT PROBABILITY = $rightEyeProbability");
+          print("EYE LEFT PROBABILITY = $leftEyeProbability");
+
+             if (rightEyeProbability < 0.8 || leftEyeProbability < 0.8) {
+            print("REAL person detected"); // At least one eye is open enough
           } else {
-            print('face is null');
+            print("FAKE person detected"); // Both eyes are closed or nearly closed
+          }
+          }
+         
+
+          setState(() {
+            if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
+                _faceDetectorService.faces[0].headEulerAngleY! < -10) {
+              // Your logic for head angle if needed
+            } else {
+              faceDetected = _faceDetectorService.faces[0];
+              // faceDetectedJPG = faceDetected!.detectedFaceAsImage()
+            }
+          });
+
+          if (_saving) {
+            _mlService.setCurrentPrediction(image, faceDetected);
             setState(() {
-              faceDetected = null;
+              _saving = false;
             });
           }
+        } else {
+          dataQueue.clear();
+            print("AVERAGE LIVENESS = CLEANED" );
 
-          _detectingFaces = false;
-        } catch (e) {
-          print('Error _faceDetectorService face => $e');
-          _detectingFaces = false;
+          print('face is null');
+          setState(() {
+            faceDetected = null;
+          });
         }
+
+        _detectingFaces = false;
+      } catch (e) {
+        print('Error _faceDetectorService face => $e');
+        _detectingFaces = false;
       }
-    });
-  }
+    }
+  });
+}
+
+  // _frameFaces() {
+  //   imageSize = _cameraService.getImageSize();
+
+  //   _cameraService.cameraController?.startImageStream((image) async {
+  //     img = image;
+
+  //     if (_cameraService.cameraController != null) {
+  //       if (_detectingFaces) return;
+
+  //       _detectingFaces = true;
+
+  //       try {
+  //         await _faceDetectorService.detectFacesFromImage(img!);
+
+  //         if (_faceDetectorService.faces.isNotEmpty) {
+  //           print("EYE RIGHT PROBABILITY = "+_faceDetectorService.faces[0].rightEyeOpenProbability.toString());
+  //           print("EYE LEFT PROBABILITY = "+_faceDetectorService.faces[0].leftEyeOpenProbability.toString());
+  //           setState(() {
+  //             if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
+  //                 _faceDetectorService.faces[0].headEulerAngleY! < -10) {
+               
+  //             } else {
+  //               faceDetected = _faceDetectorService.faces[0];
+  //             }
+  //             // faceDetectedJPG = faceDetected!.detectedFaceAsImage()
+  //           });
+  //           if (_saving) {
+  //             _mlService.setCurrentPrediction(image, faceDetected);
+  //             setState(() {
+  //               _saving = false;
+  //             });
+  //           }
+  //         } else {
+  //           print('face is null');
+  //           setState(() {
+  //             faceDetected = null;
+  //           });
+  //         }
+
+  //         _detectingFaces = false;
+  //       } catch (e) {
+  //         print('Error _faceDetectorService face => $e');
+  //         _detectingFaces = false;
+  //       }
+  //     }
+  //   });
+  // }
 
   _onBackPressed() {
     Navigator.of(context).pop();
   }
+/////===============
+void addData(double newData) {
+  counterForPrintLiveness = counterForPrintLiveness +1;
+  dataQueue.add(newData);
+  if (dataQueue.length > 10) {
+    dataQueue.removeFirst();
+  }
+  if(counterForPrintLiveness == 5){
+    counterForPrintLiveness = 0;
+     print("AVERAGE LIVENESS = " + calculateThreshold(dataQueue).toString());
+  }
+}
+
+  double calculateThreshold(Queue<double> data) {
+  double sum = 0;
+  int count = 0;
+  double previousValue = 0;
+
+  for (var value in data) {
+    if (count > 0) {
+      sum += (value - previousValue).abs();
+    }
+    previousValue = value;
+    count++;
+  }
+
+  if (count > 1) {
+    double average = sum / (count - 1);
+    return average;
+  }
+
+  return 0;
+}
+
+/////===============
 
   _reload() {
     setState(() {

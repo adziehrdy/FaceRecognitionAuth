@@ -56,6 +56,12 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
   AttendanceRepos repo = AttendanceRepos();
   String status = "";
   bool showJam = false;
+  bool isOvernight = false;
+
+  String? note_status = null;
+
+
+
 
   ProgressButton progressbutt = ProgressButton(
     stateWidgets: {
@@ -96,9 +102,17 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
 
   void initState() {
     super.initState();
+
+      isOvernight = checkShiftIsOvernight(widget.user.check_in!,widget.user.check_out!);
+
+
+
+
+
     getTimeOut().then((value) {
       _counter = value;
     });
+     
 
     // checOut();
 
@@ -136,104 +150,130 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Lottie.asset(
-            //   'assets/lottie/success.json',
-            //   width: 200,
-            //   height: 200,
-            //   fit: BoxFit.fill,
-            // ),
-
-            
-            ClipOval(
-              child: Image.memory(
-              widget.faceImage,
-              width: 200,
-              height: 200,
-              fit: BoxFit.fill,
-            ),),
-            
-            SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                widget.user.employee_name!.toUpperCase(),
-                style: TextStyle(fontSize: 30),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-              ),
-            ),
-            SizedBox(height: 5),
-            Text(
-              'Kordinat',
-              style: TextStyle(fontSize: 14),
-            ),
-            Text(
-              widget.lat + "," + widget.long,
-              style: TextStyle(fontSize: 14),
-            ),
-            SizedBox(height: 5),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                widget.alamat,
-                style: TextStyle(fontSize: 14),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-              ),
-            ),
-            SizedBox(height: 5),
-
-            if (showJam)
-              Column(
-                children: [
-                  Text(
-                    'Jam Absensi',
-                    style: TextStyle(fontSize: 14),
+      body: 
+      Container(
+        decoration: BoxDecoration(
+    borderRadius: BorderRadius.circular(5),
+    gradient: LinearGradient(
+      colors: [Colors.white, Colors.white], // Ubah warna gradasi sesuai kebutuhan
+      begin: Alignment.bottomRight,
+      end: Alignment.centerLeft,
+    ),
+  ),
+        child: 
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Lottie.asset(
+                //   'assets/lottie/success.json',
+                //   width: 200,
+                //   height: 200,
+                //   fit: BoxFit.fill,
+                // ),
+          
+                
+                ClipOval(
+                  child: Image.memory(
+                  widget.faceImage,
+                  width: 200,
+                  height: 200,
+                  fit: BoxFit.fill,
+                ),),
+                
+                SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    widget.user.employee_name!.toUpperCase(),
+                    style: TextStyle(fontSize: 30,fontWeight: FontWeight.bold),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
                   ),
-                   Text(
-              dateFormatText.format(widget.jamAbsensi),
-              style: TextStyle(fontSize: 25),
+                ),
+                 Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Text(
+                    widget.user.shift_id!.toUpperCase(),
+                    style: TextStyle(fontSize: 15),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(height: 5),
+                
+          
+                if (showJam)
+                
+                Column(children: [Text(
+                  'Kordinat',
+                  style: TextStyle(fontSize: 12),
+                ),
+                Text(
+                  widget.lat + "," + widget.long,
+                  style: TextStyle(fontSize: 12),
+                ),
+                SizedBox(height: 5),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Text(
+                    widget.alamat,
+                    style: TextStyle(fontSize: 12),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(height: 5),
+                  Column(
+                    children: [
+                      Text(
+                        'Jam Absensi',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                       Text(
+                  dateFormatText.format(widget.jamAbsensi),
+                  style: TextStyle(fontSize: 25),
+                ),
+                    ],
+                  ),],),
+                
+               
+                SizedBox(),
+          
+                SizedBox(height: 5),
+                Container(
+                  padding: EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                      color: Colors.blue,
+                      borderRadius: BorderRadius.all(Radius.circular(50))),
+                  child: Text(
+                    status,
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+          
+                SizedBox(height: 10),
+                // Container(
+                //   width: 300,
+                //   child: buildCustomButton(),
+                // ),
+                Text(info),
+                SizedBox(height: 10),
+                Text(
+                  'Otomatis kembali $_counter detik',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ],
             ),
-                ],
-              ),
-           
-            SizedBox(),
-
-            SizedBox(height: 5),
-            Container(
-              padding: EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.all(Radius.circular(50))),
-              child: Text(
-                status,
-                style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-
-            SizedBox(height: 10),
-            // Container(
-            //   width: 300,
-            //   child: buildCustomButton(),
-            // ),
-            Text(info),
-            SizedBox(height: 10),
-            Text(
-              'Otomatis kembali $_counter detik',
-              style: TextStyle(fontSize: 14),
-            ),
-          ],
-        ),
+          ),
+        
       ),
     );
   }
@@ -250,13 +290,18 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
     String attendndaceDateString = dateFormat.format(widget.jamAbsensi);
 
 
-    String? note_status = null;
-
-
-    if(terlambatChecker(widget.textJamAbsensi, widget.user.check_in!)){
+    if(!isOvernight){
+       if(terlambatChecker(widget.textJamAbsensi, widget.user.check_in!)){
       note_status = "TERLAMBAT";
-      showToast(note_status);
     }
+    }else{
+      
+       String? result = checkLemburStatus(isModeMasuk: true, jamAbsen: widget.textJamAbsensi, shiftMasuk: widget.user.check_in!, shiftKeluar:  widget.user.check_out!);
+       if(result != null){
+        note_status = result;
+       }
+    }
+   
 
 
     Map<String, dynamic> sampleData = {
@@ -270,9 +315,10 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
       "employee_id": widget.user.employee_id,
       "employee_name": widget.user.employee_name,
       "type_absensi": widget.type_absensi,
-      "note_status": note_status,
+      // "note_status": note_status,
       "check_in_status": note_status,
-      "is_uploaded" : "0"
+      "is_uploaded" : "0",
+      "shift" : widget.user.shift_id
     };
     Attendance dataAbsen = Attendance.fromMap(sampleData);
 
@@ -302,12 +348,22 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
 
     // Format the DateTime object into a string
 
-     String? note_status = null;
-
-     if(pulangCepatChecker(widget.textJamAbsensi, widget.user.check_in!)){
+    if(!isOvernight){
+       if(pulangCepatChecker(widget.textJamAbsensi, widget.user.check_in!)){
       note_status = "PULANG CEPAT";
-      showToast(note_status);
     }
+    }else{
+      
+       String? result = checkLemburStatus(isModeMasuk: false, jamAbsen: widget.textJamAbsensi, shiftMasuk: widget.user.check_in!, shiftKeluar:  widget.user.check_out!);
+       if(result != null){
+        note_status = result;
+       }
+    
+    }
+    
+
+
+
     String attendndaceDateString = dateFormat.format(widget.jamAbsensi);
     Map<String, dynamic> sampleData = {
       "attendance_date": attendndaceDateString,
@@ -322,9 +378,10 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
       "employee_id": widget.user.employee_id,
       "employee_name": widget.user.employee_name,
       "type_absensi": widget.type_absensi,
-      "note_status": note_status,
+      // "note_status": note_status,
       "check_out_status": note_status,
-      "is_uploaded" : "0"
+      "is_uploaded" : "0",
+      "shift" : widget.user.shift_id
     };
 
     Attendance dataAbsen = Attendance.fromMap(sampleData);
@@ -396,19 +453,26 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
 
 insertToLocalDB(Attendance dataAbsen) async {
 
-  // bool isOvernight = checkShiftIsOvernight(widget.user.check_in!,widget.user.check_out!);
+
 
     DatabaseHelperAbsensi databaseHelperAbsensi =
         DatabaseHelperAbsensi.instance;
     String statusDb = await databaseHelperAbsensi.insertAttendance(
-        dataAbsen, widget.type_absensi);
+        dataAbsen, widget.type_absensi,isOvernight,widget.user.shift_id ?? "NO SHIFT");
     setState(() {
       if (statusDb == "SUCCESS") {
+        if(note_status != null){
+ showToast(note_status!);
+        }
+       
         status = "SUKSES ABSEN " + widget.type_absensi;
         showJam = true;
       } else if (statusDb == "ALLREADY") {
         status = "ANDA SUDAH ABSEN " + widget.type_absensi;
-      } else if (statusDb == "") {}
+        showJam = false;
+      } else {
+        status = statusDb;
+      }
       status;
       // buttonState = ButtonState.fail;
       // info = "Data absensi dimasukan ke local DB";

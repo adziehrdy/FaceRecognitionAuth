@@ -85,6 +85,7 @@ class GlobalRepo {
         String approver = await getActiveSuperIntendentID();
         
 
+        try{
       Response res = await callApi(ApiMethods.POST, '/employee/change-shift',data: 
       {
         "employee_id": employee_id,
@@ -114,6 +115,10 @@ class GlobalRepo {
         showToast("Terjadi Kesalahan, mohon cek koneksi internet");
         return false;
       }
+        }catch(e){
+           showToast("Terjadi Kesalahan, mohon cek koneksi internet");
+        return false;
+        }
     }
 
   Future<bool> hitUpdateLokasi(String latlong, String Alamat) async {

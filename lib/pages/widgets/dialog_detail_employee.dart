@@ -4,6 +4,7 @@ import 'package:face_net_authentication/pages/models/model_master_shift.dart';
 import 'package:face_net_authentication/pages/models/user.dart';
 import 'package:face_net_authentication/repo/global_repos.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:pinput/pinput.dart';
 
 class widget_detail_employee extends StatefulWidget {
@@ -70,6 +71,7 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
   contentBox(context) {
     return SingleChildScrollView(
       child: Container(
+        width: 300,
         padding: EdgeInsets.all(20),
         decoration: BoxDecoration(
           shape: BoxShape.rectangle,
@@ -100,9 +102,18 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
             SizedBox(height: 10),
 
             Text(
-              widget.user_detail.employee_name ?? "-",
+              (widget.user_detail.employee_name ?? "-").toUpperCase(),
               style: TextStyle(fontSize: 21, fontWeight: FontWeight.w600),
             ),
+            Text(
+              (widget.user_detail.employee_id ?? "-" )+ " - " + (widget.user_detail.branch_id ?? "-"),
+              maxLines: 2,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey),
+            ),
+            Divider(),
             Text(
               shift_id,
               maxLines: 2,
@@ -211,6 +222,8 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
 
               GlobalRepo repo = GlobalRepo();
 
+              EasyLoading.show(status: "Uploading Shift..");
+
               bool success = await repo.hitUpdateMasterShift(
                   widget.user_detail.employee_id!, shift_id);
 
@@ -221,6 +234,12 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
                     checkin,
                     checkOut);
                 Navigator.pop(context);
+                EasyLoading.dismiss();
+                showToastShort("Shift Berhasil dirubah");
+
+              }else{
+                EasyLoading.dismiss();
+                showToastShort("Perubahan Shift Gagal, mohon coba kembali");
               }
             },
             child: Text("Update Shift")),

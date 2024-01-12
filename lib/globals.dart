@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
@@ -14,6 +15,7 @@ import 'package:face_net_authentication/repo/custom_exception.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image/image.dart' as img;
 import 'package:image/image.dart' as imglib;
@@ -178,6 +180,8 @@ Dio dio = Dio(options);
 
 Future<Response<dynamic>> callApi(ApiMethods method, String url, {Map<String, dynamic>? data}) async {
 
+  EasyLoading.show(status: "Loading..");
+
   final dio = Dio();
 
   try {
@@ -190,7 +194,8 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url, {Map<String, dy
 
     
 
-    print("PAYLOAD = "+jsonEncode(data));
+    // print("PAYLOAD = "+jsonEncode(data));
+    log("PAYLOAD = "+jsonEncode(data));
     
 
     Map<String, dynamic> headers;
@@ -230,13 +235,17 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url, {Map<String, dy
         data: data != null ? json.encode(data) : "",
       );
     }
+    EasyLoading.dismiss();
     
   } catch (error) {
+    EasyLoading.dismiss();
     print(error.toString());
     if (error is DioException){
      if (error.response!.statusCode == 400 || error.response!.statusCode == 500) {
+      print(error.response!.data['message']);
        showToast(error.response!.data['message']);
     }else{
+      
       showToast(error.response?.statusMessage.toString() ?? "Error");
     }
     }
@@ -244,8 +253,9 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url, {Map<String, dy
     
     rethrow; // Re-throw the error after handling it
   }
-
+  EasyLoading.dismiss();
   throw Exception("Invalid API method");
+  
 }
 
 
@@ -592,6 +602,46 @@ Uint8List decodeToBase64ToImage(String input) {
       return false;
     }
   }
+
+
+String? checkLemburStatus({
+  required bool isModeMasuk,
+  required String jamAbsen,
+  required String shiftMasuk,
+  required String shiftKeluar,
+}) {
+
+  DateTime dateTime = DateTime.parse(jamAbsen);
+  String timeOnly = "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}";
+
+try{
+  final DateTime jamAbsenDT = DateTime.parse("2024-01-02 $timeOnly");
+  final DateTime shiftKeluarDT = DateTime.parse("2024-01-03 $shiftKeluar");
+  final DateTime shiftMasukDT = DateTime.parse("2024-01-01 $shiftMasuk");
+  
+
+  
+
+
+  if (isModeMasuk) {
+    if (jamAbsenDT.isAfter(shiftMasukDT)) {
+      return "TERLAMBAT";
+    } else if (jamAbsenDT.isBefore(shiftMasukDT) || jamAbsenDT.isAtSameMomentAs(shiftMasukDT)) {
+      return null;
+    }
+  } else {
+    if (jamAbsenDT.isBefore(shiftKeluarDT)) {
+      return "PULANG CEPAT";
+    } else if (jamAbsenDT.isAfter(shiftKeluarDT) || jamAbsenDT.isAtSameMomentAs(shiftKeluarDT)) {
+      return null;
+    }
+  }
+  }catch (e){
+  print(e);
+}
+
+  return "UNKNOW";
+}
 
   Uint8List convertImagelibToUint8List(imglib.Image? image) {
   // Konversi imglib.Image menjadi format PNG

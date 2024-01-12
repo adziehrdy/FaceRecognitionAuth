@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:face_net_authentication/globals.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class User {
   String? employee_id;
@@ -13,7 +12,7 @@ class User {
   String? employee_phone;
   String? employee_email;
   String? employee_status;
-  DateTime? employee_birth_date;
+  // DateTime? employee_birth_date;
   String? employee_position;
   ImageProvider? employee_photo;
   String? branch_id;
@@ -31,6 +30,14 @@ class User {
   String? check_out;
   String? employee_fr_image;
 
+
+  String? status_relief;
+  String? relief_id;
+  String? from_branch;
+  String? to_branch;
+  String? relief_status;
+
+
   User({required this.employee_id});
 
   User.fromMap(Map<String, dynamic> map) {
@@ -42,8 +49,8 @@ class User {
     employee_phone = map['employee_phone'];
     employee_email = map['employee_email'];
     employee_status = map['employee_status'];
-    employee_birth_date =
-        DateFormat('yyyy-MM').parse(map['employee_birth_date']);
+    // employee_birth_date =
+    //     DateFormat('yyyy-MM').parse(map['employee_birth_date']);
     employee_position = map['employee_position'];
     if (map['employee_photo'] == null || map['employee_photo'].length == 0) {
       employee_photo = AssetImage('assets/images/blank-profile-pic.png');
@@ -62,6 +69,13 @@ class User {
     check_in = map['check_in'];
     check_out = map['check_out'];
     employee_fr_image = map['employee_fr_image'];
+
+//RELIEF
+  status_relief = map['status_relief'];
+  relief_id = map['relief_id'];
+  from_branch  = map['from_branch'];
+  to_branch  = map['to_branch'];
+  relief_status = map['relief_status'];
 
 
     print(map['employee_fr_template']);
@@ -89,8 +103,8 @@ class User {
       'employee_phone': employee_phone,
       'employee_email': employee_email,
       'employee_status': employee_status,
-      'employee_birth_date':
-          DateFormat('yyyy-MM').format(employee_birth_date!),
+      // 'employee_birth_date':
+      //     DateFormat('yyyy-MM').format(employee_birth_date!),
       'employee_position': employee_position,
       // profileImage cannot be directly converted to a map.
       'branch_id': branch_id,
@@ -105,6 +119,13 @@ class User {
       'check_in': check_in,
       'check_out': check_out,
       'employee_fr_image':employee_fr_image,
+
+      //RELIEF
+      'status_relief':status_relief,
+      'relief_id':relief_id,
+      'from_branch':from_branch,
+      'to_branch':to_branch,
+      'relief_status':relief_status,
     };
   }
 }
