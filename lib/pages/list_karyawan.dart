@@ -207,7 +207,7 @@ class _ListKaryawanState extends State<ListKaryawan> {
             processedItems++;
             progressDialog.update(
               value: ((processedItems / totalItems) * 100).toInt(),
-              msg: 'Updating data... ($processedItems/$totalItems)',
+              msg: 'Fetching data... ($processedItems/$totalItems)',
             );
           }
         } catch (e) {
@@ -228,7 +228,7 @@ class _ListKaryawanState extends State<ListKaryawan> {
        progressDialog.close();
     }
 
-  }         
+  }
 
   Future<void> _loadUserData() async {
   user_list = await _dataBaseHelper.queryAllUsers();

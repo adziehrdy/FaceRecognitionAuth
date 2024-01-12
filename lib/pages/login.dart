@@ -2,9 +2,6 @@ import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/repo/user_repos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_udid/flutter_udid.dart';
-// import 'package:get_mac_address/get_mac_address.dart';
-// import 'package:imei/imei.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 
@@ -23,8 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   TextEditingController? nipCtrl;
   TextEditingController? passCtrl;
   String versionLabel = ' ';
-  String deviceID = "-";
-  // final _getMacAddressPlugin = GetMacAddress();
+  String deviceID = "";
   UserRepo repo = UserRepo();
 
   @override
@@ -38,9 +34,6 @@ class _LoginPageState extends State<LoginPage> {
     showPassword = false;
     nipCtrl = TextEditingController();
     passCtrl = TextEditingController();
-    
-
-    // initPlatformState();
 
     
     getPackageLabel();
@@ -58,11 +51,7 @@ class _LoginPageState extends State<LoginPage> {
   getPackageLabel() async {
     PackageInfo info = await PackageInfo.fromPlatform();
 
-    // deviceID = await getDeviceId();
-
-    
-
-    deviceID =  await FlutterUdid.udid;
+    deviceID = await getDeviceId();
 
     setState(() {
       versionLabel = 'v.' + info.version;
@@ -217,27 +206,6 @@ Widget build(BuildContext context) {
       rememberMe = val;
     });
   }
-
-  // Future<void> initPlatformState() async {
-  //   String macAddress;
-  //   // Platform messages may fail, so we use a try/catch PlatformException.
-  //   // We also handle the message potentially returning null.
-  //   try {
-  //     macAddress =
-  //         await _getMacAddressPlugin.getMacAddress() ?? 'Unknown mac address';
-  //   } on PlatformException {
-  //     macAddress = 'Failed to get mac address.';
-  //   }
-
-  //   // If the widget was removed from the tree while the asynchronous platform
-  //   // message was in flight, we want to discard the reply rather than calling
-  //   // setState to update our non-existent appearance.
-  //   if (!mounted) return;
-
-  //   setState(() {
-  //     deviceID = macAddress;
-  //   });
-  // }
 
   Widget buildTextFieldContainer({TextField? child}) {
     return Padding(

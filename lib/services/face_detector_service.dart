@@ -19,15 +19,12 @@ class FaceDetectorService {
     _faceDetector = GoogleMlKit.vision.faceDetector(
       FaceDetectorOptions(
         performanceMode: FaceDetectorMode.fast,
-        minFaceSize: 0.1
-        ,
       ),
     );
 // ====
     _faceDetector = FaceDetector(
         options: FaceDetectorOptions(
             performanceMode: FaceDetectorMode.fast,
-            minFaceSize: 0.9,
             enableContours: true,
             enableClassification: true));
             // /====

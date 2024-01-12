@@ -27,12 +27,6 @@ apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
-
-    lintOptions {
-        checkReleaseBuilds false
-        // disable 'InvalidPackage'
-    }
-
     aaptOptions {
         noCompress "tflite"
         noCompress "lite"
@@ -44,7 +38,9 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
-
+    lintOptions {
+        disable 'InvalidPackage'
+    }
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).

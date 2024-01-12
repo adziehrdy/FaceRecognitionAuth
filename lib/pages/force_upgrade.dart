@@ -1,4 +1,4 @@
-import 'package:face_net_authentication/pages/history_absensi_mainPage.dart';
+import 'package:face_net_authentication/pages/history_absensi.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
@@ -75,7 +75,7 @@ class _ForceUpgradeState extends State<ForceUpgrade> {
                         style: ButtonStyle(),
                         onPressed: () {
                          
-                            Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryAbsensiMainPage(),));
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => HistoryAbsensi(),));
                         
 
                         },

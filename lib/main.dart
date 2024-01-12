@@ -1,4 +1,3 @@
-import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/pages/home_page.dart';
@@ -20,7 +19,7 @@ void main() async {
   getThreshold().then(
     (value) {
       if (value == null) {
-        saveThreshold(COSTANT_VAR.DEFAULT_TRESHOLD.toString());
+        saveThreshold("0.8");
       }
     },
   );

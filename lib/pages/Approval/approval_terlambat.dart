@@ -1,3 +1,4 @@
+import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
 import 'package:face_net_authentication/pages/models/attendance.dart';
 import 'package:face_net_authentication/pages/widgets/attendance_anomaly_single.dart';
@@ -35,7 +36,7 @@ class _ApprovalTerlambatState extends State<ApprovalTerlambat> {
                     onApprove: () async {
 
                   
-                      //  await _dataBaseHelper.approveAbsensi(user_list[index].attendanceId!,await getActiveSuperIntendentID(),);
+                       await _dataBaseHelper.approveAbsensi(user_list[index].attendanceId!,await getActiveSuperIntendentID());
                         _loadUserData();
                     },
                   );

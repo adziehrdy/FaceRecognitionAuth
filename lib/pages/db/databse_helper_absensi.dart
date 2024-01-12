@@ -35,9 +35,6 @@ class DatabaseHelperAbsensi {
   static final String note_status = 'note_status';
   static final String is_uploaded = 'is_uploaded';
   static final String approval_employee_id = "approval_employee_id";
-  static final String shift = "shift";
-  static final String approval_status_in= "approval_status_in";
-  static final String approval_status_out= "approval_status_out";
 
   DatabaseHelperAbsensi._privateConstructor();
 
@@ -86,207 +83,68 @@ class DatabaseHelperAbsensi {
         $columnTypeAbsensi TEXT,
         $note_status TEXT,
         $is_uploaded TEXT,
-        $approval_employee_id TEXT,
-        $shift TEXT,
-        $approval_status_in TEXT,
-        $approval_status_out TEXT
+        $approval_employee_id TEXT
       )
     ''');
   }
 
-  Future<String> insertAttendance(Attendance attendance, String MODE,
-      bool isOvernight, String shift_id) async {
-    try {
-      final db = await database;
+  Future<String> insertAttendance(Attendance attendance, String MODE) async {
 
-      bool canAbsense = false;
+    try{
+final db = await database;
 
-      DateTime now = DateTime.now();
+    bool canAbsense = false;
 
-      // //TESTING ABSENSI
-      // String textJamAbsensi = "2024-01-04 01:51:46";
-      // now = DateTime.parse(textJamAbsensi!);
-      // //TESTING ABSENSI
+    DateTime now = DateTime.now();
+    String hariIni = DateFormat("ddMM").format(now);
+    // DateTime yesterday = now.subtract(Duration(days: 1));
+    // String kemarin = DateFormat("ddMM").format(yesterday);
 
-      String hariIni = DateFormat("ddMM").format(now);
+    
+    List<Attendance> allRecord =
+        await getAllAttendancesByType(attendance.employee_id!, MODE);
 
-      DateTime yesterday = now.subtract(Duration(days: 1));
-      String kemarin = DateFormat("ddMM").format(yesterday);
+    if (allRecord.isEmpty) {
+      await db.insert(tableName, attendance.toCreateMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace);
+      return "SUCCESS";
+    } else {
+      for (var data in allRecord) {
+        String tanggalAbsen = DateFormat("ddMM").format(data.attendanceDate!);
 
-      if (!isOvernight) {
-        //MASUK PAGI
-        if (MODE == "MASUK") {
-          List<Attendance> allRecord =
-              await getAllAttendancesMasuk(attendance.employee_id!, shift_id);
-          if (allRecord.isEmpty) {
-            await db.insert(tableName, attendance.toCreateMap(),
-                conflictAlgorithm: ConflictAlgorithm.replace);
-            return "SUCCESS";
-          } else {
-            for (var data in allRecord) {
-              String tanggalAbsen =
-                  DateFormat("ddMM").format(data.attendanceDate!);
-              if (tanggalAbsen != hariIni) {
-                canAbsense = true;
-                break;
-              } else {
-                canAbsense = false;
-                // break;
-              }
-            }
 
-            if (canAbsense) {
-              await db.insert(tableName, attendance.toCreateMap(),
-                  conflictAlgorithm: ConflictAlgorithm.replace);
-              print("SUSKSES ABSENSI");
-              return "SUCCESS";
-            } else {
-              return "ALLREADY";
-            }
-          }
+    if(tanggalAbsen != hariIni) {
+          canAbsense = true;
         } else {
-          //KELUAR PAGI
-          List<Attendance> allRecord =
-              await getAllAttendancesKELUAR(attendance.employee_id!, shift_id);
-          if (allRecord.isEmpty) {
-            print("BELUM ABSEN MASUK");
-
-            return "BELUM ABSEN MASUK";
-          } else {
-            for (var data in allRecord) {
-              String dateCheckinPagi = "";
-              if(data.checkIn != null){
-                dateCheckinPagi = DateFormat("ddMM").format(data.checkIn!);
-              }
-              if (data.checkOut == null && dateCheckinPagi == hariIni) {
-                await db.update(
-                  tableName,
-                  attendance.toCreateMap(),
-                  where: '$columnAttendanceId = ?',
-                  whereArgs: [data.attendanceId],
-                  conflictAlgorithm: ConflictAlgorithm.replace,
-                );
-                canAbsense = true;
-                break;
-              } else {
-                canAbsense = false;
-              }
-            }
-
-            if (canAbsense) {
-              return "SUCCESS";
-            } else {
-              return "ALLREADY";
-            }
-          }
+          canAbsense = false;
+          break;
         }
-      } else {
-        //OVERNIGHT
-        print("OVERNIGHT");
-
-        if (MODE == "MASUK") {
-          List<Attendance> allRecord =
-              await getAllAttendancesMasuk(attendance.employee_id!, shift_id);
-          if (allRecord.isEmpty) {
-            await db.insert(tableName, attendance.toCreateMap(),
-                conflictAlgorithm: ConflictAlgorithm.replace);
-            return "SUCCESS";
-          } else {
-            for (var data in allRecord) {
-              String tanggalAbsen =
-                  DateFormat("ddMM").format(data.attendanceDate!);
-              if (tanggalAbsen != hariIni && tanggalAbsen != kemarin) {
-                canAbsense = true;
-                break;
-              } else {
-                canAbsense = false;
-                break;
-              }
-            }
-
-            if (canAbsense) {
-              await db.insert(tableName, attendance.toCreateMap(),
-                  conflictAlgorithm: ConflictAlgorithm.replace);
-              print("SUSKSES ABSENSI");
-              return "SUCCESS";
-            } else {
-              return "ALLREADY";
-            }
-          }
-        } else {
-          //KELUAR OVERNIGHT
-          List<Attendance> allRecord =
-              await getAllAttendancesKELUAR(attendance.employee_id!, shift_id);
-          if (allRecord.isEmpty) {
-            print("BELUM ABSEN MASUK");
-
-            return "BELUM ABSEN MASUK";
-          } else {
-            for (var data in allRecord) {
-               String tanggalCheckIn =
-                  DateFormat("ddMM").format(data.attendanceDate!);
-              if (data.checkOut == null && (tanggalCheckIn == hariIni || tanggalCheckIn == kemarin)) {
-                await db.update(
-                  tableName,
-                  attendance.toCreateMap(),
-                  where: '$columnAttendanceId = ?',
-                  whereArgs: [data.attendanceId],
-                  conflictAlgorithm: ConflictAlgorithm.replace,
-                );
-                canAbsense = true;
-                break;
-              } else {
-                canAbsense = false;
-              }
-            }
-
-            if (canAbsense) {
-              return "SUCCESS";
-            } else {
-              return "ALLREADY";
-            }
-          }
-        }
+        
+       
       }
 
-      // List<Attendance> allRecord =
-      //     await getAllAttendancesByType(attendance.employee_id!, MODE);
-
-      // if (allRecord.isEmpty) {
-      //   await db.insert(tableName, attendance.toCreateMap(),
-      //       conflictAlgorithm: ConflictAlgorithm.replace);
-      //   return "SUCCESS";
-      // } else {
-      //   for (var data in allRecord) {
-      //     String tanggalAbsen = DateFormat("ddMM").format(data.attendanceDate!);
-
-      // if(tanggalAbsen != hariIni) {
-      //       canAbsense = true;
-      //     } else {
-      //       canAbsense = false;
-      //       break;
-      //     }
-      //   }
-
-      //   if (canAbsense) {
-      //     await db.insert(tableName, attendance.toCreateMap(),
-      //         conflictAlgorithm: ConflictAlgorithm.replace);
-      //     print("SUSKSES ABSENSI");
-      //     return "SUCCESS";
-      //   } else {
-      //     return "ALLREADY";
-      //   }
-      // }
-
-      //BYPASS CHECK
-      //  await db.insert(tableName, attendance.toCreateMap(),
-      //     conflictAlgorithm: ConflictAlgorithm.replace);
-      //     print("SUSKSES ABSENSI");
-      //     return "SUCCESS";
-    } catch (e) {
-      print(e.toString);
-      return ("ERROR INSERT DB");
+      if (canAbsense) {
+        await db.insert(tableName, attendance.toCreateMap(),
+            conflictAlgorithm: ConflictAlgorithm.replace);
+        print("SUSKSES ABSENSI");
+        return "SUCCESS";
+      } else {
+        return "ALLREADY";
+      }
     }
+
+    //BYPASS CHECK
+    //  await db.insert(tableName, attendance.toCreateMap(),
+    //     conflictAlgorithm: ConflictAlgorithm.replace);
+    //     print("SUSKSES ABSENSI");
+    //     return "SUCCESS";
+    }catch(e){
+
+      print(e.toString);
+      return("ERROR INSERT DB");
+
+    }
+    
   }
 
   Future<List<Attendance>> getAllAttendances() async {
@@ -297,47 +155,15 @@ class DatabaseHelperAbsensi {
     });
   }
 
-  // Future<List<Attendance>> getAllAttendancesByType(
-  //     String employee_id, String type, String shift) async {
-  //   final db = await database;
-  //   final List<Map<String, dynamic>> maps ;
-  //   if(type == "MASUK"){
-  //      maps = await db.query(
-  //     tableName,
-  //     where: 'columnCheckInActual NOT NULL AND employee_id = ? AND shift = ?',
-  //     whereArgs: [employee_id, shift],
-  //   );
-  //   }else{
-  //      maps = await db.query(
-  //     tableName,
-  //     where: 'columnCheckOutActual NOT NULL AND employee_id = ? AND shift = ?',
-  //     whereArgs: [employee_id, shift],
-  //   );
-  //   }
-
-  Future<List<Attendance>> getAllAttendancesMasuk(
-      String employee_id, String shift) async {
+  Future<List<Attendance>> getAllAttendancesByType(
+      String employee_id, String type) async {
     final db = await database;
-    final List<Map<String, dynamic>> maps;
-    maps = await db.query(
+    final List<Map<String, dynamic>> maps = await db.query(
       tableName,
-      where: 'check_in_actual NOT NULL AND employee_id = ? AND shift = ?',
-      whereArgs: [employee_id, shift],
+      where: 'type_absensi = ? AND employee_id = ?',
+      whereArgs: [type, employee_id],
     );
-    return List.generate(maps.length, (i) {
-      return Attendance.fromMap(maps[i]);
-    });
-  }
 
-  Future<List<Attendance>> getAllAttendancesKELUAR(
-      String employee_id, String shift) async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps;
-    maps = await db.query(
-      tableName,
-      where: 'check_in_actual NOT NULL AND employee_id = ? AND shift = ?',
-      whereArgs: [employee_id, shift],
-    );
     return List.generate(maps.length, (i) {
       return Attendance.fromMap(maps[i]);
     });
@@ -352,43 +178,6 @@ class DatabaseHelperAbsensi {
     );
   }
 
-  Future<Attendance?> getUpdatedAttendance(int attendanceId) async {
-  final db = await database;
-  List<Map<String, dynamic>> maps = await db.query(
-    tableName,
-    where: '$columnAttendanceId = ?',
-    whereArgs: [attendanceId],
-  );
-
-  if (maps.isNotEmpty) {
-    // Jika data ditemukan, kembalikan objek Attendance yang sesuai
-    return Attendance.fromMap(maps.first);
-  }
-
-  // Jika tidak ditemukan, kembalikan null atau sesuaikan dengan kebutuhan logika aplikasi Anda
-  return null;
-}
-
-Future<void> updateToullAttendanceKeluar(int attendanceId) async {
-  final db = await database;
-  await db.update(
-    tableName,
-    {
-      columnCheckOut: null,
-      columnCheckOutActual: null,
-      columnCheckOutStatus: null,
-      columnAttendanceTypeOut: null,
-      columnAttendanceLocationOut: null,
-      columnAttendanceAddressOut: null,
-      columnAttendanceNoteOut: null,
-      columnAttendancePhotoOut: null,
-      approval_status_out: null,
-    },
-    where: '$columnAttendanceId = ?',
-    whereArgs: [attendanceId],
-  );
-}
-
   Future<List<Attendance>> getAnomalyAbsensi() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.rawQuery(
@@ -401,57 +190,26 @@ Future<void> updateToullAttendanceKeluar(int attendanceId) async {
   Future<List<Attendance>> getHistoryAbsensi() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db
-       .rawQuery('SELECT * FROM $tableName' + " WHERE "+is_uploaded +" = 0");
+        .rawQuery('SELECT * FROM $tableName WHERE ' + note_status + ' is NULL');
     return List.generate(maps.length, (i) {
       return Attendance.fromMap(maps[i]);
     });
   }
 
-    Future<List<Attendance>> getHistoryAbsensiTerUpload() async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db
-        .rawQuery('SELECT * FROM $tableName' + " WHERE "+is_uploaded +" = 1");
-    return List.generate(maps.length, (i) {
-      return Attendance.fromMap(maps[i]);
-    });
-  }
 
-      Future<List<Attendance>> getHistoryAbsensiTerUploadFilterDate(DateTime date) async {
-    final db = await database;
-    final List<Map<String, dynamic>> maps = await db
-        .rawQuery('SELECT * FROM $tableName' + " WHERE "+is_uploaded +" = 1" );
-    return List.generate(maps.length, (i) {
-      return Attendance.fromMap(maps[i]);
-    });
-  }
-
-  Future<void> approveAbsensi(int attendanceId, String id_approval, String notes, bool isAbsenMasuk, String statusApproval) async {
+  Future<void> approveAbsensi(int attendanceId,String id_approval) async {
     final db = await database;
     try {
-      if(isAbsenMasuk){
-        await db.update(
+      await db.update(
         tableName,
         {
-          columnAttendanceNoteIn: notes,
-          approval_status_in:statusApproval,
+          note_status: null,
           approval_employee_id: id_approval,
+
         },
         where: 'attendance_id = ?',
         whereArgs: [attendanceId],
       );
-      }else{
-        await db.update(
-        tableName,
-        {
-          columnAttendanceNoteOut: notes,
-          approval_status_out:statusApproval,
-          approval_employee_id: id_approval,
-        },
-        where: 'attendance_id = ?',
-        whereArgs: [attendanceId],
-        );
-      }
-      
     } catch (e) {
       showToast("error saat Approve Absensi - " + e.toString());
     }
