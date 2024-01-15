@@ -141,7 +141,7 @@ class _HomeWigetState extends State<HomeWiget> {
                                       Container(
                                         height: 16,
                                         width:
-                                            250, // Sesuaikan tinggi dengan desain Anda
+                                            500, // Sesuaikan tinggi dengan desain Anda
                                         child: Text(
                                           alamat,
                                           maxLines: 1,

@@ -1,7 +1,7 @@
 class master_register_model {
-  final int code;
-  final String message;
-  final ApiData data;
+  final int? code;
+  final String? message;
+  final ApiData? data;
 
   master_register_model({
     required this.code,
@@ -19,39 +19,39 @@ class master_register_model {
 }
 
 class ApiData {
-  final List<Employee> employee;
-  final List<Role> role;
+  // final List<Employee> employee;
+  // final List<Role> role;
   final List<Location> location;
-  final List<Division> division;
+  // final List<Division> division;
 
   ApiData({
-    required this.employee,
-    required this.role,
+    // required this.employee,
+    // required this.role,
     required this.location,
-    required this.division,
+    // required this.division,
   });
 
   factory ApiData.fromJson(Map<String, dynamic> json) {
     return ApiData(
-      employee: (json['employee'] as List)
-          .map((e) => Employee.fromJson(e))
-          .toList(),
-      role: (json['role'] as List)
-          .map((e) => Role.fromJson(e))
-          .toList(),
+      // employee: (json['employee'] as List)
+      //     .map((e) => Employee.fromJson(e))
+      //     .toList(),
+      // role: (json['role'] as List)
+      //     .map((e) => Role.fromJson(e))
+      //     .toList(),
       location: (json['location'] as List)
           .map((e) => Location.fromJson(e))
           .toList(),
-      division: (json['division'] as List)
-          .map((e) => Division.fromJson(e))
-          .toList(),
+      // division: (json['division'] as List)
+      //     .map((e) => Division.fromJson(e))
+      //     .toList(),
     );
   }
 }
 
 class Employee {
-  final String employeeId;
-  final String employeeName;
+  final String? employeeId;
+  final String? employeeName;
 
   Employee({
     required this.employeeId,
@@ -67,7 +67,7 @@ class Employee {
 }
 
 class Role {
-  final String id;
+  final String? id;
 
   Role({required this.id});
 
@@ -77,8 +77,8 @@ class Role {
 }
 
 class Location {
-  final String branchId;
-  final String branchName;
+  final String? branchId;
+  final String? branchName;
 
   Location({
     required this.branchId,
@@ -94,8 +94,8 @@ class Location {
 }
 
 class Division {
-  final String organizationId;
-  final String group;
+  final String? organizationId;
+  final String? group;
 
   Division({
     required this.organizationId,

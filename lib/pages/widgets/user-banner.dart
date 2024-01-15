@@ -1,5 +1,5 @@
 import 'package:face_net_authentication/globals.dart';
-import 'package:face_net_authentication/pages/models/login_model.dart';
+import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/pages/setting_page.dart';
 import 'package:face_net_authentication/pages/switch_supper_attendance.dart';
 import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';

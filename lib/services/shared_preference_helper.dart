@@ -1,5 +1,5 @@
 import 'package:face_net_authentication/globals.dart';
-import 'package:face_net_authentication/pages/models/login_model.dart';
+import 'package:face_net_authentication/models/login_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<SharedPreferences> initSP() async {

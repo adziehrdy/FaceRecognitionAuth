@@ -1,6 +1,6 @@
 import 'package:face_net_authentication/globals.dart';
+import 'package:face_net_authentication/models/attendance.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
-import 'package:face_net_authentication/pages/models/attendance.dart';
 import 'package:face_net_authentication/pages/widgets/attendance_single.dart';
 import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
 import 'package:face_net_authentication/repo/attendance_repos.dart';
@@ -122,7 +122,13 @@ int index = _attendanceList.indexWhere(
                             showToastShort("Data Sudah Terhapus");
                           }
                         });
-                      },
+                      }, onUpdate: () { 
+                         setState(() {
+
+                          
+                                  _loadData();
+                                });
+                       },
                     ),
                   ],
                 );
@@ -138,9 +144,11 @@ int index = _attendanceList.indexWhere(
     ProgressDialog progressDialog = ProgressDialog(context: context);
     progressDialog.show(max: 100, msg: 'Upload data..');
 
+
     for (var index = 0; index < totalCount; index++) {
+      bool StillnotCompleteAttendace = false;
       var data = _attendanceList[index];
-      if (data.checkIn != null && data.checkOut != null) {
+      if ((data.checkIn != null || (data.approval_status_in != null && data.checkIn == null) ) && (data.checkOut != null || (data.approval_status_out != null && data.checkOut == null))) {
         // String mode = data.type_absensi == "MASUK" ? "checkin" : "checkout";
         String mode = "checkout";
 
@@ -151,15 +159,20 @@ int index = _attendanceList.indexWhere(
           );
 
           await repo.verifyAbsensi(data, mode, data.employee_id!);
-
           await _updateIsUploaded(data);
+          print(data.employee_name);
         } catch (e) {
           print(e.toString());
-          showToast("Error saat upload absensi - ${data.employee_name}");
+          showToast("Error saat upload absensi - ${data.employee_name} - " + (data.shift_id ?? "-"));
           break;
         } finally {
-          
         }
+      }else{
+        StillnotCompleteAttendace = true;
+      }
+
+      if(StillnotCompleteAttendace){
+        showToast("Ada beberapa absensi yang belum terupload karna belum ada approval, mohon approve terlebih dahulu agar bisa terupload");
       }
     }
     progressDialog.close();

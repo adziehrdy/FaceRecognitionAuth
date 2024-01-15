@@ -1,6 +1,7 @@
 import 'package:face_net_authentication/globals.dart';
+import 'package:face_net_authentication/models/master_register_model.dart';
+import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
-import 'package:face_net_authentication/pages/models/user.dart';
 import 'package:flutter/material.dart';
 
 class ReliefForm extends StatefulWidget {
@@ -20,6 +21,16 @@ class _ReliefFormState extends State<ReliefForm> {
   TimeOfDay jamMulai = TimeOfDay.now();
   DateTime tanggalSelesai = DateTime.now();
   TimeOfDay jamSelesai = TimeOfDay.now();
+
+  List<Employee> _approvalList = [];
+  List<Division> _divisiList = [];
+  List<Location> _lokasiList = [];
+  List<Role> _roleList = [];
+  bool _dataLoaded = false;
+
+  master_register_model? master_data;
+
+
 
   DatabaseHelperEmployee _dataBaseHelper = DatabaseHelperEmployee.instance;
   List<User> user_list = [];
@@ -91,6 +102,7 @@ class _ReliefFormState extends State<ReliefForm> {
     // TODO: implement initState
     super.initState();
     _loadUserData();
+    hitGetMasterRegister();
   }
   @override
   Widget build(BuildContext context) {
@@ -270,8 +282,35 @@ class _ReliefFormState extends State<ReliefForm> {
     );
   }
 
+  Future<void> hitGetMasterRegister() async {
+    // String? data = await GlobalRepo().getMasterRegister();
+    // if(d)
+    // setState(() {
+    //   if (data != null) {
+    //     log(json.decode(data));
+    //     master_data = master_register_model.fromJson(json.decode(data));
+    //     log(json.decode(data));
+    //     // _divisiList = master_data!.data.division;
+    //     // _roleList = master_data!.data.role;
+
+    //     getUserLoginData().then((device_data) {
+    //       setState(() {
+    //         for(Location lokasi in _lokasiList){
+    //           _lokasiList.add(Location(
+    //           branchId: device_data.branch?.branchId ?? "",
+    //           branchName: device_data.branch?.branchName ?? "",
+    //         ));
+    //         }
+    //       });
+    //     });
+    //   }
+    // });
+  }
+
   Future<void> _loadUserData() async {
   user_list = await _dataBaseHelper.queryAllUsers();
   // print(user_list);
   setState(() {});}
+
+    
 }

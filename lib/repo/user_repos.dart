@@ -2,9 +2,9 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
+import 'package:face_net_authentication/models/login_model.dart';
+import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/home_page.dart';
-import 'package:face_net_authentication/pages/models/login_model.dart';
-import 'package:face_net_authentication/pages/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

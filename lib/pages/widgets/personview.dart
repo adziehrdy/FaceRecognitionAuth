@@ -1,4 +1,4 @@
-import 'package:face_net_authentication/pages/models/user.dart';
+import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/sign-up.dart';
 import 'package:face_net_authentication/pages/widgets/dialog_detail_employee.dart';
 import 'package:flutter/material.dart';
@@ -178,7 +178,7 @@ class _PersonViewState extends State<PersonView> {
                           height: 5,
                         ),
                         Text(
-                          widget.personList[index].shift_id ?? "Shift Belum Di Assign",
+                          (widget.personList[index].shift_id ?? "Shift Belum Di Assign") +" | "+(widget.personList[index].company_id ?? "-"),
                           style: TextStyle(color: Colors.grey, fontSize: 12),
                         ),
                       ],

@@ -1,5 +1,7 @@
+import 'dart:developer';
+
 import 'package:face_net_authentication/globals.dart';
-import 'package:face_net_authentication/pages/models/attendance.dart';
+import 'package:face_net_authentication/models/attendance.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -35,9 +37,9 @@ class DatabaseHelperAbsensi {
   static final String note_status = 'note_status';
   static final String is_uploaded = 'is_uploaded';
   static final String approval_employee_id = "approval_employee_id";
-  static final String shift = "shift";
-  static final String approval_status_in= "approval_status_in";
-  static final String approval_status_out= "approval_status_out";
+  static final String columnShift_id = "shift_id";
+  static final String approval_status_in = "approval_status_in";
+  static final String approval_status_out = "approval_status_out";
 
   DatabaseHelperAbsensi._privateConstructor();
 
@@ -87,7 +89,7 @@ class DatabaseHelperAbsensi {
         $note_status TEXT,
         $is_uploaded TEXT,
         $approval_employee_id TEXT,
-        $shift TEXT,
+        $columnShift_id TEXT,
         $approval_status_in TEXT,
         $approval_status_out TEXT
       )
@@ -134,7 +136,6 @@ class DatabaseHelperAbsensi {
                 // break;
               }
             }
-
             if (canAbsense) {
               await db.insert(tableName, attendance.toCreateMap(),
                   conflictAlgorithm: ConflictAlgorithm.replace);
@@ -155,7 +156,7 @@ class DatabaseHelperAbsensi {
           } else {
             for (var data in allRecord) {
               String dateCheckinPagi = "";
-              if(data.checkIn != null){
+              if (data.checkIn != null) {
                 dateCheckinPagi = DateFormat("ddMM").format(data.checkIn!);
               }
               if (data.checkOut == null && dateCheckinPagi == hariIni) {
@@ -223,9 +224,10 @@ class DatabaseHelperAbsensi {
             return "BELUM ABSEN MASUK";
           } else {
             for (var data in allRecord) {
-               String tanggalCheckIn =
+              String tanggalCheckIn =
                   DateFormat("ddMM").format(data.attendanceDate!);
-              if (data.checkOut == null && (tanggalCheckIn == hariIni || tanggalCheckIn == kemarin)) {
+              if (data.checkOut == null &&
+                  (tanggalCheckIn == hariIni || tanggalCheckIn == kemarin)) {
                 await db.update(
                   tableName,
                   attendance.toCreateMap(),
@@ -321,7 +323,7 @@ class DatabaseHelperAbsensi {
     final List<Map<String, dynamic>> maps;
     maps = await db.query(
       tableName,
-      where: 'check_in_actual NOT NULL AND employee_id = ? AND shift = ?',
+      where: 'check_in_actual NOT NULL AND employee_id = ? AND shift_id = ?',
       whereArgs: [employee_id, shift],
     );
     return List.generate(maps.length, (i) {
@@ -335,7 +337,7 @@ class DatabaseHelperAbsensi {
     final List<Map<String, dynamic>> maps;
     maps = await db.query(
       tableName,
-      where: 'check_in_actual NOT NULL AND employee_id = ? AND shift = ?',
+      where: 'check_in_actual NOT NULL AND employee_id = ? AND shift_id = ?',
       whereArgs: [employee_id, shift],
     );
     return List.generate(maps.length, (i) {
@@ -353,41 +355,41 @@ class DatabaseHelperAbsensi {
   }
 
   Future<Attendance?> getUpdatedAttendance(int attendanceId) async {
-  final db = await database;
-  List<Map<String, dynamic>> maps = await db.query(
-    tableName,
-    where: '$columnAttendanceId = ?',
-    whereArgs: [attendanceId],
-  );
+    final db = await database;
+    List<Map<String, dynamic>> maps = await db.query(
+      tableName,
+      where: '$columnAttendanceId = ?',
+      whereArgs: [attendanceId],
+    );
 
-  if (maps.isNotEmpty) {
-    // Jika data ditemukan, kembalikan objek Attendance yang sesuai
-    return Attendance.fromMap(maps.first);
+    if (maps.isNotEmpty) {
+      // Jika data ditemukan, kembalikan objek Attendance yang sesuai
+      return Attendance.fromMap(maps.first);
+    }
+
+    // Jika tidak ditemukan, kembalikan null atau sesuaikan dengan kebutuhan logika aplikasi Anda
+    return null;
   }
 
-  // Jika tidak ditemukan, kembalikan null atau sesuaikan dengan kebutuhan logika aplikasi Anda
-  return null;
-}
-
-Future<void> updateToullAttendanceKeluar(int attendanceId) async {
-  final db = await database;
-  await db.update(
-    tableName,
-    {
-      columnCheckOut: null,
-      columnCheckOutActual: null,
-      columnCheckOutStatus: null,
-      columnAttendanceTypeOut: null,
-      columnAttendanceLocationOut: null,
-      columnAttendanceAddressOut: null,
-      columnAttendanceNoteOut: null,
-      columnAttendancePhotoOut: null,
-      approval_status_out: null,
-    },
-    where: '$columnAttendanceId = ?',
-    whereArgs: [attendanceId],
-  );
-}
+  Future<void> updateToullAttendanceKeluar(int attendanceId) async {
+    final db = await database;
+    await db.update(
+      tableName,
+      {
+        columnCheckOut: null,
+        columnCheckOutActual: null,
+        columnCheckOutStatus: null,
+        columnAttendanceTypeOut: null,
+        columnAttendanceLocationOut: null,
+        columnAttendanceAddressOut: null,
+        columnAttendanceNoteOut: null,
+        columnAttendancePhotoOut: null,
+        approval_status_out: null,
+      },
+      where: '$columnAttendanceId = ?',
+      whereArgs: [attendanceId],
+    );
+  }
 
   Future<List<Attendance>> getAnomalyAbsensi() async {
     final db = await database;
@@ -400,58 +402,70 @@ Future<void> updateToullAttendanceKeluar(int attendanceId) async {
 
   Future<List<Attendance>> getHistoryAbsensi() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db
-       .rawQuery('SELECT * FROM $tableName' + " WHERE "+is_uploaded +" = 0");
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+        'SELECT * FROM $tableName' + " WHERE " + is_uploaded + " = 0");
     return List.generate(maps.length, (i) {
       return Attendance.fromMap(maps[i]);
     });
   }
 
-    Future<List<Attendance>> getHistoryAbsensiTerUpload() async {
+  Future<List<Attendance>> getHistoryAbsensiTerUpload() async {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db
-        .rawQuery('SELECT * FROM $tableName' + " WHERE "+is_uploaded +" = 1");
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+        'SELECT * FROM $tableName' + " WHERE " + is_uploaded + " = 1");
     return List.generate(maps.length, (i) {
       return Attendance.fromMap(maps[i]);
     });
   }
 
-      Future<List<Attendance>> getHistoryAbsensiTerUploadFilterDate(DateTime date) async {
+  Future<List<Attendance>> getHistoryAbsensiTerUploadFilterDate(
+  DateTime selectedDate) async {
+  try {
     final db = await database;
-    final List<Map<String, dynamic>> maps = await db
-        .rawQuery('SELECT * FROM $tableName' + " WHERE "+is_uploaded +" = 1" );
+
+    // Ubah format tanggal ke dalam format yang sesuai untuk penyimpanan di SQLite
+    final formattedDate = selectedDate.toIso8601String().substring(0, 10);
+
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+        'SELECT * FROM $tableName WHERE $is_uploaded = 1 AND $columnAttendanceDate = ?',
+        [formattedDate]);
+
     return List.generate(maps.length, (i) {
       return Attendance.fromMap(maps[i]);
     });
+  } catch (e) {
+    log(e.toString());
+    return [];
   }
+}
 
-  Future<void> approveAbsensi(int attendanceId, String id_approval, String notes, bool isAbsenMasuk, String statusApproval) async {
+  Future<void> approveAbsensi(int attendanceId, String id_approval,
+      String notes, bool isAbsenMasuk, String statusApproval) async {
     final db = await database;
     try {
-      if(isAbsenMasuk){
+      if (isAbsenMasuk) {
         await db.update(
-        tableName,
-        {
-          columnAttendanceNoteIn: notes,
-          approval_status_in:statusApproval,
-          approval_employee_id: id_approval,
-        },
-        where: 'attendance_id = ?',
-        whereArgs: [attendanceId],
-      );
-      }else{
+          tableName,
+          {
+            columnAttendanceNoteIn: notes,
+            approval_status_in: statusApproval,
+            approval_employee_id: id_approval,
+          },
+          where: 'attendance_id = ?',
+          whereArgs: [attendanceId],
+        );
+      } else {
         await db.update(
-        tableName,
-        {
-          columnAttendanceNoteOut: notes,
-          approval_status_out:statusApproval,
-          approval_employee_id: id_approval,
-        },
-        where: 'attendance_id = ?',
-        whereArgs: [attendanceId],
+          tableName,
+          {
+            columnAttendanceNoteOut: notes,
+            approval_status_out: statusApproval,
+            approval_employee_id: id_approval,
+          },
+          where: 'attendance_id = ?',
+          whereArgs: [attendanceId],
         );
       }
-      
     } catch (e) {
       showToast("error saat Approve Absensi - " + e.toString());
     }

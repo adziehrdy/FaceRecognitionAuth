@@ -1,4 +1,4 @@
-import 'package:face_net_authentication/pages/models/approval.dart';
+import 'package:face_net_authentication/models/approval.dart';
 import 'package:intl/intl.dart';
 
 class Attendance {
@@ -30,7 +30,7 @@ class Attendance {
   String? note_status;
   String? is_uploaded;
   String? approval_employee_id;
-  String? shift;
+  String? shift_id;
   String? approval_status_in;
   String? approval_status_out;
 
@@ -68,7 +68,7 @@ attendanceId = map["attendance_id"];
     note_status = map['note_status'];
     is_uploaded = map['is_uploaded'];
     approval_employee_id = map['approval_employee_id'];
-    shift = map['shift_id'];
+    shift_id = map['shift_id'];
     approval_status_in = map['approval_status_in'];
     approval_status_out = map['approval_status_out'];
   }
@@ -102,7 +102,7 @@ attendanceId = map["attendance_id"];
     map['note_status'] = note_status;
     map['is_uploaded'] = is_uploaded;
     map['approval_employee_id'] = approval_employee_id;
-    map['shift_id'] = shift;
+    map['shift_id'] = shift_id;
     map['approval_status_in'] = approval_status_in;
     map['approval_status_out'] = approval_status_out;
     
@@ -131,7 +131,7 @@ Map<String, dynamic> toCreateMapForHitAPI(){
     if(attendanceAddressOut != null) map["attendance_address_out"] = attendanceAddressOut;
     if(attendanceNoteOut != null) map["attendance_note_out"] = attendanceNoteOut;
     if(attendancePhotoIn != null) map["attendance_photo_in"] = attendancePhotoIn;
-    if(shift != null) map["shift_id"] = shift;
+    if(shift_id != null) map["shift_id"] = shift_id;
     map["company_id"] = companyId;
     
     return map;

@@ -107,21 +107,21 @@ class _SettingPageState extends State<SettingPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text('Threshold'),
-            Slider(
-              value: _threshold,
-              onChanged: (newValue) {
-                setState(() {
-                  _threshold = newValue;
-                  _thresholdController.text = _threshold.toStringAsFixed(1);
-                });
-              },
-              min: 0.5,
-              max: 0.9,
-              divisions: 4,
-              label: _threshold.toStringAsFixed(1),
-            ),
-            SizedBox(height: 20),
+            // Text('Threshold'),
+            // Slider(
+            //   value: _threshold,
+            //   onChanged: (newValue) {
+            //     setState(() {
+            //       _threshold = newValue;
+            //       _thresholdController.text = _threshold.toStringAsFixed(1);
+            //     });
+            //   },
+            //   min: 0.5,
+            //   max: 0.9,
+            //   divisions: 4,
+            //   label: _threshold.toStringAsFixed(1),
+            // ),
+            // SizedBox(height: 20),
             Text('Timeout Delay (detik)'),
             Slider(
               value: _delayTimeout.toDouble(),

@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:face_net_authentication/pages/models/approval.dart';
+import 'package:face_net_authentication/models/approval.dart';
 
 import '../globals.dart';
 

@@ -1,7 +1,7 @@
 import 'package:face_net_authentication/globals.dart';
+import 'package:face_net_authentication/models/model_master_shift.dart';
+import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
-import 'package:face_net_authentication/pages/models/model_master_shift.dart';
-import 'package:face_net_authentication/pages/models/user.dart';
 import 'package:face_net_authentication/repo/global_repos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';

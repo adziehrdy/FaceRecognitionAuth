@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:face_net_authentication/pages/models/appversion_model.dart';
+import 'package:face_net_authentication/models/appversion_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../globals.dart';
@@ -150,4 +150,6 @@ class GlobalRepo {
       throw e;
     }
   }
+
+  
 }

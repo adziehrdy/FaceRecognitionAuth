@@ -7,7 +7,7 @@ class COSTANT_VAR {
 
   static double DEFAULT_TRESHOLD = 0.75;
 
-  //STAGING EDPOINT
+  //PRODUCTION EDPOINT
   static String BASE_URL_PUBLIC = "https://pdc-api.smart-check.id";
   static String BASE_URL_API = "https://pdc-api.smart-check.id/api";
 }

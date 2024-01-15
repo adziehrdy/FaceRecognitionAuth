@@ -1,10 +1,9 @@
 import 'dart:convert';
 
 import 'package:face_net_authentication/globals.dart';
+import 'package:face_net_authentication/models/login_model.dart';
+import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
-import 'package:face_net_authentication/pages/form_registrasi_karyawan.dart';
-import 'package:face_net_authentication/pages/models/login_model.dart';
-import 'package:face_net_authentication/pages/models/user.dart';
 import 'package:face_net_authentication/pages/widgets/personview.dart';
 import 'package:face_net_authentication/repo/user_repos.dart';
 import 'package:flutter/material.dart';
@@ -59,7 +58,7 @@ class _ListKaryawanState extends State<ListKaryawan> {
           },
           onSelected:(value){
             if(value == 0){
-            Navigator.push(context, MaterialPageRoute(builder: (context) => FormRegistrasiKaryawan(),));
+            // Navigator.push(context, MaterialPageRoute(builder: (context) => FormRegistrasiKaryawan(),));
             }else if(value == 1){
               showConfirmationDialog(context,() {
                 refreshEmployee(context);

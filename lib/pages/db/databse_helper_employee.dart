@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:face_net_authentication/globals.dart';
-import 'package:face_net_authentication/pages/models/user.dart';
+import 'package:face_net_authentication/models/user.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';

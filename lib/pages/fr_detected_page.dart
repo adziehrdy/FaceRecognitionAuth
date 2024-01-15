@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:face_net_authentication/globals.dart';
+import 'package:face_net_authentication/models/attendance.dart';
+import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
-import 'package:face_net_authentication/pages/models/attendance.dart';
-import 'package:face_net_authentication/pages/models/user.dart';
 import 'package:face_net_authentication/repo/attendance_repos.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
@@ -104,11 +104,6 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
     super.initState();
 
       isOvernight = checkShiftIsOvernight(widget.user.check_in!,widget.user.check_out!);
-
-
-
-
-
     getTimeOut().then((value) {
       _counter = value;
     });
@@ -318,7 +313,7 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
       // "note_status": note_status,
       "check_in_status": note_status,
       "is_uploaded" : "0",
-      "shift" : widget.user.shift_id
+      "shift_id" : widget.user.shift_id
     };
     Attendance dataAbsen = Attendance.fromMap(sampleData);
 
@@ -349,7 +344,7 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
     // Format the DateTime object into a string
 
     if(!isOvernight){
-       if(pulangCepatChecker(widget.textJamAbsensi, widget.user.check_in!)){
+       if(pulangCepatChecker(widget.textJamAbsensi, widget.user.check_out!)){
       note_status = "PULANG CEPAT";
     }
     }else{
@@ -381,7 +376,7 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
       // "note_status": note_status,
       "check_out_status": note_status,
       "is_uploaded" : "0",
-      "shift" : widget.user.shift_id
+      "shift_id" : widget.user.shift_id
     };
 
     Attendance dataAbsen = Attendance.fromMap(sampleData);

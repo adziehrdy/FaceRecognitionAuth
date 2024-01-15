@@ -3,9 +3,9 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:dio/dio.dart';
-import 'package:face_net_authentication/pages/models/attendance.dart';
-import 'package:face_net_authentication/pages/models/attendance_approval.dart';
-import 'package:face_net_authentication/pages/models/branch.dart';
+import 'package:face_net_authentication/models/attendance.dart';
+import 'package:face_net_authentication/models/attendance_approval.dart';
+import 'package:face_net_authentication/models/branch.dart';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import 'package:path/path.dart';
@@ -27,6 +27,7 @@ class AttendanceRepos {
   // }
 
     Future verifyAbsensi(Attendance attendance, String? mode, String id) async{
+      
      Map <String, dynamic> data ={
       "attendance": attendance.toCreateMapForHitAPI(),
       "attendanceApprovalIn": attendance.toCreateMapForHit_Approval_in(),

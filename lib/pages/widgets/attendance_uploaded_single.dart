@@ -1,6 +1,6 @@
 import 'package:face_net_authentication/globals.dart';
+import 'package:face_net_authentication/models/attendance.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
-import 'package:face_net_authentication/pages/models/attendance.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -75,7 +75,7 @@ class _AttendanceUploadedSingleState extends State<AttendanceUploadedSingle> {
                         width: 10,
                       ),
                       Text(
-                        " ( " + (widget.data.shift ?? "") + " )",
+                        " ( " + (widget.data.shift_id ?? "") + " )",
                         style: TextStyle(
                             overflow: TextOverflow.ellipsis, fontSize: 8),
                       )

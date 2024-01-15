@@ -64,7 +64,9 @@ class _CustomPinDialogState extends State<CustomPinDialog> {
     return 
     SingleChildScrollView(child: Container(
       padding: EdgeInsets.all(20),
+      width: 400,
       decoration: BoxDecoration(
+        
         shape: BoxShape.rectangle,
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),

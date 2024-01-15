@@ -4,13 +4,14 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:connectivity/connectivity.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:face_net_authentication/constants/constants.dart';
+import 'package:face_net_authentication/models/login_model.dart';
+import 'package:face_net_authentication/models/model_master_shift.dart';
 import 'package:face_net_authentication/pages/force_upgrade.dart';
 import 'package:face_net_authentication/pages/login.dart';
-import 'package:face_net_authentication/pages/models/login_model.dart';
-import 'package:face_net_authentication/pages/models/model_master_shift.dart';
 import 'package:face_net_authentication/repo/custom_exception.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -185,6 +186,16 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url, {Map<String, dy
   final dio = Dio();
 
   try {
+
+        var connectivityResult = await (Connectivity().checkConnectivity());
+
+    if (connectivityResult == ConnectivityResult.none) {
+      // Tidak ada koneksi internet, tampilkan pesan dan hentikan pemanggilan API
+      EasyLoading.dismiss();
+      showToast("Cek koneksi Internet");
+      // throw Exception("Tidak ada koneksi internet");
+    }
+    
     // await getEndpointURL();
     url = COSTANT_VAR.BASE_URL_API + "" + url;
 
@@ -211,9 +222,11 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url, {Map<String, dy
       var test = url.split('?');
       if (test.length > 1) {
         url = test[0] + '?token=$token&' + test[1];
+        
       } else {
         url = url + "?token=$token";
       }
+      log(token);
     } else {
       headers = {
         "Content-Type": "application/json",
@@ -255,7 +268,6 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url, {Map<String, dy
   }
   EasyLoading.dismiss();
   throw Exception("Invalid API method");
-  
 }
 
 
@@ -568,6 +580,10 @@ Uint8List decodeToBase64ToImage(String input) {
   }
 
    bool terlambatChecker(String jamMasuk, String jamShift) {
+
+    // jamMasuk = "2024-01-13 06:00:00";
+
+    
     // Memisahkan tanggal dan waktu pada time1
     List<String> splitTime1 = jamMasuk.split(' ');
     // Menggabungkan waktu dari time1 dengan tanggal dari time2
@@ -579,14 +595,18 @@ Uint8List decodeToBase64ToImage(String input) {
 
     // Bandingkan waktu
     if (dateTime2.isAfter(dateTime1)) {
+       log("MASUK TIME = " + jamMasuk + "=" "TERLAMBAT");
       return true;
     } else {
+       log("MASUK TIME = " + jamMasuk + "=" "NORMAL");
       return false;
     }
   }
 
      bool pulangCepatChecker(String jamKeluar, String jamShift) {
     // Memisahkan tanggal dan waktu pada time1
+
+
     List<String> splitTime1 = jamKeluar.split(' ');
     // Menggabungkan waktu dari time1 dengan tanggal dari time2
     String combinedTime = "${splitTime1[0]} $jamShift";
@@ -597,8 +617,10 @@ Uint8List decodeToBase64ToImage(String input) {
 
     // Bandingkan waktu
     if (dateTime2.isBefore(dateTime1)) {
+      log("KELUAR TIME = " + jamKeluar + "=" "PULANG CEPAT");
       return true;
     } else {
+      log("KELUAR TIME = " + jamKeluar + "=" "NORMAL");
       return false;
     }
   }
@@ -614,10 +636,13 @@ String? checkLemburStatus({
   DateTime dateTime = DateTime.parse(jamAbsen);
   String timeOnly = "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}";
 
+  // timeOnly = "13:00:00";
+
 try{
   final DateTime jamAbsenDT = DateTime.parse("2024-01-02 $timeOnly");
-  final DateTime shiftKeluarDT = DateTime.parse("2024-01-03 $shiftKeluar");
-  final DateTime shiftMasukDT = DateTime.parse("2024-01-01 $shiftMasuk");
+  final DateTime shiftMasukDT = DateTime.parse("2024-01-02 $shiftMasuk");
+  final DateTime shiftKeluarDT = DateTime.parse("2024-01-02 $shiftKeluar");
+
   
 
   
@@ -625,14 +650,18 @@ try{
 
   if (isModeMasuk) {
     if (jamAbsenDT.isAfter(shiftMasukDT)) {
+      log("MASUK TIME = " + timeOnly + "=" "TERLAMBAT");
       return "TERLAMBAT";
     } else if (jamAbsenDT.isBefore(shiftMasukDT) || jamAbsenDT.isAtSameMomentAs(shiftMasukDT)) {
+      log("MASUK TIME = " + timeOnly + "=" "NORMAL");
       return null;
     }
   } else {
     if (jamAbsenDT.isBefore(shiftKeluarDT)) {
+      log("KELUAR TIME = " + timeOnly + "=" "PULANG CEPAT");
       return "PULANG CEPAT";
     } else if (jamAbsenDT.isAfter(shiftKeluarDT) || jamAbsenDT.isAtSameMomentAs(shiftKeluarDT)) {
+      log("KELUAR TIME = " + timeOnly + "=" "NORMAL");
       return null;
     }
   }

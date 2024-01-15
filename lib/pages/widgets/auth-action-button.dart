@@ -1,5 +1,5 @@
 import 'package:face_net_authentication/locator.dart';
-import 'package:face_net_authentication/pages/models/user.dart';
+import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:flutter/material.dart';

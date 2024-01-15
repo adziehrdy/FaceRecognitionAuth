@@ -74,7 +74,7 @@ class _RegisterPinState extends State<RegisterPin> {
                 ),
                 
                 Text(
-                  "Registrasi PIN Baru",
+                  "Buat PIN Baru",
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 20,
