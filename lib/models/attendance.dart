@@ -141,9 +141,9 @@ Map<String, dynamic> toCreateMapForHitAPI(){
   Map<String, dynamic>? toCreateMapForHit_Approval_in(){
     Map<String, dynamic> map = {};
     
-    if(approval_employee_id != null){
+    if(checkInStatus != null){
       map["approval_employee_id"] = approval_employee_id;
-       map["employee_id"] = approval_employee_id;
+       map["employee_id"] = employee_id;
 
       if(attendanceDate != null) map["approval_date"] = DateFormat("yyyy-MM-dd").format(attendanceDate!);
 
@@ -171,9 +171,9 @@ Map<String, dynamic> toCreateMapForHitAPI(){
   Map<String, dynamic>? toCreateMapForHit_Approval_out(){
     Map<String, dynamic> map = {};
 
-    if(approval_employee_id != null){
+    if(checkOutStatus != null){
       map["approval_employee_id"] = approval_employee_id;
-       map["employee_id"] = approval_employee_id;
+       map["employee_id"] = employee_id;
 
       if(attendanceDate != null) map["approval_date"] = DateFormat("yyyy-MM-dd").format(attendanceDate!);
 

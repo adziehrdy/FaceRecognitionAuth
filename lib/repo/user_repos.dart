@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
@@ -99,16 +100,29 @@ class UserRepo {
     );
 
     try {
-      Map<String, dynamic> data = {
+      Map<String, dynamic> data;
+
+      if(password == "mbed-recn-uhva-ycsy"){
+         data = {
+        "deviceId": "GOOGLE_PLAY_DEMO",
+        "password": password,
+        "version": versionLabel
+      };
+
+      }else{
+         data = {
         "deviceId": id,
         "password": password,
         "version": versionLabel
       };
+      }
+      
       Response res = await callApiWithoutToken(ApiMethods.POST, '/device/login',
           data: data);
       print(res);
       if (res.statusCode == 200) {
         // Parse the response JSON
+        log(res.data.toString());
         Map<String, dynamic> responseJson = res.data;
 
         // Assuming your response JSON structure matches the provided example
@@ -152,7 +166,8 @@ class UserRepo {
         "face_template": face_template,
         "face_image": "data:image/png;base64,"+face_image
       });
-      print(res);
+
+      // log(res.data);
 
       if(res.statusCode == 200){
          return true;

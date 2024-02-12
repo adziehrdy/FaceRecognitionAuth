@@ -2,6 +2,7 @@ import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/attendance.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
 import 'package:face_net_authentication/pages/widgets/dialog_approval_absensi.dart';
+import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -312,7 +313,10 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                                             return dialog_approval_absensi(
                                                                 onSelected:
                                                                     (value) async {
-                                                              await _dataBaseHelper
+
+                                                                      PinInputDialog.show(context, (p0) async {
+
+                                                                        await _dataBaseHelper
                                                                   .approveAbsensi(
                                                                       widget
                                                                           .data
@@ -327,6 +331,9 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                                                       .onUpdate();
                                                                 });
                                                               });
+                                                                        
+                                                                      });
+                                                              
                                                             });
                                                           },
                                                         );
@@ -563,7 +570,8 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                                           return dialog_approval_absensi(
                                                               onSelected:
                                                                   (value) async {
-                                                            await _dataBaseHelper
+                                                           PinInputDialog.show(context, (p0) async {
+                                                             await _dataBaseHelper
                                                                 .approveAbsensi(
                                                                     widget.data
                                                                         .attendanceId!,
@@ -574,6 +582,7 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                                             setState(() {
                                                               widget.onUpdate();
                                                             });
+                                                           });
                                                           });
                                                         },
                                                       );
@@ -669,12 +678,13 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                     color: Colors.grey.shade300,
                     borderRadius: BorderRadius.all(Radius.circular(10))),
                 child: Column(children: [
-                  (widget.data.approval_status_out == null) ?
-                  Text(
-                    "BELUM ABSEN KELUAR",
-                  ) : Text(
-                    "TIDAK ABSEN KELUAR",
-                  ),
+                  (widget.data.approval_status_out == null)
+                      ? Text(
+                          "BELUM ABSEN KELUAR",
+                        )
+                      : Text(
+                          "TIDAK ABSEN KELUAR",
+                        ),
                   SizedBox(
                     height: 5,
                   ),
@@ -692,7 +702,8 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                 builder: (BuildContext context) {
                                   return dialog_approval_absensi(
                                       onSelected: (value) async {
-                                    await _dataBaseHelper.approveAbsensi(
+                                        PinInputDialog.show(context, (p0) async {
+                                          await _dataBaseHelper.approveAbsensi(
                                         widget.data.attendanceId!,
                                         await getActiveSuperIntendentID(),
                                         value[1],
@@ -701,6 +712,8 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                     setState(() {
                                       widget.onUpdate();
                                     });
+                                        });
+                                    
                                   });
                                 },
                               );
@@ -710,36 +723,36 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                               style:
                                   TextStyle(fontSize: 11, color: Colors.white),
                             ))
-                        : 
-                        Column(
-                          children: [
-                            InkWell(
+                        : Column(
+                            children: [
+                              InkWell(
                                 onTap: () {
                                   showToast("Notes : " +
                                       (widget.data.attendanceNoteOut ?? "-"));
                                 },
-                                child: 
-                                Column(
-
+                                child: Column(
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(Icons.notes_sharp),
                                         SizedBox(
                                           width: 5,
                                         ),
                                         Text(
-                                          (widget.data.approval_status_out ?? ""),
-                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                          (widget.data.approval_status_out ??
+                                              ""),
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
                                         ),
                                       ],
                                     ),
                                   ],
                                 ),
                               ),
-                          ],
-                        ),
+                            ],
+                          ),
                   ),
                   SizedBox(
                     height: 3,

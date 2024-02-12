@@ -11,6 +11,7 @@ import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/pages/widgets/FacePainter.dart';
 import 'package:face_net_authentication/pages/widgets/auth-action-button.dart';
 import 'package:face_net_authentication/pages/widgets/camera_header.dart';
+import 'package:face_net_authentication/pages/widgets/dialog_confirm_FR.dart';
 import 'package:face_net_authentication/repo/user_repos.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/face_detector_service.dart';
@@ -48,8 +49,6 @@ class SignUpState extends State<SignUp> {
 
   int counterForPrintLiveness = 0;
 
-
-
   // service injection
   FaceDetectorService _faceDetectorService = locator<FaceDetectorService>();
   CameraService _cameraService = locator<CameraService>();
@@ -57,7 +56,7 @@ class SignUpState extends State<SignUp> {
 
   UserRepo repo = UserRepo();
 
-   Queue<double> dataQueue = Queue<double>();
+  Queue<double> dataQueue = Queue<double>();
 
   @override
   void initState() {
@@ -97,7 +96,7 @@ class SignUpState extends State<SignUp> {
       _saving = true;
       // await Future.delayed(Duration(milliseconds: 500));
       // await Future.delayed(Duration(milliseconds: 200));
-      
+
       // showDialog(
       //   context: context,
       //   barrierDismissible:
@@ -110,7 +109,7 @@ class SignUpState extends State<SignUp> {
       //   },
       // );
       photoTakenFile = await _cameraService.takePicture();
-      showToastShort("Scaning..");
+
       imagePath = photoTakenFile?.path;
 
       setState(() async {
@@ -122,77 +121,79 @@ class SignUpState extends State<SignUp> {
   }
 
   _frameFaces() {
-  imageSize = _cameraService.getImageSize();
+    imageSize = _cameraService.getImageSize();
 
-  _cameraService.cameraController?.startImageStream((image) async {
-    img = image;
+    _cameraService.cameraController?.startImageStream((image) async {
+      img = image;
 
-    if (_cameraService.cameraController != null) {
-      if (_detectingFaces) return;
+      if (_cameraService.cameraController != null) {
+        if (_detectingFaces) return;
 
-      _detectingFaces = true;
+        _detectingFaces = true;
 
-      try {
-        await _faceDetectorService.detectFacesFromImage(img!);
+        try {
+          await _faceDetectorService.detectFacesFromImage(img!);
 
-        if (_faceDetectorService.faces.isNotEmpty) {
-          double rightEyeProbability = _faceDetectorService.faces[0].rightEyeOpenProbability ?? 0.0;
-          double leftEyeProbability = _faceDetectorService.faces[0].leftEyeOpenProbability ?? 0.0;
+          if (_faceDetectorService.faces.isNotEmpty) {
+            double rightEyeProbability =
+                _faceDetectorService.faces[0].rightEyeOpenProbability ?? 0.0;
+            double leftEyeProbability =
+                _faceDetectorService.faces[0].leftEyeOpenProbability ?? 0.0;
 
+            print("HEAD Y " +
+                (_faceDetectorService.faces[0].headEulerAngleY!).toString());
 
-          print( "HEAD Y " + (_faceDetectorService.faces[0].headEulerAngleY!).toString()) ;
+            addData(_faceDetectorService.faces[0].headEulerAngleY! +
+                rightEyeProbability);
 
-                    addData(_faceDetectorService.faces[0].headEulerAngleY! + rightEyeProbability);
+            // Liveness detection logic based on eye probabilities
+            if (rightEyeProbability != 0.0) {
+              print("EYE RIGHT PROBABILITY = $rightEyeProbability");
+              print("EYE LEFT PROBABILITY = $leftEyeProbability");
 
-         
-
-          // Liveness detection logic based on eye probabilities
-          if(rightEyeProbability != 0.0){
-             print("EYE RIGHT PROBABILITY = $rightEyeProbability");
-          print("EYE LEFT PROBABILITY = $leftEyeProbability");
-
-             if (rightEyeProbability < 0.8 || leftEyeProbability < 0.8) {
-            print("REAL person detected"); // At least one eye is open enough
-          } else {
-            print("FAKE person detected"); // Both eyes are closed or nearly closed
-          }
-          }
-         
-
-          setState(() {
-            if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
-                _faceDetectorService.faces[0].headEulerAngleY! < -10) {
-              // Your logic for head angle if needed
-            } else {
-              faceDetected = _faceDetectorService.faces[0];
-              // faceDetectedJPG = faceDetected!.detectedFaceAsImage()
+              if (rightEyeProbability < 0.8 || leftEyeProbability < 0.8) {
+                print(
+                    "REAL person detected"); // At least one eye is open enough
+              } else {
+                print(
+                    "FAKE person detected"); // Both eyes are closed or nearly closed
+              }
             }
-          });
 
-          if (_saving) {
-            _mlService.setCurrentPrediction(image, faceDetected);
             setState(() {
-              _saving = false;
+              if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
+                  _faceDetectorService.faces[0].headEulerAngleY! < -10) {
+                // Your logic for head angle if needed
+              } else {
+                faceDetected = _faceDetectorService.faces[0];
+                // faceDetectedJPG = faceDetected!.detectedFaceAsImage()
+              }
+            });
+
+            if (_saving) {
+              _mlService.setCurrentPrediction(image, faceDetected);
+              setState(() {
+                _saving = false;
+              });
+            }
+          } else {
+            dataQueue.clear();
+            print("AVERAGE LIVENESS = CLEANED");
+
+            print('face is null');
+            setState(() {
+              faceDetected = null;
             });
           }
-        } else {
-          dataQueue.clear();
-            print("AVERAGE LIVENESS = CLEANED" );
 
-          print('face is null');
-          setState(() {
-            faceDetected = null;
-          });
+          _detectingFaces = false;
+        } catch (e) {
+          print('Error _faceDetectorService face => $e');
+          _detectingFaces = false;
         }
-
-        _detectingFaces = false;
-      } catch (e) {
-        print('Error _faceDetectorService face => $e');
-        _detectingFaces = false;
       }
-    }
-  });
-}
+    });
+  }
 
   // _frameFaces() {
   //   imageSize = _cameraService.getImageSize();
@@ -214,7 +215,7 @@ class SignUpState extends State<SignUp> {
   //           setState(() {
   //             if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
   //                 _faceDetectorService.faces[0].headEulerAngleY! < -10) {
-               
+
   //             } else {
   //               faceDetected = _faceDetectorService.faces[0];
   //             }
@@ -245,39 +246,40 @@ class SignUpState extends State<SignUp> {
   _onBackPressed() {
     Navigator.of(context).pop();
   }
+
 /////===============
-void addData(double newData) {
-  counterForPrintLiveness = counterForPrintLiveness +1;
-  dataQueue.add(newData);
-  if (dataQueue.length > 10) {
-    dataQueue.removeFirst();
+  void addData(double newData) {
+    counterForPrintLiveness = counterForPrintLiveness + 1;
+    dataQueue.add(newData);
+    if (dataQueue.length > 10) {
+      dataQueue.removeFirst();
+    }
+    if (counterForPrintLiveness == 5) {
+      counterForPrintLiveness = 0;
+      print("AVERAGE LIVENESS = " + calculateThreshold(dataQueue).toString());
+    }
   }
-  if(counterForPrintLiveness == 5){
-    counterForPrintLiveness = 0;
-     print("AVERAGE LIVENESS = " + calculateThreshold(dataQueue).toString());
-  }
-}
 
   double calculateThreshold(Queue<double> data) {
-  double sum = 0;
-  int count = 0;
-  double previousValue = 0;
+    double sum = 0;
+    int count = 0;
+    double previousValue = 0;
 
-  for (var value in data) {
-    if (count > 0) {
-      sum += (value - previousValue).abs();
+    for (var value in data) {
+      if (count > 0) {
+        sum += (value - previousValue).abs();
+      }
+      previousValue = value;
+      count++;
     }
-    previousValue = value;
-    count++;
-  }
 
-  if (count > 1) {
-    double average = sum / (count - 1);
-    return average;
-  }
+    if (count > 1) {
+      double average = sum / (count - 1);
+      return average;
+    }
 
-  return 0;
-}
+    return 0;
+  }
 
 /////===============
 
@@ -363,49 +365,57 @@ void addData(double newData) {
       // await convertXFIleToImage(photoTakenFile!).then((value) async {
       //   ImagePhoto = await imageToBase64(value);
       // });
-      
 
-              
       String frTemplateBase64 = encode_FR_ToBase64(predictedData);
 
-        // frTemplateBase64 = "W10=";
-
-
+      // frTemplateBase64 = "W10=";
 
       if (frTemplateBase64 == "W10=" || frTemplateBase64.length < 50) {
         throw Exception('Hasil prediksi error');
       }
 
-
       ImagePhoto =
           convertImagelibToBase64JPG(_mlService.cropFace(img!, faceDetected!));
 
-
-
       //JIKA HASIL PREDICTED ERROR
 
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return dialog_confirm_fr(
+            faceImage: convertImagelibToUint8List(
+                _mlService.cropFace(img!, faceDetected!)),
+            employeeName: (widget.user.employee_name ?? "-").toUpperCase(),
+            onApprove: () async {
+              showToastShort("Uploading..");
+              bool success_upload_fr = await repo.uploadFR(
+                  widget.user.employee_id!, frTemplateBase64, ImagePhoto);
 
+              if (success_upload_fr) {
+                await _dataBaseHelper.updateFaceTemplate(
+                    widget.user.employee_id!, predictedData, ImagePhoto);
+                this._mlService.setPredictedData([]);
 
-      bool success_upload_fr = await repo.uploadFR(
-          widget.user.employee_id!, frTemplateBase64, ImagePhoto);
-
-      if (success_upload_fr) {
-        await _dataBaseHelper.updateFaceTemplate(
-            widget.user.employee_id!, predictedData, ImagePhoto);
-        this._mlService.setPredictedData([]);
-        showToast("Registrasi wajah sukses !");
-        Navigator.pop(context);
-      } else {
-        showToast("Kesalahan Saat Upload FR Ke server");
-        Navigator.pop(context);
-      }
+                showToast("Registrasi wajah sukses !");
+                Navigator.pop(context);
+                Navigator.pop(context);
+              } else {
+                showToast("Kesalahan Saat Upload FR Ke server, Mohon Coba Kembali");
+                Navigator.pop(context);
+              }
+            },
+          );
+        },
+      );
+      await _cameraService.cameraController?.resumePreview();
+      _frameFaces();
     } catch (e) {
       print(e);
       showToastShort("GAGAL Saat registrasi wajah, Mohon coba Kembali");
       //  Navigator.pop(context);
-       _reload();
+      _reload();
       await _cameraService.cameraController?.resumePreview();
-
+      _frameFaces();
     }
   }
 

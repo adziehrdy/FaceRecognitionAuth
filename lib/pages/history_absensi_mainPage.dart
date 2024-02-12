@@ -26,12 +26,10 @@ class HistoryAbsensiMainPage extends StatefulWidget {
 
 class _HistoryAbsensiMainPageState extends State<HistoryAbsensiMainPage> {
   int _currentIndex = 0;
-
   final List<Widget> _pages = [
     HistoryAbsensi(),
     HistoryAbsensiUploaded(),
   ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

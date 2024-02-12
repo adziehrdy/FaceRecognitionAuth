@@ -14,6 +14,17 @@ SpSetLastLoc(double lat, double long, String loc) async {
   await sp.setString("LOC", loc);
 }
 
+SpSetStatusRig(String status) async {
+  SharedPreferences sp = await initSP();
+  await sp.setString("RIG_STATUS", status);
+}
+
+Future<String> SpGetStatusRig() async {
+  SharedPreferences sp = await initSP();
+ String RIG_STATUS = await sp.getString("RIG_STATUS") ?? "-";
+ return RIG_STATUS;
+}
+
 Future<double> SpGetLastLat() async {
   SharedPreferences sp = await initSP();
 

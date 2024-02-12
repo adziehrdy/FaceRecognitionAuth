@@ -28,6 +28,7 @@ class _HomeWigetState extends State<HomeWiget> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    
 
     DateTime now = DateTime.now();
     formattedDate = DateFormat('EEEE, dd MMMM yyyy', 'id').format(now);
@@ -37,7 +38,7 @@ class _HomeWigetState extends State<HomeWiget> {
   }
 
   Future<void> update_loc_text() async {
-    await GET_LOCATION();
+    await GET_LOCATION(context);
     lat = await SpGetLastLat();
     log = await SpGetLastlong();
     alamat = await SpGetLastAlamat();

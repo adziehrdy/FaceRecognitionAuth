@@ -117,6 +117,9 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+
+
+
   @override
   Widget build(BuildContext context) {
     _setItemPerRow();
@@ -267,17 +270,14 @@ class _HomePageState extends State<HomePage> {
                         //     });
                         //   },
                         // ),
+
                         // new HomeMenu(
                         //   "Testing Button",
                         //   "assets/images/absent_register.png",
                         //   -1,
-                        //   callback: (p0) {
+                        //   callback: (p0) async {
                         //     // Navigator.push(context, MaterialPageRoute( builder: (BuildContext context) => ForceUpgrade(isLoged: true,currentVersion: "1.0.0",latestVersion: "1.0.0",)));
-                        //     Navigator.push(
-                        //         context,
-                        //         MaterialPageRoute(
-                        //             builder: (BuildContext context) =>
-                        //                 SwitchSupperAttendance()));
+                        //     bool? granted = await showLocationPermissionDialog(context);
                         //   },
                         // ),
 

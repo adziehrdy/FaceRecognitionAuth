@@ -124,8 +124,6 @@ int index = _attendanceList.indexWhere(
                         });
                       }, onUpdate: () { 
                          setState(() {
-
-                          
                                   _loadData();
                                 });
                        },
@@ -148,25 +146,38 @@ int index = _attendanceList.indexWhere(
     for (var index = 0; index < totalCount; index++) {
       bool StillnotCompleteAttendace = false;
       var data = _attendanceList[index];
-      if ((data.checkIn != null || (data.approval_status_in != null && data.checkIn == null) ) && (data.checkOut != null || (data.approval_status_out != null && data.checkOut == null))) {
-        // String mode = data.type_absensi == "MASUK" ? "checkin" : "checkout";
-        String mode = "checkout";
 
-        try {
+
+      if(data.checkInStatus == null || (data.approval_status_in != null && data.checkInStatus != null)){
+
+        // print(index.toString() +" || "+ formatDate(data.checkInActual ?? DateTime.now())+" = CHECKIN PASSED");
+
+        if((data.checkOutStatus == null && data.checkOutActual !=null) || (data.checkOutStatus != null && data.approval_status_out != null) || (data.checkOutStatus == null && data.approval_status_out != null) ){
+
+                  try {
           progressDialog.update(
             value: ((index / totalCount) * 100).toInt(),
             msg: "Uploading " + data.employee_name! + ' ($index/$totalCount)',
           );
 
-          await repo.verifyAbsensi(data, mode, data.employee_id!);
+          await repo.uploadAbsensi(data, data.employee_id!);
           await _updateIsUploaded(data);
-          print(data.employee_name);
+          // ADZIEHRDY TEST
+          print(index.toString() +" || "+ formatDate(data.checkInActual ?? DateTime.now())+" = IS UPLOADED");
         } catch (e) {
           print(e.toString());
           showToast("Error saat upload absensi - ${data.employee_name} - " + (data.shift_id ?? "-"));
           break;
         } finally {
         }
+        }else{
+          StillnotCompleteAttendace = true;
+        }
+      // if ((data.checkIn != null && (data.approval_status_in != null || data.checkIn != null) ) &&  (data.approval_status_out != null || data.checkOut != null)) {
+        //  if ((data.checkOut != null && data.approval_status_out != null ) || ( data.checkOutStatus != null && data.approval_status_out != null) || data.checkOutStatus == null ) {
+        // String mode = data.type_absensi == "MASUK" ? "checkin" : "checkout";
+
+
       }else{
         StillnotCompleteAttendace = true;
       }

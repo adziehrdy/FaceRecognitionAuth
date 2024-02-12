@@ -165,7 +165,7 @@ class _HistoryAbsensiUploadedState extends State<HistoryAbsensiUploaded> {
                       Text(
                           textAlign: TextAlign.center,
                           "Tidak Ada History Untuk Tanggal " +
-                              formatDateRegisterForm(_selectedDate),
+                              formatDateOnly(_selectedDate),
                           style: TextStyle(fontSize: 15)),
                     ],
                   ),

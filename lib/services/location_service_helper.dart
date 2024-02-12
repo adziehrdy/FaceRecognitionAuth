@@ -12,7 +12,7 @@ import 'package:geolocator/geolocator.dart';
 ///
 /// When the location services are not enabled or permissions
 /// are denied the `Future` will return an error.
-Future<void> GET_LOCATION() async {
+Future<void> GET_LOCATION(context) async {
   bool serviceEnabled;
   LocationPermission permission;
   // Test if location services are enabled.
@@ -26,25 +26,43 @@ Future<void> GET_LOCATION() async {
   }
 
   permission = await Geolocator.checkPermission();
+
+  
   if (permission == LocationPermission.denied) {
+     bool? approved = await showLocationPermissionDialog(context);
+       if(approved == true){
     permission = await Geolocator.requestPermission();
+       }
+
     if (permission == LocationPermission.denied) {
+
+
+          await Geolocator.openLocationSettings();
+
+
+      
+      
+
       // Permissions are denied, next time you could try
       // requesting permissions again (this is also where
       // Android's shouldShowRequestPermissionRationale 
       // returned true. According to Android guidelines
       // your App should show an explanatory UI now.
        showToast("Mohon Aktifkan Akses Lokasi");
-       await Geolocator.openLocationSettings();
+      
       return Future.error('Location permissions are denied');
     }
   }
   
   if (permission == LocationPermission.deniedForever) {
     // Permissions are denied forever, handle appropriately. 
-     showToast("Mohon Aktifkan Akses Lokasi pada pengaturan perangkat");
+    bool? granted = await showLocationPermissionDialog(context);
+
+      if(granted == true){
+        await Geolocator.openLocationSettings();
+      }
+    //  showToast("Mohon Aktifkan Akses Lokasi pada pengaturan perangkat");
     return Future.error(
-      
       'Location permissions are permanently denied, we cannot request permissions.');
   } 
 
@@ -54,7 +72,7 @@ Future<void> GET_LOCATION() async {
   Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
   String alamat = await getPlace(position.longitude, position.latitude);
 
-  int distanceInMeters = Geolocator.distanceBetween(position.latitude,position.longitude, position.latitude,position.longitude).round();
+  // int distanceInMeters = Geolocator.distanceBetween(position.latitude,position.longitude, position.latitude,position.longitude).round();
 
 
   SpSetLastLoc(position.latitude, position.longitude, alamat);
@@ -78,6 +96,8 @@ Future<void> GET_LOCATION() async {
 
     } catch (e) {
       print(e);
+      String alamat = await getPlace(long, lat);
+      SpSetLastLoc(long, lat, alamat);
       return "Lokasi Perlu di Update";
     }
   }

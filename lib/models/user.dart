@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:face_net_authentication/globals.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +13,7 @@ class User {
   String? employee_phone;
   String? employee_email;
   String? employee_status;
-  // DateTime? employee_birth_date;
+  DateTime? employee_birth_date;
   String? employee_position;
   ImageProvider? employee_photo;
   String? branch_id;
@@ -41,6 +42,8 @@ class User {
   User({required this.employee_id});
 
   User.fromMap(Map<String, dynamic> map) {
+      try{
+print(map['employee_name']);
     employee_id = map['employee_id'];
     username = map['username'];
     group_access_id = map['group_access_id'];
@@ -76,9 +79,13 @@ class User {
   from_branch  = map['from_branch'];
   to_branch  = map['to_branch'];
   relief_status = map['relief_status'];
+  }catch(e){
+    log(e.toString());
+  }
+    
 
 
-    print(map['employee_fr_template']);
+
 
     if (map['employee_fr_template'] == null ||
         map['employee_fr_template'] == "null") {

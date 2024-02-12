@@ -58,12 +58,14 @@ class Branch {
   final String branchName;
   final String branchLocation;
   final String branchGeofencing;
+  final String? tolerance;
 
   Branch({
     required this.branchId,
     required this.branchName,
     required this.branchLocation,
     required this.branchGeofencing,
+    required this.tolerance
   });
 
   Map<String, dynamic> toMap() {
@@ -72,6 +74,7 @@ class Branch {
       'branch_name': branchName,
       'branch_location': branchLocation,
       'branch_geofencing': branchGeofencing,
+      'tolerance' : tolerance ?? "0"
     };
   }
 
@@ -81,6 +84,7 @@ class Branch {
       branchName: map['branch_name'],
       branchLocation: map['branch_location'],
       branchGeofencing: map['branch_geofencing'],
+      tolerance : map['tolerance']
     );
   }
 }

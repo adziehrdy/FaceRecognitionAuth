@@ -26,7 +26,7 @@ class AttendanceRepos {
   //   });
   // }
 
-    Future verifyAbsensi(Attendance attendance, String? mode, String id) async{
+    Future uploadAbsensi(Attendance attendance, String id) async{
       
      Map <String, dynamic> data ={
       "attendance": attendance.toCreateMapForHitAPI(),
@@ -36,15 +36,17 @@ class AttendanceRepos {
       // "attendanceApprovalOut": null,
     };
 
-    String param = jsonEncode(data);
+    
 
-    // stderr.writeln(param);
+    
+
+    String param = jsonEncode(data);
 
 
     
 
 
-    return await callApi(ApiMethods.POST, '/attendance/demo/wfoinput/', data: data);
+    return await callApi(ApiMethods.POST, '/attendance/demo/wfoinput', data: data);
   }
 
   Future verifyAbsensiWFH(File image, Attendance attendance, AttendanceApproval? attendanceApproval, String? mode) async{

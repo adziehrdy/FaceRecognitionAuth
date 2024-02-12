@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/master_register_model.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
+import 'package:face_net_authentication/repo/global_repos.dart';
 import 'package:flutter/material.dart';
 
 class ReliefForm extends StatefulWidget {
@@ -36,7 +40,7 @@ class _ReliefFormState extends State<ReliefForm> {
   List<User> user_list = [];
 
   // Daftar pekerja dan rig tujuan
-  List<String> daftarRigTujuan = ["Rig A", "Rig B", "Rig C"];
+  List<String> daftarRigTujuan = [];
 
   // Method untuk menampilkan DatePicker
   Future<void> _selectDate(BuildContext context, bool isStartDate,String title) async {
@@ -183,7 +187,7 @@ class _ReliefFormState extends State<ReliefForm> {
                           border: OutlineInputBorder(),
                         ),
                         child: Text(
-                          formatDateRegisterForm(tanggalMulai),
+                          formatDateOnly(tanggalMulai),
                           style: TextStyle(fontSize: 16),
                         ),
                       ),
@@ -221,7 +225,7 @@ class _ReliefFormState extends State<ReliefForm> {
                           border: OutlineInputBorder(),
                         ),
                         child: Text(
-                          formatDateRegisterForm(tanggalSelesai),
+                          formatDateOnly(tanggalSelesai),
                           style: TextStyle(fontSize: 16),
                         ),
                       ),
@@ -283,34 +287,35 @@ class _ReliefFormState extends State<ReliefForm> {
   }
 
   Future<void> hitGetMasterRegister() async {
-    // String? data = await GlobalRepo().getMasterRegister();
-    // if(d)
-    // setState(() {
-    //   if (data != null) {
-    //     log(json.decode(data));
-    //     master_data = master_register_model.fromJson(json.decode(data));
-    //     log(json.decode(data));
-    //     // _divisiList = master_data!.data.division;
-    //     // _roleList = master_data!.data.role;
+    String? data = await GlobalRepo().getMasterRegister();
+    
+    setState(() {
+      if (data != null) {
+        log(json.decode(data).toString());
+        master_data = master_register_model.fromJson(json.decode(data));
+        log(json.decode(data).toString());
+        // _divisiList = master_data!.data.division;
+        // _roleList = master_data!.data.role;
 
-    //     getUserLoginData().then((device_data) {
-    //       setState(() {
-    //         for(Location lokasi in _lokasiList){
-    //           _lokasiList.add(Location(
-    //           branchId: device_data.branch?.branchId ?? "",
-    //           branchName: device_data.branch?.branchName ?? "",
-    //         ));
-    //         }
-    //       });
-    //     });
-    //   }
-    // });
+        getUserLoginData().then((device_data) {
+          setState(() {
+            for(Location lokasi in master_data!.data!.location){
+              // _lokasiList.add(Location(
+              // branchId: device_data.branch?.branchId ?? "",
+              // branchName: device_data.branch?.branchName ?? "",
+
+              daftarRigTujuan.add(
+              lokasi.branchId ?? "-",
+            );
+            }
+          });
+        });
+      }
+    });
   }
 
   Future<void> _loadUserData() async {
   user_list = await _dataBaseHelper.queryAllUsers();
   // print(user_list);
   setState(() {});}
-
-    
 }

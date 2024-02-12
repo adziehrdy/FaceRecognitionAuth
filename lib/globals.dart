@@ -10,6 +10,7 @@ import 'package:dio/dio.dart';
 import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/model_master_shift.dart';
+import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:face_net_authentication/pages/force_upgrade.dart';
 import 'package:face_net_authentication/pages/login.dart';
 import 'package:face_net_authentication/repo/custom_exception.dart';
@@ -206,6 +207,7 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url, {Map<String, dy
     
 
     // print("PAYLOAD = "+jsonEncode(data));
+    log("API = "+url);
     log("PAYLOAD = "+jsonEncode(data));
     
 
@@ -242,7 +244,8 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url, {Map<String, dy
       return await dio.get(url);
     } else if (method == ApiMethods.POST) {
       String jsonSting = jsonEncode(data);
-      print(jsonSting);
+      log("================ RESPONSE ==================");
+      log(jsonSting);
       return await dio.post(
         url,
         data: data != null ? json.encode(data) : "",
@@ -295,7 +298,8 @@ Future<Response<dynamic>> callApiWithoutToken(ApiMethods method, String url, {Ma
       return await dio.get(url);
     } else if (method == ApiMethods.POST) {
       String jsonString = jsonEncode(data);
-      print(jsonString);
+      log("================ RESPONSE ==================");
+      log(jsonString);
       return await dio.post(
         url,
         data: data != null ? json.encode(data) : "",
@@ -456,7 +460,12 @@ String formatDate(DateTime dateTime) {
   return formatter.format(dateTime);
 }
 
-String formatDateRegisterForm(DateTime dateTime) {
+String formatDateForFilter(DateTime dateTime) {
+  DateFormat formatter = DateFormat("yyyy-MM-dd");
+  return formatter.format(dateTime);
+}
+
+String formatDateOnly(DateTime dateTime) {
   DateFormat formatter = DateFormat("dd-MM-yyyy");
   return formatter.format(dateTime);
 }
@@ -475,8 +484,6 @@ String formatDateRegisterForm(DateTime dateTime) {
       LoginModel data = LoginModel.fromMap(json.decode(JsonData));
       
       return data;
-      
-    
   }
 
   Future<void> logout(context)async {
@@ -512,37 +519,47 @@ Future<String?> getPIN() async {
    return prefs.getString("PIN_"+active_super_attendance.toString());
 }
 
-Future<void> checkIsNeedForceUpgrade(context) async {
+
+Future<void> checkIsNeedForceUpgrade(BuildContext context) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? latestVersion = await prefs.getString("LATEST_VERSION");
 
-      PackageInfo info = await PackageInfo.fromPlatform();
-
-    
+  PackageInfo info = await PackageInfo.fromPlatform();
   String currentVersion = info.version;
 
-  if(latestVersion != null){
+  if (latestVersion != null) {
     List<String> latestParts = latestVersion.split('.');
-  List<String> currentParts = currentVersion.split('.');
+    List<String> currentParts = currentVersion.split('.');
 
-  // Menentukan panjang maksimum dari kedua versi
-  int maxLength = latestParts.length > currentParts.length ? latestParts.length : currentParts.length;
+    // Menentukan panjang maksimum dari kedua versi
+    int maxLength =
+        latestParts.length > currentParts.length ? latestParts.length : currentParts.length;
 
-  for (int i = 0; i < maxLength; i++) {
-    int latest = i < latestParts.length ? int.parse(latestParts[i]) : 0;
-    int current = i < currentParts.length ? int.parse(currentParts[i]) : 0;
+    for (int i = 0; i < maxLength; i++) {
+      int latest = i < latestParts.length ? int.parse(latestParts[i]) : 0;
+      int current = i < currentParts.length ? int.parse(currentParts[i]) : 0;
 
-    if (latest > current) {
-
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ForceUpgrade(isLoged: true,currentVersion: currentVersion,latestVersion: latestVersion),));
-     
-    } else if (latest < current) {
-      
+      if (latest > current) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ForceUpgrade(
+              isLoged: true,
+              currentVersion: currentVersion,
+              latestVersion: latestVersion!,
+            ),
+          ),
+        );
+        return; // Keluar dari metode setelah melakukan navigasi
+      } else if (latest < current) {
+        return; // Keluar dari metode karena versi terbaru lebih kecil
+      }
+      // Jika kedua versi sama pada bagian ini, lanjutkan perbandingan untuk bagian berikutnya
     }
-    // Jika kedua versi sama pada bagian ini, lanjutkan perbandingan untuk bagian berikutnya
+
+    // Jika kedua versi sama, tidak perlu melakukan apa-apa
+    return; // Keluar dari metode karena kedua versi sama
   }
-  }
-  
 }
 
 Future<List<int>> convertXFIleToImage(XFile file) async {
@@ -604,6 +621,8 @@ Uint8List decodeToBase64ToImage(String input) {
   }
 
      bool pulangCepatChecker(String jamKeluar, String jamShift) {
+
+
     // Memisahkan tanggal dan waktu pada time1
 
 
@@ -613,6 +632,9 @@ Uint8List decodeToBase64ToImage(String input) {
 
     // Konversi string waktu menjadi objek DateTime
     DateTime dateTime1 = DateTime.parse(combinedTime);
+
+    //TOLERANCE
+
     DateTime dateTime2 = DateTime.parse(jamKeluar);
 
     // Bandingkan waktu
@@ -623,6 +645,21 @@ Uint8List decodeToBase64ToImage(String input) {
       log("KELUAR TIME = " + jamKeluar + "=" "NORMAL");
       return false;
     }
+  }
+
+int calculateTimeDifference(String jamMasuk, String JamKeluar) {
+
+    DateTime start = DateTime.parse(jamMasuk);
+    DateTime end = DateTime.parse(JamKeluar);
+    // DateTime start = DateTime.parse("2022-01-01 $jamMasuk");
+    // DateTime end = DateTime.parse("2022-01-01 $JamKeluar");
+
+    Duration differenceDuration = end.difference(start);
+
+    int hours = differenceDuration.inHours;
+    int minutes = (differenceDuration.inMinutes % 60).abs();
+
+    return hours;
   }
 
 
@@ -838,8 +875,59 @@ print(deviceType);
     }else{
       return [];
     }
-
   }
+
+  List<BranchStatus> getAllBrachStatus(String jsonStr) {
+  final parsed = json.decode(jsonStr).cast<Map<String, dynamic>>();
+  return parsed.map<BranchStatus>((json) => BranchStatus.fromJson(json)).toList();
+}
+
+  Future<bool?> showLocationPermissionDialog(BuildContext context) async {
+  return await showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('SmartCheck ingin mengakses lokasi Anda'),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Aplikasi kami membutuhkan akses lokasi Anda untuk memungkinkan Anda melakukan absensi dengan lebih akurat. Lokasi Anda akan digunakan hanya selama sesi absensi dan tidak akan disimpan atau digunakan untuk tujuan lain. Kami menghargai privasi Anda dan ingin memastikan bahwa Anda merasa aman menggunakan aplikasi kami.',
+            ),
+            SizedBox(height: 16.0),
+            Text('Apa yang akan kami lakukan dengan informasi lokasi Anda:'),
+            Text('- Menentukan lokasi Anda saat melakukan absensi.'),
+            Text('- Meningkatkan akurasi absensi dengan memastikan Anda berada di lokasi yang benar.'),
+            SizedBox(height: 16.0),
+            Text('Apa yang tidak akan kami lakukan:'),
+            Text('- Tidak akan membagikan informasi lokasi Anda dengan pihak ketiga.'),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(false); // Tidak memberikan izin
+            },
+            child: Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(true); // Memberikan izin
+            },
+            child: Text('Izinkan Akses Lokasi'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+  
+
+
+
+
 
 
 

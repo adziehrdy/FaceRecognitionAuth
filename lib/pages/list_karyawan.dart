@@ -19,6 +19,7 @@ class ListKaryawan extends StatefulWidget {
 class _ListKaryawanState extends State<ListKaryawan> {
   DatabaseHelperEmployee _dataBaseHelper = DatabaseHelperEmployee.instance;
   List<User> user_list = [];
+  List<bool> selected = [];
   String branchID = "";
 
   @override
@@ -122,7 +123,12 @@ class _ListKaryawanState extends State<ListKaryawan> {
                 PersonView(
                   personList: user_list, onFinish: () { 
                     _loadUserData();
-                   },
+                   }, onUserSelected: (int ) { 
+                    print(int.toString());
+                    print(selected);
+                    }, selected: [], onShiftUpdated: () { 
+                      _loadUserData();
+                     },
                   // homePageState: this,
                 ),
                 Column(
@@ -209,6 +215,7 @@ class _ListKaryawanState extends State<ListKaryawan> {
               value: ((processedItems / totalItems) * 100).toInt(),
               msg: 'Updating data... ($processedItems/$totalItems)',
             );
+            selected.add(false);
           }
         } catch (e) {
           await _dataBaseHelper.deleteAll();
@@ -232,7 +239,16 @@ class _ListKaryawanState extends State<ListKaryawan> {
 
   Future<void> _loadUserData() async {
   user_list = await _dataBaseHelper.queryAllUsers();
+  if(user_list.isEmpty){
+    refreshEmployee(context);
+  }
   // print(user_list);
   setState(() {});
+}
+
+void _onUserSelected(int index) {
+  setState(() {
+    selected[index] = !selected[index];
+  });
 }
 }

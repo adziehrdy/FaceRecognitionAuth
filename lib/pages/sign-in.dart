@@ -160,7 +160,7 @@ class SignInState extends State<SignIn> {
 
       //  //TESTING ABSENSI
 
-      //  textJamAbsensi = "2024-01-04 01:51:46";
+      //  textJamAbsensi = "2024-02-11 07:30:00";
       //  jamAbsensi = DateTime.parse(textJamAbsensi!);
 
       //  //TESTING ABSENSI

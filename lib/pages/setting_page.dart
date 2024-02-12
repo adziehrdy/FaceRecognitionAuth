@@ -1,4 +1,6 @@
 import 'package:face_net_authentication/globals.dart';
+import 'package:face_net_authentication/models/login_model.dart';
+import 'package:face_net_authentication/pages/userguide_view.dart';
 import 'package:flutter/material.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,6 +16,7 @@ class _SettingPageState extends State<SettingPage> {
   late int _delayTimeout;
   late TextEditingController _delayController;
   late bool landscapeMode;
+  String tolerance = "";
 
   @override
   void initState() {
@@ -26,6 +29,11 @@ class _SettingPageState extends State<SettingPage> {
   }
 
   _loadThreshold() async {
+
+
+    LoginModel loginData = await getUserLoginData();
+    tolerance = (loginData.branch?.tolerance ?? 0).toString();
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     _threshold = await prefs.getDouble('threshold') ?? 0.8;
     setState(() {
@@ -136,6 +144,8 @@ class _SettingPageState extends State<SettingPage> {
               divisions: 15,
               label: _delayTimeout.toString(),
             ),
+                        SizedBox(height: 20),
+            Row(children: [ Text('Toleransi Absensi : ' + tolerance + " Jam"),],),
             SizedBox(height: 20),
             // Row(children: [
             //   Text("Mode Landscape"),
@@ -148,12 +158,28 @@ class _SettingPageState extends State<SettingPage> {
             //   },)
             // ],),
                         SizedBox(height: 20),
+                                    
             ElevatedButton(
               onPressed: () async {
                 await _showConfirmationDialog(context);
               },
               child: Text('Simpan dan Restart Aplikasi'),
             ),
+
+            SizedBox(height: 150,),
+            Center(child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.info,color: Colors.blue,),
+                TextButton(
+                  onPressed: () async {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => userguide_view()) );
+                  },
+                  child: Text('USER GUIDE PENGGUNAAN APLIKASI'),
+                ),
+              ],
+            ),),
+            
           ],
         ),
       ),

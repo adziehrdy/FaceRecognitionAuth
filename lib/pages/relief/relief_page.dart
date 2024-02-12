@@ -111,12 +111,12 @@ class _ReliefPageState extends State<ReliefPage> {
                       ),
                       Text(
                         "Tanggal Mulai : " +
-                            (formatDateRegisterForm(
+                            (formatDateOnly(
                                 listRelief[index].reliefStartDate ??
                                     DateTime.now())),
                       ),
                       Text("Tanggal Selesai : " +
-                          (formatDateRegisterForm(
+                          (formatDateOnly(
                               listRelief[index].reliefEndDate ??
                                   DateTime.now()))),
                       Text("Status Relief : " +
