@@ -1,36 +1,34 @@
-import 'dart:convert';
-import 'dart:developer';
-
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/master_register_model.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
-import 'package:face_net_authentication/repo/global_repos.dart';
 import 'package:face_net_authentication/repo/relief_repos.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
-class ReliefForm extends StatefulWidget {
-  const ReliefForm({Key? key}) : super(key: key);
+class DKForm extends StatefulWidget {
+  const DKForm({Key? key}) : super(key: key);
 
   @override
-  _ReliefFormState createState() => _ReliefFormState();
+  _DKFormState createState() => _DKFormState();
 }
 
-class _ReliefFormState extends State<ReliefForm> {
+class _DKFormState extends State<DKForm> {
   // Controller untuk mengelola nilai dari TextInput
   TextEditingController deskripsiController = TextEditingController();
   TextEditingController catatanController = TextEditingController();
+  TextEditingController biayaDinasController = TextEditingController();
 
   // Variabel untuk menyimpan nilai dari Date dan Time Picker
   DateTime tanggalMulai = DateTime.now();
-  TimeOfDay jamMulai = TimeOfDay.now();
   DateTime tanggalSelesai = DateTime.now();
-  TimeOfDay jamSelesai = TimeOfDay.now();
+
+  final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp. ');
+// String formattedValue = currencyFormat.format(int.parse(biayaDinasController.text));
 
   List<Employee> _approvalList = [];
   List<Division> _divisiList = [];
-  List<Location> _lokasiList = [];
   List<Role> _roleList = [];
   bool _dataLoaded = false;
 
@@ -65,37 +63,19 @@ class _ReliefFormState extends State<ReliefForm> {
     }
   }
 
-  // Method untuk menampilkan TimePicker
-  Future<void> _selectTime(BuildContext context, bool isStartTime) async {
-    TimeOfDay? selectedTime = await showTimePicker(
-      context: context,
-      initialTime: isStartTime ? jamMulai : jamSelesai,
-    );
-
-    if (selectedTime != null &&
-        selectedTime != (isStartTime ? jamMulai : jamSelesai)) {
-      setState(() {
-        if (isStartTime) {
-          jamMulai = selectedTime;
-        } else {
-          jamSelesai = selectedTime;
-        }
-      });
-    }
-  }
-
   // Method untuk menangani submit form
   Future<void> _showSummaryDialog() async {
     String superIntendentID = await getActiveSuperIntendentID();
 
     // Validasi nama TKJP
-    if (pekerjaDropdownValue == null || rigTujuanDropdownValue == null) {
+
+    if (pekerjaDropdownValue == null) {
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             title: Text('Error'),
-            content: Text('Nama TKJP dan Rig Tujuan tidak boleh kosong'),
+            content: Text('Nama TKJP tidak boleh kosong'),
             actions: <Widget>[
               TextButton(
                 onPressed: () {
@@ -129,24 +109,10 @@ class _ReliefFormState extends State<ReliefForm> {
                 ),
                 ListTile(
                   title: Text(
-                    'Rig Tujuan',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(rigTujuanDropdownValue ?? "-"),
-                ),
-                ListTile(
-                  title: Text(
                     'Tanggal Mulai',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(formatDateOnly(tanggalMulai)),
-                ),
-                ListTile(
-                  title: Text(
-                    'Jam Mulai',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text("${jamMulai.format(context)}"),
                 ),
                 ListTile(
                   title: Text(
@@ -157,14 +123,7 @@ class _ReliefFormState extends State<ReliefForm> {
                 ),
                 ListTile(
                   title: Text(
-                    'Jam Selesai',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text("${jamSelesai.format(context)}"),
-                ),
-                ListTile(
-                  title: Text(
-                    'Deskripsi Tugas',
+                    'Deskripsi Dinas Khusus',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(deskripsiController.text),
@@ -192,27 +151,24 @@ class _ReliefFormState extends State<ReliefForm> {
                 // Format tanggal dan waktu untuk start_date dan end_date
                 DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
                 String startDateFormatted = dateFormat.format(DateTime(
-                    tanggalMulai.year,
-                    tanggalMulai.month,
-                    tanggalMulai.day,
-                    jamMulai.hour,
-                    jamMulai.minute));
+                  tanggalMulai.year,
+                  tanggalMulai.month,
+                  tanggalMulai.day,
+                ));
                 String endDateFormatted = dateFormat.format(DateTime(
-                    tanggalSelesai.year,
-                    tanggalSelesai.month,
-                    tanggalSelesai.day,
-                    jamSelesai.hour,
-                    jamSelesai.minute));
+                  tanggalSelesai.year,
+                  tanggalSelesai.month,
+                  tanggalSelesai.day,
+                ));
 
                 // Lakukan logika pengiriman data atau simpan ke database di sini
                 print("Data yang dikirim:");
                 print("Nama Pekerja: " +
                     pekerjaDropdownValue!.employee_id.toString());
-                print("Rig Tujuan: ${rigTujuanDropdownValue}");
                 print("Tanggal Mulai: $tanggalMulai");
-                print("Jam Mulai: $jamMulai");
+
                 print("Tanggal Selesai: $tanggalSelesai");
-                print("Jam Selesai: $jamSelesai");
+
                 print("Deskripsi Tugas: ${deskripsiController.text}");
                 print("Catatan: ${catatanController.text}");
 
@@ -225,7 +181,6 @@ class _ReliefFormState extends State<ReliefForm> {
                   "note": catatanController.text,
                   "total_days":
                       tanggalSelesai.difference(tanggalMulai).inDays + 1,
-                  "to_branch": rigTujuanDropdownValue
                 };
                 print(payload);
 
@@ -246,14 +201,12 @@ class _ReliefFormState extends State<ReliefForm> {
 
   // Nilai default untuk dropdown
   User? pekerjaDropdownValue;
-  String? rigTujuanDropdownValue;
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     _loadUserData();
-    hitGetMasterRegister();
   }
 
   @override
@@ -272,7 +225,11 @@ class _ReliefFormState extends State<ReliefForm> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(
-                height: 20,
+                height: 50,
+              ),
+              Text("Form Dinas Khusus",style: TextStyle(color: Colors.blue,fontWeight: FontWeight.bold, fontSize: 30),),
+              SizedBox(
+                height: 15,
               ),
               Text("Nama TKJP"),
               // Dropdown untuk Nama Pekerja
@@ -296,7 +253,7 @@ class _ReliefFormState extends State<ReliefForm> {
                         SizedBox(
                           width: 10,
                         ),
-                        Text(((pekerja.employee_name ?? "-") +
+                        Text(((pekerja.employee_name ?? "-").toUpperCase() +
                             " - (" +
                             (pekerja.employee_id ?? "-") +
                             ")")),
@@ -308,33 +265,7 @@ class _ReliefFormState extends State<ReliefForm> {
               SizedBox(height: 16.0),
 
               // Dropdown untuk Rig Tujuan
-              Text("RIG Tujuan"),
-              DropdownButtonFormField<String>(
-                value: rigTujuanDropdownValue,
-                hint: Text('Pilih Rig Tujuan'),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    rigTujuanDropdownValue = newValue;
-                  });
-                },
-                items: daftarRigTujuan.map((String rigTujuan) {
-                  return DropdownMenuItem<String>(
-                    value: rigTujuan,
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.location_city,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        SizedBox(
-                          width: 10,
-                        ),
-                        Text(rigTujuan),
-                      ],
-                    ),
-                  );
-                }).toList(),
-              ),
+
               SizedBox(height: 16.0),
 
               // Date Picker dan Time Picker untuk Tanggal dan Jam Mulai
@@ -358,28 +289,6 @@ class _ReliefFormState extends State<ReliefForm> {
                   SizedBox(width: 16.0),
                   Expanded(
                     child: InkWell(
-                      onTap: () => _selectTime(context, true),
-                      child: InputDecorator(
-                        decoration: InputDecoration(
-                          labelText: 'Jam Mulai',
-                          border: OutlineInputBorder(),
-                        ),
-                        child: Text(
-                          "${jamMulai.format(context)}",
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 16.0),
-
-              // Date Picker dan Time Picker untuk Tanggal dan Jam Selesai
-              Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
                       onTap: () =>
                           _selectDate(context, false, "Tanggal Selesai"),
                       child: InputDecorator(
@@ -394,31 +303,39 @@ class _ReliefFormState extends State<ReliefForm> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 16.0),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => _selectTime(context, false),
-                      child: InputDecorator(
-                        decoration: InputDecoration(
-                          labelText: 'Jam Selesai',
-                          border: OutlineInputBorder(),
-                        ),
-                        child: Text(
-                          "${jamSelesai.format(context)}",
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
               SizedBox(height: 16.0),
 
+              // Date Picker dan Time Picker untuk Tanggal dan Jam Selesai
+
               // TextInput untuk Deskripsi Tugas
+              TextFormField(
+                controller: biayaDinasController,
+                decoration: InputDecoration(
+                  labelText: 'Biaya Dinas Khusus',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  TextInputFormatter.withFunction((oldValue, newValue) {
+                    final regExp = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+                    final newString = newValue.text
+                        .replaceAllMapped(regExp, (match) => '${match[1]},');
+                    return TextEditingValue(
+                      text: 'Rp. $newString',
+                      selection: TextSelection.collapsed(
+                          offset: 'Rp. $newString'.length),
+                    );
+                  }),
+                ],
+              ),
+              SizedBox(height: 16.0),
               TextFormField(
                 controller: deskripsiController,
                 decoration: InputDecoration(
-                  labelText: 'Deskripsi Tugas',
+                  labelText: 'Deskripsi Dinas Khusus',
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 3,
@@ -449,34 +366,6 @@ class _ReliefFormState extends State<ReliefForm> {
         ),
       ),
     );
-  }
-
-  Future<void> hitGetMasterRegister() async {
-    String? data = await GlobalRepo().getMasterRegister();
-
-    setState(() {
-      if (data != null) {
-        log(json.decode(data).toString());
-        master_data = master_register_model.fromJson(json.decode(data));
-        log(json.decode(data).toString());
-        // _divisiList = master_data!.data.division;
-        // _roleList = master_data!.data.role;
-
-        getUserLoginData().then((device_data) {
-          setState(() {
-            for (Location lokasi in master_data!.data!.location) {
-              // _lokasiList.add(Location(
-              // branchId: device_data.branch?.branchId ?? "",
-              // branchName: device_data.branch?.branchName ?? "",
-
-              daftarRigTujuan.add(
-                lokasi.branchId ?? "-",
-              );
-            }
-          });
-        });
-      }
-    });
   }
 
   Future<void> _loadUserData() async {

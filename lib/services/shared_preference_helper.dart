@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/login_model.dart';
+import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<SharedPreferences> initSP() async {
@@ -14,15 +17,52 @@ SpSetLastLoc(double lat, double long, String loc) async {
   await sp.setString("LOC", loc);
 }
 
-SpSetStatusRig(String status) async {
+SpSetALLStatusRig(String status) async {
   SharedPreferences sp = await initSP();
-  await sp.setString("RIG_STATUS", status);
+  await sp.setString("ALL_STATUS_RIG", status);
 }
 
-Future<String> SpGetStatusRig() async {
+Future<List<BranchStatus>>SpGetALLStatusRig() async {
+SharedPreferences sp = await initSP();
+List<BranchStatus> result = [];
+ String RIG_STATUS = await sp.getString("ALL_STATUS_RIG") ?? "-";
+
+
+ if(RIG_STATUS != "-"){
+  
+  List<Map<String, dynamic>> parsed = jsonDecode(RIG_STATUS).cast<Map<String, dynamic>>();
+  return parsed.map<BranchStatus>((RIG_STATUS) => BranchStatus.fromJson(RIG_STATUS)).toList();
+ }else{
+  return result;
+ }
+
+ 
+}
+
+
+
+SpSetSelectedStatusRig(String status) async {
   SharedPreferences sp = await initSP();
- String RIG_STATUS = await sp.getString("RIG_STATUS") ?? "-";
- return RIG_STATUS;
+  await sp.setString("RIG_STATUS_SELECTED", status);
+}
+
+
+
+
+
+Future<BranchStatus?> SpGetSelectedStatusRig() async {
+SharedPreferences sp = await initSP();
+
+ String RIG_STATUS = await sp.getString("RIG_STATUS_SELECTED") ?? "[]";
+
+ BranchStatus?  currentStatus = null;
+ if(RIG_STATUS != "[]"){
+  currentStatus = BranchStatus.fromJson(jsonDecode(RIG_STATUS));
+ }else{
+  return null;
+ }
+
+ 
 }
 
 Future<double> SpGetLastLat() async {

@@ -14,13 +14,17 @@ void main() async {
   
   watchKioskMode().listen((mode) async {
     if (mode != KioskMode.enabled){
-    await startKioskMode();
+    // await startKioskMode();
     }
   });
   await setDeviceOrientationByDevice();
 
 
   setupServices();
+
+  // GlobalRepo repo= GlobalRepo();
+  // List<MasterBranches?> branches = await repo.hitGetMasterBranches();
+  // log(jsonEncode(branches));
 
 
 
@@ -29,7 +33,7 @@ void main() async {
   getThreshold().then(
     (value) {
       if (value == null) {
-        saveThreshold(COSTANT_VAR.DEFAULT_TRESHOLD.toString());
+        saveThreshold(CONSTANT_VAR.DEFAULT_TRESHOLD.toString());
       }
     },
   );
@@ -47,9 +51,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
    
     return MaterialApp(
+      
       theme:
           ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue)),
       home: isLoggedIn ? HomePage() : LoginPage(),
+      // builder: EasyLoading.init(),
+
     );
   }
 }

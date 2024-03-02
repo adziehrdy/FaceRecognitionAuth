@@ -23,7 +23,7 @@ class MLService {
 
   Future initialize() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
-    threshold = pref.getDouble("threshold") ?? COSTANT_VAR.DEFAULT_TRESHOLD;
+    threshold = pref.getDouble("threshold") ?? CONSTANT_VAR.DEFAULT_TRESHOLD;
 
     landscape_mode = pref.getBool("LANDSCAPE_MODE") ?? false;
 

@@ -10,7 +10,6 @@ import 'package:dio/dio.dart';
 import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/model_master_shift.dart';
-import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:face_net_authentication/pages/force_upgrade.dart';
 import 'package:face_net_authentication/pages/login.dart';
 import 'package:face_net_authentication/repo/custom_exception.dart';
@@ -198,7 +197,7 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url, {Map<String, dy
     }
     
     // await getEndpointURL();
-    url = COSTANT_VAR.BASE_URL_API + "" + url;
+    url = CONSTANT_VAR.BASE_URL_API + "" + url;
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
@@ -288,7 +287,7 @@ Future<Response<dynamic>> callApiWithoutToken(ApiMethods method, String url, {Ma
       "Accept": "application/json",
     };
 
-    url = COSTANT_VAR.BASE_URL_API + "" + url;
+    url = CONSTANT_VAR.BASE_URL_API + "" + url;
 
     print(url);
     
@@ -526,6 +525,8 @@ Future<void> checkIsNeedForceUpgrade(BuildContext context) async {
 
   PackageInfo info = await PackageInfo.fromPlatform();
   String currentVersion = info.version;
+
+  // latestVersion = "3.0.0";
 
   if (latestVersion != null) {
     List<String> latestParts = latestVersion.split('.');
@@ -860,7 +861,7 @@ print(deviceType);
             fit: BoxFit.cover, // Sesuaikan sesuai kebutuhan Anda
           );
     }catch(e){
-      return Image.network(COSTANT_VAR.BASE_URL_PUBLIC + file!);
+      return Image.network(CONSTANT_VAR.BASE_URL_PUBLIC + file!);
     }
       }
   }
@@ -877,10 +878,10 @@ print(deviceType);
     }
   }
 
-  List<BranchStatus> getAllBrachStatus(String jsonStr) {
-  final parsed = json.decode(jsonStr).cast<Map<String, dynamic>>();
-  return parsed.map<BranchStatus>((json) => BranchStatus.fromJson(json)).toList();
-}
+//   List<BranchStatus> getAllBrachStatus(String jsonStr) {
+//   final parsed = json.decode(jsonStr).cast<Map<String, dynamic>>();
+//   return parsed.map<BranchStatus>((json) => BranchStatus.fromJson(json)).toList();
+// }
 
   Future<bool?> showLocationPermissionDialog(BuildContext context) async {
   return await showDialog<bool>(

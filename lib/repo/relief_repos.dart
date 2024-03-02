@@ -11,8 +11,8 @@ class ReliefRepo {
     LoginModel user = await getUserLoginData();
 
     try {
-      Response res = await callApi(ApiMethods.GET, '/master/list-relief/LUWUK-04-3');
-      // Response res = await callApi(ApiMethods.GET, 'api/master/list-relief/'+(user.branch!.branchId));
+      // Response res = await callApi(ApiMethods.GET, '/master/list-relief/LUWUK-04-3');
+      Response res = await callApi(ApiMethods.GET, '/master/list-relief/'+(user.branch!.branchId));
       log(json.encode(res.data));
       return json.encode(res.data);
     } catch (e) {
@@ -20,5 +20,18 @@ class ReliefRepo {
       return [];
     }
   }
+
+  Future hitFormRelief(Map<String,dynamic> form_data) async{
+    try {
+      Response res = await callApi(ApiMethods.POST, '/master/employee-relief',data: form_data);
+      log(json.encode(res.data));
+      return json.encode(res.data);
+    } catch (e) {
+      print("ERROR SUBMIT RELIEF");
+      return false;
+    }
+  }
+
+
 
 }

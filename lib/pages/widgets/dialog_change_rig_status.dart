@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:face_net_authentication/constants/constants.dart';
-import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +20,7 @@ class _dialog_change_rig_statusState extends State<dialog_change_rig_status> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    rig_statuses = getAllBrachStatus(COSTANT_VAR.SHIFT_RIG_DUMMY);
+    SpGetALLStatusRig().then((value) => rig_statuses = value);
     print(rig_statuses);
   }
 
@@ -79,15 +77,25 @@ class _dialog_change_rig_statusState extends State<dialog_change_rig_status> {
               shrinkWrap: true,
               itemCount: rig_statuses.length,
               itemBuilder: (context, index) {
-                return ElevatedButton(
-                  onPressed: () async {
-                    // Set the selected status when a button is pressed
-                    await SpSetStatusRig(jsonEncode(rig_statuses[index])); // CARA SAVE STRING DARI OBJEK
-                    Navigator.pop(context);
-                    // You can add additional logic or callback here
-                    // For example, you can call a function to handle the selected status
-                  },
-                  child: Text(rig_statuses[index].statusBranch),
+                return Row(
+                  children: [
+                    Expanded(child: ElevatedButton(
+                      onPressed: () async {
+                        // Set the selected status when a button is pressed
+                        await SpSetSelectedStatusRig(jsonEncode(rig_statuses[index])); // CARA SAVE STRING DARI OBJEK
+                        Navigator.pop(context);
+                        // You can add additional logic or callback here
+                        // For example, you can call a function to handle the selected status
+                      },
+                      child: Text(rig_statuses[index].statusBranch ?? "-"),
+                    ),),
+                    // Container(
+                    //   width: 20,
+                    //   child: IconButton(onPressed: (){
+                      
+                    //   }, icon: Icon(Icons.info_outline)),
+                    // )
+                  ],
                 );
               },
             ),

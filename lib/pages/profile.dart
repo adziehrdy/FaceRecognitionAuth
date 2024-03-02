@@ -89,7 +89,7 @@ class Profile extends StatelessWidget {
                         alignment: Alignment.center,
                         padding:
                             EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                        width: MediaQuery.of(context).size.width * COSTANT_VAR.DEFAULT_TRESHOLD,
+                        width: MediaQuery.of(context).size.width * CONSTANT_VAR.DEFAULT_TRESHOLD,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

@@ -3,6 +3,10 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:face_net_authentication/models/appversion_model.dart';
+import 'package:face_net_authentication/models/login_model.dart';
+import 'package:face_net_authentication/models/model_master_branch.dart';
+import 'package:face_net_authentication/models/model_rig_shift.dart';
+import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../globals.dart';
@@ -43,6 +47,7 @@ class GlobalRepo {
     await checkIsNeedForceUpgrade(context);
   }
 
+
   Future<String?> getMasterRegister() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     try {
@@ -68,58 +73,51 @@ class GlobalRepo {
 
   Future<String?> hitApiGetMsterShift() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-      Response res = await callApi(ApiMethods.GET, '/master/shift');
+    Response res = await callApi(ApiMethods.GET, '/master/shift');
 
-      if (res.statusCode == 200) {
-        await prefs.setString(
-            "MASTER_SHIFT", jsonEncode(res.data).toString());
-        return jsonEncode(res.data).toString();
-      } else {
-        print("Failed to retrieve data from master register");
-        return prefs.getString("MASTER_SHIFT");
-      }
+    if (res.statusCode == 200) {
+      await prefs.setString("MASTER_SHIFT", jsonEncode(res.data).toString());
+      return jsonEncode(res.data).toString();
+    } else {
+      print("Failed to retrieve data from master register");
+      return prefs.getString("MASTER_SHIFT");
     }
+  }
 
-      Future<bool> hitUpdateMasterShift(String employee_id, String shift_id) async {
+  Future<bool> hitUpdateMasterShift(String employee_id, String shift_id) async {
+    String approver = await getActiveSuperIntendentID();
 
-        String approver = await getActiveSuperIntendentID();
-        
-
-        try{
-      Response res = await callApi(ApiMethods.POST, '/employee/change-shift',data: 
-      {
-        "employee_id": employee_id,
-        "shift_id" : shift_id,
-        "approved_by" : approver
-      });
+    try {
+      Response res = await callApi(ApiMethods.POST, '/employee/change-shift',
+          data: {
+            "employee_id": employee_id,
+            "shift_id": shift_id,
+            "approved_by": approver
+          });
 
       if (res.statusCode == 200) {
-
-        try{
-        int code = res.data['code'];
-        if(code == 200){
-          return true;
-        }else{
-          showToast(res.data["message"]);
-          return false;
-        }
-        }catch(e){
+        try {
+          int code = res.data['code'];
+          if (code == 200) {
+            return true;
+          } else {
+            showToast(res.data["message"]);
+            return false;
+          }
+        } catch (e) {
           print(e.toString());
           showToast(e.toString());
           return false;
         }
-       
-
-        
       } else {
         showToast("Terjadi Kesalahan, mohon cek koneksi internet");
         return false;
       }
-        }catch(e){
-           showToast("Terjadi Kesalahan, mohon cek koneksi internet");
-        return false;
-        }
+    } catch (e) {
+      showToast("Terjadi Kesalahan, mohon cek koneksi internet");
+      return false;
     }
+  }
 
   Future<bool> hitUpdateLokasi(String latlong, String Alamat) async {
     String id = await getActiveSuperIntendentID();
@@ -151,5 +149,40 @@ class GlobalRepo {
     }
   }
 
-  
+
+  Future<void> hitAllMasterRigStatus() async {
+
+    LoginModel user = await getUserLoginData();
+    Response res = await callApi(ApiMethods.GET, '/master/branch-statuses/'+user.branch!.branchId);
+
+    if (res.statusCode == 200) {
+      await SpSetALLStatusRig(res.data.toString());
+      print(jsonEncode(res.data.toString()));
+      if(await SpGetSelectedStatusRig() == null){
+
+        List<BranchStatus> all_status = await SpGetALLStatusRig();
+        
+        // await await SpSetSelectedStatusRig(jsonDecode(all_status[0].toString()));
+      }
+      
+    } else {
+      showToast("Failed to retrieve data from MASTER_RIG_STATUS " + res.statusCode.toString());
+    }
+  }
+
+
+
+  Future<List<MasterBranches?>> hitGetMasterBranches() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    Response res = await callApi(ApiMethods.GET, '/master/branches');
+
+    if (res.statusCode == 200) {
+      await prefs.setString("MASTER_BRANCHES", jsonEncode(res.data.toString()).toString());
+      return MasterBranches.listFromJson(jsonDecode(res.data.toString()));
+    } else {
+      print("Failed to retrieve data from MASTER_BRANCHES ");
+      return MasterBranches.listFromJson(
+          jsonDecode(await prefs.getString("MASTER_BRANCHES") ?? "[]"));
+    }
+  }
 }

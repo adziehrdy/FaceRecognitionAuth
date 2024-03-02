@@ -1,6 +1,10 @@
+import 'dart:io';
+
+import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/pages/history_absensi_mainPage.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ForceUpgrade extends StatefulWidget {
   const ForceUpgrade({Key? key, required this.isLoged, required this.currentVersion, required this.latestVersion}) : super(key: key);
@@ -14,6 +18,18 @@ class ForceUpgrade extends StatefulWidget {
 }
 
 class _ForceUpgradeState extends State<ForceUpgrade> {
+
+Future<void> _launchUrl() async {
+  late Uri _url ;
+  if(Platform.isAndroid){
+    _url = Uri.parse(CONSTANT_VAR.PLAYSTORE_URL);
+  }else{
+     _url = Uri.parse(CONSTANT_VAR.PLAYSTORE_URL);
+  }
+  if (!await launchUrl(_url)) {
+    throw Exception('Could not launch $_url');
+  }
+}
 
   
   @override
@@ -38,8 +54,8 @@ class _ForceUpgradeState extends State<ForceUpgrade> {
                 SizedBox(height: 15),
                 Lottie.asset(
                   'assets/lottie/force_upgrade.json',
-                  width: 300,
-                  height: 300,
+                  width: 250,
+                  height: 250,
                   fit: BoxFit.fill,
                 ),
                 Text(
@@ -85,7 +101,9 @@ class _ForceUpgradeState extends State<ForceUpgrade> {
                 SizedBox(height: 15),
                 ElevatedButton(
                     style: ButtonStyle(),
-                    onPressed: () {},
+                    onPressed: () {
+                      _launchUrl();
+                    },
                     child: Text("UPGRADE KE V."+widget.latestVersion))
               ],
             ),
@@ -93,5 +111,8 @@ class _ForceUpgradeState extends State<ForceUpgrade> {
         ),)
       ),
     );
+    
   }
+
+
 }

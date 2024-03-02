@@ -1,7 +1,10 @@
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/login_model.dart';
+import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:face_net_authentication/pages/setting_page.dart';
 import 'package:face_net_authentication/pages/switch_supper_attendance.dart';
+import 'package:face_net_authentication/pages/widgets/dialog_change_rig_status.dart';
+import 'package:face_net_authentication/pages/widgets/dialog_rig_info.dart';
 import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
@@ -16,7 +19,7 @@ class UserBanner extends StatefulWidget {
 class _UserBannerState extends State<UserBanner> {
   LoginModel? userInfo;
   String activeSuperAttendace = "-";
-  String status_rig = "-";
+  BranchStatus? status_rig;
 
   @override
   void initState() {
@@ -28,7 +31,7 @@ class _UserBannerState extends State<UserBanner> {
 
   Future<void> _loadUserInfo() async {
     userInfo = await getUserLoginData();
-    status_rig = await SpGetStatusRig();
+    status_rig = await SpGetSelectedStatusRig();
 
     activeSuperAttendace = await getActiveSuperIntendentName();
 
@@ -109,66 +112,78 @@ class _UserBannerState extends State<UserBanner> {
                       SizedBox(
                         width: 30,
                       ),
-                      // InkWell(
-                      //   onTap: () {},
-                      //   child: 
-                      //   Row(
-                      //     children: [
-                      //       Padding(
-                      //           padding: const EdgeInsets.only(left: 8.0),
-                      //           child: InkWell(
-                      //             child: Card(
-                      //               child: Padding(
-                      //                 padding: EdgeInsets.symmetric(
-                      //                     horizontal: 20, vertical: 5),
-                      //                 child: Column(
-                      //                   mainAxisAlignment:
-                      //                       MainAxisAlignment.center,
-                      //                   crossAxisAlignment:
-                      //                       CrossAxisAlignment.start,
-                      //                   children: <Widget>[
-                      //                     Text(
-                      //                       "STATUS RIG :",
-                      //                       style: TextStyle(
-                      //                           color: Colors.black,
-                      //                           fontSize: 9,
-                      //                           fontStyle: FontStyle.italic,
-                      //                           overflow:
-                      //                               TextOverflow.ellipsis),
-                      //                     ),
-                      //                     Text(
-                      //                       status_rig,
-                      //                       style: TextStyle(
-                      //                           color: Colors.red,
-                      //                           fontSize: 18,
-                      //                           fontWeight: FontWeight.bold,
-                      //                           overflow:
-                      //                               TextOverflow.ellipsis),
-                      //                     ),
-                      //                   ],
-                      //                 ),
-                      //               ),
-                      //             ),
-                      //             onTap: () async {
-                      //               await showDialog(
-                      //                 context: context,
-                      //                 builder: (BuildContext context) {
-                      //                   return dialog_change_rig_status();
-                      //                 },
-                      //               );
-                      //             status_rig = await SpGetStatusRig();
-                      //               setState(() {
-                      //                 status_rig;
-                      //               });
-                      //             },
-                      //           )),
-                      //     ],
-                      //   ),
-                      // )
+                      InkWell(
+                        onTap: () {},
+                        child: Row(
+                          children: [
+                            Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
+                                child: InkWell(
+                                  child: Card(
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 20, vertical: 5),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Text(
+                                            "STATUS RIG :",
+                                            style: TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 9,
+                                                fontStyle: FontStyle.italic,
+                                                overflow:
+                                                    TextOverflow.ellipsis),
+                                          ),
+                                          Text(
+                                            (status_rig?.statusBranch ?? "-"),
+                                            style: TextStyle(
+                                                color: Colors.red,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                overflow:
+                                                    TextOverflow.ellipsis),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  onTap: () async {
+                                    await showDialog(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return dialog_change_rig_status();
+                                      },
+                                    );
+                                    status_rig = await SpGetSelectedStatusRig();
+                                    setState(() {
+                                      status_rig;
+                                    });
+                                  },
+                                )),
+                          ],
+                        ),
+                      )
                     ],
                   ),
                   Row(
                     children: [
+                      IconButton(
+                          onPressed: () async {
+                            await showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return dialog_rig_info();
+                              },
+                            );
+                          },
+                          icon: Icon(
+                            Icons.info,
+                            color: Colors.white,
+                          )),
                       IconButton(
                           onPressed: () {
                             PinInputDialog.show(

@@ -202,7 +202,7 @@ class DatabaseHelperAbsensi {
 
                 }else if(tanggalAbsen == kemarin){
                   int perbadinganJam = calculateTimeDifference(data.checkInActual!.toIso8601String(), DateTime.now().toIso8601String());
-                  if(perbadinganJam >= COSTANT_VAR.LAMA_JAM_BEKERJA){
+                  if(perbadinganJam >= CONSTANT_VAR.LAMA_JAM_BEKERJA){
                     canAbsense = true;
                     // break;
                   }else{

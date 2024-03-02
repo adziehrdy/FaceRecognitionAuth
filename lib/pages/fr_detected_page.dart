@@ -3,9 +3,11 @@ import 'dart:typed_data';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/attendance.dart';
 import 'package:face_net_authentication/models/login_model.dart';
+import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
 import 'package:face_net_authentication/repo/attendance_repos.dart';
+import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:intl/intl.dart';
@@ -447,8 +449,28 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
       showToast(e.toString());
     }
 
+
+
+/// GET SHIFT BY RIG STATUS
     String checkin = widget.user.check_in!;
     String checkout = widget.user.check_out!;
+
+    BranchStatus? statusRig = await SpGetSelectedStatusRig();
+
+    if(statusRig != null){
+      for(ShiftBranch rigShift in statusRig.shift){
+        if(rigShift.id == widget.user.shift_id){
+          checkin = rigShift.checkin;
+          checkin = rigShift.checkout;
+          break;
+        }
+      }
+    }
+/// GET SHIFT BY RIG STATUS
+
+    
+    // String checkin = widget.user.check_in!;
+    // String checkout = widget.user.check_out!;
 
     DateTime checkinDateTime = DateTime.parse("2024-01-01 " + checkin);
     DateTime checkoutDateTime = DateTime.parse("2024-01-01 " + checkout);

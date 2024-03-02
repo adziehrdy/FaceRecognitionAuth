@@ -2,18 +2,18 @@ import 'dart:convert';
 
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/reliefModel.dart';
-import 'package:face_net_authentication/pages/relief/relief_form.dart';
+import 'package:face_net_authentication/pages/Dinas%20Khusus/DK_form.dart';
 import 'package:face_net_authentication/repo/relief_repos.dart';
 import 'package:flutter/material.dart';
 
-class ReliefPage extends StatefulWidget {
-  const ReliefPage({Key? key}) : super(key: key);
+class DKPage extends StatefulWidget {
+  const DKPage({Key? key}) : super(key: key);
 
   @override
-  _ReliefPageState createState() => _ReliefPageState();
+  _DKPageState createState() => _DKPageState();
 }
 
-class _ReliefPageState extends State<ReliefPage> {
+class _DKPageState extends State<DKPage> {
   List<ReliefModel> listRelief = [];
 
   @override
@@ -27,19 +27,19 @@ class _ReliefPageState extends State<ReliefPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text('Relief'),
+          title: Text('Dinas Khusus'),
           actions: <Widget>[
             ElevatedButton(
               onPressed: () {
                 Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => ReliefForm()));
+                    MaterialPageRoute(builder: (context) => DKForm()));
               },
               child: Row(children: [
                 Icon(Icons.person_add),
                 SizedBox(
                   width: 10,
                 ),
-                Text("Ajukan Relief"),
+                Text("Ajukan Dinas Khusus"),
                 SizedBox(
                   width: 10,
                 ),
