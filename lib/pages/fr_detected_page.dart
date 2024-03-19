@@ -59,6 +59,8 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
   String? note_status = null;
   String checkin_onShift = "";
   String checkOut_onShift = "";
+  String branch_status_id = "";
+  String attendance_location_id = "";
 
   ProgressButton progressbutt = ProgressButton(
     stateWidgets: {
@@ -96,6 +98,16 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
 
   void initState() {
     super.initState();
+
+    try{
+       SpGetSelectedStatusRig().then((value) {
+      branch_status_id = value!.statusBranchId!;
+    },);
+    }catch(e){
+      showToast("branch_status_id tidak ditemukan, mohon hubungi admin");
+      Navigator.pop(context);
+    }
+   
 
     setTolerance().then((value) {
       isOvernight =
@@ -304,7 +316,9 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
       // "note_status": note_status,
       "check_in_status": note_status,
       "is_uploaded": "0",
-      "shift_id": widget.user.shift_id
+      "shift_id": widget.user.shift_id,
+      "branch_status_id" : branch_status_id,
+      "attendance_location_id" : attendance_location_id
     };
     Attendance dataAbsen = Attendance.fromMap(sampleData);
 
@@ -367,7 +381,9 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
       // "note_status": note_status,
       "check_out_status": note_status,
       "is_uploaded": "0",
-      "shift_id": widget.user.shift_id
+      "shift_id": widget.user.shift_id,
+      "branch_status_id" : branch_status_id,
+      "attendance_location_id" : attendance_location_id
     };
 
     Attendance dataAbsen = Attendance.fromMap(sampleData);
@@ -440,6 +456,8 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
   Future<void> setTolerance() async {
     LoginModel user = await getUserLoginData();
 
+    attendance_location_id = user.branch!.branchId;
+
     int toleranceHour = 0;
     print(toleranceHour * toleranceHour);
     try {
@@ -455,13 +473,13 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
     String checkin = widget.user.check_in!;
     String checkout = widget.user.check_out!;
 
-    BranchStatus? statusRig = await SpGetSelectedStatusRig();
+    RigStatusShift? statusRig = await SpGetSelectedStatusRig();
 
     if(statusRig != null){
-      for(ShiftBranch rigShift in statusRig.shift){
+      for(ShiftRig rigShift in statusRig.shift!){
         if(rigShift.id == widget.user.shift_id){
-          checkin = rigShift.checkin;
-          checkin = rigShift.checkout;
+          checkin = rigShift.checkin!;
+          checkin = rigShift.checkout!;
           break;
         }
       }

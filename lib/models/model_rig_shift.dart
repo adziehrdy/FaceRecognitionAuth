@@ -1,53 +1,57 @@
+// To parse this JSON data, do
+//
+//     final rigStatusShift = rigStatusShiftFromJson(jsonString);
+
 import 'dart:convert';
 
-List<BranchStatus> branchStatusFromJson(String str) => List<BranchStatus>.from(json.decode(str).map((x) => BranchStatus.fromJson(x)));
+List<RigStatusShift> rigStatusShiftFromJson(String str) => List<RigStatusShift>.from(json.decode(str).map((x) => RigStatusShift.fromJson(x)));
 
-String branchStatusToJson(List<BranchStatus> data) => json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
+String rigStatusShiftToJson(List<RigStatusShift> data) => json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
-class BranchStatus {
-    BranchStatus({
-        required this.statusBranchId,
-        required this.branchId,
-        required this.statusBranch,
-        required this.duration,
-        required this.shift,
-    });
-
+class RigStatusShift {
     String? statusBranchId;
     String? branchId;
     String? statusBranch;
-    String? duration;
-    List<ShiftBranch> shift;
+    // String? duration;
+    List<ShiftRig>? shift;
 
-    factory BranchStatus.fromJson(Map<String, dynamic> json) => BranchStatus(
+    RigStatusShift({
+        this.statusBranchId,
+        this.branchId,
+        this.statusBranch,
+        // this.duration,
+        this.shift,
+    });
+
+    factory RigStatusShift.fromJson(Map<String, dynamic> json) => RigStatusShift(
         statusBranchId: json["status_branch_id"],
         branchId: json["branch_id"],
         statusBranch: json["status_branch"],
-        duration: json["duration"],
-        shift: List<ShiftBranch>.from(json["shift"].map((x) => ShiftBranch.fromJson(x))),
+        // duration: json["duration"],
+        shift: json["shift"] == null ? [] : List<ShiftRig>.from(json["shift"]!.map((x) => ShiftRig.fromJson(x))),
     );
 
     Map<String, dynamic> toJson() => {
         "status_branch_id": statusBranchId,
         "branch_id": branchId,
         "status_branch": statusBranch,
-        "duration": duration,
-        "shift": List<dynamic>.from(shift.map((x) => x.toJson())),
+        // "duration": duration,
+        "shift": shift == null ? [] : List<dynamic>.from(shift!.map((x) => x.toJson())),
     };
 }
 
-class ShiftBranch {
-    ShiftBranch({
-        required this.id,
-        required this.checkin,
-        required this.checkout,
+class ShiftRig {
+    String? id;
+    String? checkin;
+    String? checkout;
+
+    ShiftRig({
+        this.id,
+        this.checkin,
+        this.checkout,
     });
 
-    String id;
-    String checkin;
-    String checkout;
-
-    factory ShiftBranch.fromJson(Map<String, dynamic> json) => ShiftBranch(
+    factory ShiftRig.fromJson(Map<String, dynamic> json) => ShiftRig(
         id: json["id"],
         checkin: json["checkin"],
         checkout: json["checkout"],
@@ -58,4 +62,16 @@ class ShiftBranch {
         "checkin": checkin,
         "checkout": checkout,
     };
+}
+
+class EnumValues<T> {
+    Map<String, T> map;
+    late Map<T, String> reverseMap;
+
+    EnumValues(this.map);
+
+    Map<T, String> get reverse {
+        reverseMap = map.map((k, v) => MapEntry(v, k));
+        return reverseMap;
+    }
 }

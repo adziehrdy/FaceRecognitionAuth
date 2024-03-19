@@ -14,14 +14,23 @@ class dialog_change_rig_status extends StatefulWidget {
 class _dialog_change_rig_statusState extends State<dialog_change_rig_status> {
   TextEditingController notesController =
       TextEditingController(); // Track the selected status
-  List<BranchStatus> rig_statuses = [];
+
+  List<RigStatusShift> rig_statuses = [];
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    SpGetALLStatusRig().then((value) => rig_statuses = value);
+    initStatusRig();
+  }
+
+  Future<void> initStatusRig() async {
+    rig_statuses = await SpGetALLStatusRig();
+    setState(() {
+    rig_statuses;
     print(rig_statuses);
+    });
+   
   }
 
   @override

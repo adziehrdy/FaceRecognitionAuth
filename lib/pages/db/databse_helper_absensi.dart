@@ -41,6 +41,9 @@ class DatabaseHelperAbsensi {
   static final String columnShift_id = "shift_id";
   static final String approval_status_in = "approval_status_in";
   static final String approval_status_out = "approval_status_out";
+  static final String branch_status_id = "branch_status_id";
+  static final String attendance_location_id = "attendance_location_id";
+
 
   DatabaseHelperAbsensi._privateConstructor();
 
@@ -56,7 +59,7 @@ class DatabaseHelperAbsensi {
     String path = await getDatabasesPath();
     return await openDatabase(
       '$path/attendance.db',
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
     );
   }
@@ -92,7 +95,9 @@ class DatabaseHelperAbsensi {
         $approval_employee_id TEXT,
         $columnShift_id TEXT,
         $approval_status_in TEXT,
-        $approval_status_out TEXT
+        $approval_status_out TEXT,
+        $branch_status_id TEXT,
+        $attendance_location_id TEXT
       )
     ''');
   }

@@ -43,6 +43,8 @@ class _HomePageState extends State<HomePage> {
     //GET MASTER DATA FOR REGIST FORM
     // GlobalRepo().getMasterRegister();
     GlobalRepo().hitApiGetMsterShift();
+    GlobalRepo().hitAllMasterRigStatus(context);
+
 
     getPIN().then((value) {
       setState(() {
@@ -71,7 +73,8 @@ class _HomePageState extends State<HomePage> {
 
     GlobalRepo().getLatestVersion(context);
 
-    GlobalRepo().hitAllMasterRigStatus();
+
+    // GlobalRepo().hitAllMasterRigStatus(context);
 
 
   }
@@ -249,42 +252,42 @@ class _HomePageState extends State<HomePage> {
                           },
                         ),
 
-                        new HomeMenu(
-                          "Approval",
-                          "assets/images/absent_approval.png",
-                          waitingApproval!,
-                          callback: (p0) {
-                            PinInputDialog.show(context, (p0) {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => approval_main_page()));
-                              // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
-                            });
-                          },
-                        ),
+                        // new HomeMenu(
+                        //   "Approval",
+                        //   "assets/images/absent_approval.png",
+                        //   waitingApproval!,
+                        //   callback: (p0) {
+                        //     PinInputDialog.show(context, (p0) {
+                        //       Navigator.of(context).push(MaterialPageRoute(
+                        //           builder: (context) => approval_main_page()));
+                        //       // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
+                        //     });
+                        //   },
+                        // ),
 
-                        new HomeMenu(
-                          "Relief",
-                          "assets/images/absent_approval.png",
-                          waitingApproval!,
-                          callback: (p0) {
-                            PinInputDialog.show(context, (p0) {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => ReliefPage()));
-                              // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
-                            });
-                          },
-                        ),
+                        // new HomeMenu(
+                        //   "Relief",
+                        //   "assets/images/absent_approval.png",
+                        //   waitingApproval!,
+                        //   callback: (p0) {
+                        //     PinInputDialog.show(context, (p0) {
+                        //       Navigator.of(context).push(MaterialPageRoute(
+                        //           builder: (context) => ReliefPage()));
+                        //       // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
+                        //     });
+                        //   },
+                        // ),
 
                         new HomeMenu(
                           "Dinas Khusus",
                           "assets/images/absent_approval.png",
                           waitingApproval!,
                           callback: (p0) {
-                            PinInputDialog.show(context, (p0) {
+                           
                               Navigator.of(context).push(MaterialPageRoute(
                                   builder: (context) => DKPage()));
                               // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
-                            });
+                            
                           },
                         ),
 

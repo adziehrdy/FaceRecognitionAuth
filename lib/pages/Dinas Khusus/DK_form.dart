@@ -1,7 +1,9 @@
 import 'package:face_net_authentication/globals.dart';
+import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/master_register_model.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
+import 'package:face_net_authentication/repo/DK_repo.dart';
 import 'package:face_net_authentication/repo/relief_repos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,7 +19,6 @@ class DKForm extends StatefulWidget {
 class _DKFormState extends State<DKForm> {
   // Controller untuk mengelola nilai dari TextInput
   TextEditingController deskripsiController = TextEditingController();
-  TextEditingController catatanController = TextEditingController();
   TextEditingController biayaDinasController = TextEditingController();
 
   // Variabel untuk menyimpan nilai dari Date dan Time Picker
@@ -31,6 +32,7 @@ class _DKFormState extends State<DKForm> {
   List<Division> _divisiList = [];
   List<Role> _roleList = [];
   bool _dataLoaded = false;
+  String biaya = "0";
 
   master_register_model? master_data;
 
@@ -128,13 +130,7 @@ class _DKFormState extends State<DKForm> {
                   ),
                   subtitle: Text(deskripsiController.text),
                 ),
-                ListTile(
-                  title: Text(
-                    'Catatan',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(catatanController.text),
-                ),
+                
               ],
             ),
           )),
@@ -146,10 +142,15 @@ class _DKFormState extends State<DKForm> {
               child: Text('Cancel'),
             ),
             ElevatedButton(
+
+              
               onPressed: () async {
+                if(biayaDinasController.text.isNotEmpty){
+                  biaya = biayaDinasController.text;
+                }
                 // Lakukan logika pengiriman data atau simpan ke database di sini
                 // Format tanggal dan waktu untuk start_date dan end_date
-                DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm:ss");
+                DateFormat dateFormat = DateFormat("yyyy-MM-dd");
                 String startDateFormatted = dateFormat.format(DateTime(
                   tanggalMulai.year,
                   tanggalMulai.month,
@@ -170,26 +171,33 @@ class _DKFormState extends State<DKForm> {
                 print("Tanggal Selesai: $tanggalSelesai");
 
                 print("Deskripsi Tugas: ${deskripsiController.text}");
-                print("Catatan: ${catatanController.text}");
+                
+
+
+                LoginModel user = await getUserLoginData();
 
                 Map<String, dynamic> payload = {
                   "employee_id": pekerjaDropdownValue!.employee_id.toString(),
-                  "start_date": startDateFormatted,
-                  "end_date": endDateFormatted,
-                  "approved_by": superIntendentID,
+                  "branch_id" : user.branch!.branchId,
+                  "from_date": startDateFormatted,
+                  "to_date": endDateFormatted,
                   "desc": deskripsiController.text,
-                  "note": catatanController.text,
-                  "total_days":
-                      tanggalSelesai.difference(tanggalMulai).inDays + 1,
+                  "amount": biaya,
+
                 };
                 print(payload);
 
-                ReliefRepo repo = ReliefRepo();
-                await repo.hitFormRelief(payload);
+                DKRepo repo = DKRepo();
+                
+                if(await repo.createDK(payload)){
+                  Navigator.of(context).pop();
+                 Navigator.of(context).pop();
+                }
 
                 // Lakukan pengiriman data atau simpan ke database di sini
 
-                Navigator.of(context).pop();
+                
+
               },
               child: Text('Submit'),
             ),
@@ -317,19 +325,19 @@ class _DKFormState extends State<DKForm> {
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  TextInputFormatter.withFunction((oldValue, newValue) {
-                    final regExp = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
-                    final newString = newValue.text
-                        .replaceAllMapped(regExp, (match) => '${match[1]},');
-                    return TextEditingValue(
-                      text: 'Rp. $newString',
-                      selection: TextSelection.collapsed(
-                          offset: 'Rp. $newString'.length),
-                    );
-                  }),
-                ],
+                // inputFormatters: [
+                //   FilteringTextInputFormatter.digitsOnly,
+                //   TextInputFormatter.withFunction((oldValue, newValue) {
+                //     final regExp = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+                //     final newString = newValue.text
+                //         .replaceAllMapped(regExp, (match) => '${match[1]},');
+                //     return TextEditingValue(
+                //       text: 'Rp. $newString',
+                //       selection: TextSelection.collapsed(
+                //           offset: 'Rp. $newString'.length),
+                //     );
+                //   }),
+                // ],
               ),
               SizedBox(height: 16.0),
               TextFormField(
@@ -340,17 +348,10 @@ class _DKFormState extends State<DKForm> {
                 ),
                 maxLines: 3,
               ),
-              SizedBox(height: 16.0),
+             
 
               // TextInput untuk Catatan
-              TextFormField(
-                controller: catatanController,
-                decoration: InputDecoration(
-                  labelText: 'Catatan',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-              ),
+              
               SizedBox(height: 32.0),
 
               // Tombol Submit

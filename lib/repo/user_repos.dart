@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/home_page.dart';
+import 'package:face_net_authentication/repo/global_repos.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -137,12 +138,21 @@ class UserRepo {
           await prefs.setString('TOKEN', data.accessToken!);
           await prefs.setBool('IS_LOGIN', true);
 
-          Navigator.pop(context);
+          
+
+          bool? hasRigShift = await GlobalRepo().hitAllMasterRigStatus(context);
+
+          if(hasRigShift == true){
+             Navigator.pop(context);
           Navigator.pushReplacement(
               context,
               MaterialPageRoute(
+                 
                 builder: (context) => HomePage(),
               ));
+          }
+
+         
         } else {
           Navigator.pop(context);
           showToast("Branch id kosong, mohon setUp di website");

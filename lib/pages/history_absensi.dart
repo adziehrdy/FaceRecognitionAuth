@@ -14,6 +14,7 @@ class HistoryAbsensi extends StatefulWidget {
 
 class _HistoryAbsensiState extends State<HistoryAbsensi> {
   List<Attendance> _attendanceList = [];
+  bool isLoked = true;
 
   @override
   void initState() {
@@ -46,23 +47,23 @@ class _HistoryAbsensiState extends State<HistoryAbsensi> {
       Attendance? updatedEntry = await DatabaseHelperAbsensi.instance
           .getUpdatedAttendance(entryToDelete.attendanceId!);
 
-        // Cari entri yang cocok dalam _attendanceList
-        try{
-int index = _attendanceList.indexWhere(
+      // Cari entri yang cocok dalam _attendanceList
+      try {
+        int index = _attendanceList.indexWhere(
             (entry) => entry.attendanceId == updatedEntry!.attendanceId);
 
         if (index != -1) {
           // Perbarui entri yang sesuai dengan data yang diperbarui
           _attendanceList[index] = updatedEntry!;
         }
-        }catch (e){
-          print(e.toString());
-        }
+      } catch (e) {
+        print(e.toString());
+      }
 
-        setState(() {
-          _attendanceList;
-        });
-        
+      setState(() {
+        _attendanceList;
+      });
+
       ;
     }
   }
@@ -83,18 +84,29 @@ int index = _attendanceList.indexWhere(
       appBar: AppBar(
         title: Text('Data Absensi'),
         actions: <Widget>[
-          ElevatedButton(onPressed: () {
-            PinInputDialog.show(context, (p0) {
-                _showConfirmationDialog();
-              });
-          },
-          child: Row(children: [
-            Icon(Icons.cloud_circle),
-            SizedBox(width: 10,),
-            Text("Upload Absensi"),
-            SizedBox(width: 10,),
-          ]),)
-          
+          Row(
+            children: [
+              // isLoked ? Icon(Icons.lock,color: Colors.grey,): Icon(Icons.lock_open,color: Colors.blue,),
+              // SizedBox(width: 15),
+              ElevatedButton(
+                onPressed: () {
+                  PinInputDialog.show(context, (p0) {
+                    _showConfirmationDialog();
+                  });
+                },
+                child: Row(children: [
+                  Icon(Icons.cloud_circle),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  Text("Upload Absensi"),
+                  SizedBox(
+                    width: 10,
+                  ),
+                ]),
+              ),
+            ],
+          )
         ],
       ),
       body: _attendanceList.isEmpty
@@ -113,20 +125,21 @@ int index = _attendanceList.indexWhere(
                           try {
                             await _deleteEntryAndRefresh(
                                 _attendanceList[index], tipe_absen);
-                                setState(() {
-                                  _loadData();
-                                });
-                                
+                            setState(() {
+                              _loadData();
+                            });
+
                             showToastShort("Terhapus");
                           } catch (e) {
                             showToastShort("Data Sudah Terhapus");
                           }
                         });
-                      }, onUpdate: () { 
-                         setState(() {
-                                  _loadData();
-                                });
-                       },
+                      },
+                      onUpdate: () {
+                        setState(() {
+                          _loadData();
+                        });
+                      },
                     ),
                   ],
                 );
@@ -142,52 +155,53 @@ int index = _attendanceList.indexWhere(
     ProgressDialog progressDialog = ProgressDialog(context: context);
     progressDialog.show(max: 100, msg: 'Upload data..');
 
-
     for (var index = 0; index < totalCount; index++) {
       bool StillnotCompleteAttendace = false;
       var data = _attendanceList[index];
 
-
-      if(data.checkInStatus == null || (data.approval_status_in != null && data.checkInStatus != null)){
-
+      if (data.checkInStatus == null ||
+          (data.approval_status_in != null && data.checkInStatus != null)) {
         // print(index.toString() +" || "+ formatDate(data.checkInActual ?? DateTime.now())+" = CHECKIN PASSED");
 
-        if((data.checkOutStatus == null && data.checkOutActual !=null) || (data.checkOutStatus != null && data.approval_status_out != null) || (data.checkOutStatus == null && data.approval_status_out != null) ){
+        if ((data.checkOutStatus == null && data.checkOutActual != null) ||
+            (data.checkOutStatus != null && data.approval_status_out != null) ||
+            (data.checkOutStatus == null && data.approval_status_out != null)) {
+          try {
+            progressDialog.update(
+              value: ((index / totalCount) * 100).toInt(),
+              msg: "Uploading " + data.employee_name! + ' ($index/$totalCount)',
+            );
 
-                  try {
-          progressDialog.update(
-            value: ((index / totalCount) * 100).toInt(),
-            msg: "Uploading " + data.employee_name! + ' ($index/$totalCount)',
-          );
-
-          await repo.uploadAbsensi(data, data.employee_id!);
-          await _updateIsUploaded(data);
-          // ADZIEHRDY TEST
-          print(index.toString() +" || "+ formatDate(data.checkInActual ?? DateTime.now())+" = IS UPLOADED");
-        } catch (e) {
-          print(e.toString());
-          showToast("Error saat upload absensi - ${data.employee_name} - " + (data.shift_id ?? "-"));
-          break;
-        } finally {
-        }
-        }else{
+            await repo.uploadAbsensi(data, data.employee_id!);
+            await _updateIsUploaded(data);
+            // ADZIEHRDY TEST
+            print(index.toString() +
+                " || " +
+                formatDate(data.checkInActual ?? DateTime.now()) +
+                " = IS UPLOADED");
+          } catch (e) {
+            print(e.toString());
+            showToast("Error saat upload absensi - ${data.employee_name} - " +
+                (data.shift_id ?? "-"));
+            break;
+          } finally {}
+        } else {
           StillnotCompleteAttendace = true;
         }
-      // if ((data.checkIn != null && (data.approval_status_in != null || data.checkIn != null) ) &&  (data.approval_status_out != null || data.checkOut != null)) {
+        // if ((data.checkIn != null && (data.approval_status_in != null || data.checkIn != null) ) &&  (data.approval_status_out != null || data.checkOut != null)) {
         //  if ((data.checkOut != null && data.approval_status_out != null ) || ( data.checkOutStatus != null && data.approval_status_out != null) || data.checkOutStatus == null ) {
         // String mode = data.type_absensi == "MASUK" ? "checkin" : "checkout";
-
-
-      }else{
+      } else {
         StillnotCompleteAttendace = true;
       }
 
-      if(StillnotCompleteAttendace){
-        showToast("Ada beberapa absensi yang belum terupload karna belum ada approval, mohon approve terlebih dahulu agar bisa terupload");
+      if (StillnotCompleteAttendace) {
+        showToast(
+            "Ada beberapa absensi yang belum terupload karna belum ada approval, mohon approve terlebih dahulu agar bisa terupload");
       }
     }
     progressDialog.close();
-          _loadData();
+    _loadData();
   }
 
   Future<void> _showConfirmationDialog() async {
@@ -196,7 +210,8 @@ int index = _attendanceList.indexWhere(
       builder: (context) {
         return AlertDialog(
           title: Text('Konfirmasi'),
-          content: Text('Anda yakin ingin mengupload semua absen ?, ( data yang belum memiliki absen masuk dan keluar tidak dapat terupload )'),
+          content: Text(
+              'Anda yakin ingin mengupload semua absen ?, ( data yang belum memiliki absen masuk dan keluar tidak dapat terupload )'),
           actions: <Widget>[
             TextButton(
               child: Text('Batal'),

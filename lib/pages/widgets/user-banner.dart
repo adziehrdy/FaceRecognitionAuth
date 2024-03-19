@@ -19,7 +19,7 @@ class UserBanner extends StatefulWidget {
 class _UserBannerState extends State<UserBanner> {
   LoginModel? userInfo;
   String activeSuperAttendace = "-";
-  BranchStatus? status_rig;
+  RigStatusShift? status_rig;
 
   @override
   void initState() {
@@ -53,23 +53,12 @@ class _UserBannerState extends State<UserBanner> {
             Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: Container(
-                height: 42,
-                width: 42,
+                padding: EdgeInsets.all(8),
+                height: 45,
+                width: 45,
                 decoration:
                     BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                child: Center(
-                    // child: Container(
-                    //   height: 40,
-                    //   width: 40,
-                    //   decoration: BoxDecoration(
-                    //     shape: BoxShape.circle,
-                    //     image: DecorationImage(
-                    //       image: model.user!.profileImage!,
-                    //       fit: BoxFit.cover
-                    //     )
-                    //   ),
-                    // ),
-                    ),
+                child: Image.asset("assets/images/pertamina_logo.png"),
               ),
             ),
             Expanded(

@@ -1,10 +1,12 @@
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/model_master_shift.dart';
+import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/pages/sign-up.dart';
 import 'package:face_net_authentication/pages/widgets/dialog_detail_employee.dart';
 import 'package:face_net_authentication/repo/global_repos.dart';
+import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
 
 // ignore: must_be_immutable
@@ -35,7 +37,7 @@ class _PersonViewState extends State<PersonView> {
   TextEditingController _searchController = TextEditingController();
   DatabaseHelperEmployee _dataBaseHelper = DatabaseHelperEmployee.instance;
   String _searchText = "";
-  List<ShiftData> listShift = [];
+  List<ShiftRig> listShift = [];
 
   List<bool> selectedPerson = [];
   deletePerson(int index) async {
@@ -56,11 +58,18 @@ class _PersonViewState extends State<PersonView> {
       });
     });
 
-    getMasterShift().then((value) {
+    // getMasterShift().then((value) {
+    //   setState(() {
+    //     listShift = value;
+    //   });
+    // });
+
+        SpGetSelectedStatusRig().then((value) {
       setState(() {
-        listShift = value;
+        listShift = value!.shift!;
+        listShift.add(ShiftRig(id: "PDC_OFF",checkin: null, checkout: null));
       });
-    });
+    },);
   }
 
   @override
@@ -219,7 +228,7 @@ class _PersonViewState extends State<PersonView> {
                                     ),
                                     Text(
                                       (widget.personList[index].shift_id ??
-                                              "Shift Belum Di Assign") +
+                                              "Shift Belum Di Assign, Mohon Hubungi Admin") +
                                           " | " +
                                           (widget.personList[index]
                                                   .company_id ??
@@ -384,7 +393,7 @@ class _PersonViewState extends State<PersonView> {
   }
 
   Widget _pilihShift() {
-    String selectedShiftId = listShift.first.shiftId;
+    String? selectedShiftId = listShift.first.id;
     return Dialog(
         child: Column(
       mainAxisSize: MainAxisSize.min,
@@ -405,10 +414,10 @@ class _PersonViewState extends State<PersonView> {
                 });
               }
             },
-            items: listShift.map((ShiftData shift) {
+            items: listShift.map((ShiftRig shift) {
               return DropdownMenuItem<String>(
-                value: shift.shiftId,
-                child: Text(shift.shiftId),
+                value: shift.id,
+                child: Text(shift.id??"-"),
               );
             }).toList(),
           ),
@@ -416,7 +425,7 @@ class _PersonViewState extends State<PersonView> {
         SizedBox(height: 20),
         ElevatedButton(
   onPressed: () async {
-    List<String> selectedShiftData = getCheckInCheckOut(selectedShiftId);
+    List<String> selectedShiftData = getCheckInCheckOut(selectedShiftId!);
 
     GlobalRepo repo = GlobalRepo();
 
@@ -442,35 +451,51 @@ class _PersonViewState extends State<PersonView> {
     for (int index = 0; index < selectedPerson.length; index++) {
       if (selectedPerson[index] == true) {
         print("RESULT " + (widget.personList[index].employee_name ?? ""));
-        bool success = await repo.hitUpdateMasterShift(
-          widget.personList[index].employee_id!,
-          selectedShiftId,
-        );
 
-        if (success) {
-          await _dataBaseHelper.updateShift(
+
+        if(widget.personList[index].shift_id != null){
+           await _dataBaseHelper.updateShift(
             widget.personList[index].employee_id,
             selectedShiftData[0],
             selectedShiftData[1],
             selectedShiftData[2],
           );
 
-          selectedPerson[index] = false;
-        } else {
-          showToast(
-            "Shift " +
-                (widget.personList[index].employee_name ?? "-") +
-                " Belum ditambahkan, mohon hubungi admin",
-          );
+          bool success = await repo.hitUpdateMasterShift(
+          widget.personList[index].employee_id!,
+          selectedShiftId!,
+        );
+        }else{
+          showToast("Shift untuk " + (widget.personList[index].employee_name?? "-") + " belum bisa diganti, mohon Hubungi admin");
           isFault = true;
         }
+
+       
+
+        // if (success) {
+        //   await _dataBaseHelper.updateShift(
+        //     widget.personList[index].employee_id,
+        //     selectedShiftData[0],
+        //     selectedShiftData[1],
+        //     selectedShiftData[2],
+        //   );
+
+        //   selectedPerson[index] = false;
+        // } else {
+        //   showToast(
+        //     "Shift " +
+        //         (widget.personList[index].employee_name ?? "-") +
+        //         " Belum ditambahkan, mohon hubungi admin",
+        //   );
+        //   isFault = true;
+        // }
       }
     }
 
     Navigator.pop(context); // Close the dialog
 
     if (isFault == true) {
-      showToastShort("Beberapa Shift karyawan Gagal di update, mohon coba kembali");
+      showToastShort("Beberapa Shift karyawan belum bisa di Update, Mohon coba kembali");
     } else {
       showToastShort("Semua Shift berhasil dirubah");
       Navigator.pop(context);
@@ -492,14 +517,14 @@ class _PersonViewState extends State<PersonView> {
 
   List<String> getCheckInCheckOut(String selectedShiftId) {
     List<String> shiftData = [];
-    ShiftData? selectedShift = listShift.firstWhere(
-      (shift) => shift.shiftId == selectedShiftId,
+    ShiftRig? selectedShift = listShift.firstWhere(
+      (shift) => shift.id == selectedShiftId,
     );
 
         setState(() {
-          shiftData.add(selectedShift.shiftId);
-          shiftData.add(selectedShift.checkIn ?? "-");
-          shiftData.add( selectedShift.checkOut ?? "-");
+          shiftData.add(selectedShift.id ?? "-");
+          shiftData.add(selectedShift.checkin ?? "-");
+          shiftData.add( selectedShift.checkout ?? "-");
     });
 
     return shiftData;

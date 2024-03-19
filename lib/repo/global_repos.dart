@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -46,7 +47,6 @@ class GlobalRepo {
 
     await checkIsNeedForceUpgrade(context);
   }
-
 
   Future<String?> getMasterRegister() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -149,35 +149,44 @@ class GlobalRepo {
     }
   }
 
-
-  Future<void> hitAllMasterRigStatus() async {
-
+  Future<bool?> hitAllMasterRigStatus(context) async {
     LoginModel user = await getUserLoginData();
-    Response res = await callApi(ApiMethods.GET, '/master/branch-statuses/'+user.branch!.branchId);
+    Response res = await callApi(
+        ApiMethods.GET, '/master/branch-statuses/' + user.branch!.branchId);
 
     if (res.statusCode == 200) {
-      await SpSetALLStatusRig(res.data.toString());
-      print(jsonEncode(res.data.toString()));
-      if(await SpGetSelectedStatusRig() == null){
+      final rigStatusShift = rigStatusShiftFromJson(json.encode(res.data));
 
-        List<BranchStatus> all_status = await SpGetALLStatusRig();
+      //  final rigStatusShift = rigStatusShiftFromJson("[]");
+
+      if (rigStatusShift.isNotEmpty) {
+        print(json.encode(rigStatusShift));
+        await SpSetALLStatusRig(json.encode(rigStatusShift));
+
+        if (await SpGetSelectedStatusRig() == null) {
+          List<RigStatusShift> all_status = await SpGetALLStatusRig();
+          await await SpSetSelectedStatusRig(json.encode(all_status[0]));
+        }
+        return true;
+      } else {
+        showToast("SHIFT RIG BELUM DITAMBAHKAN, MOHON HUBUNGI ADMIN");
         
-        // await await SpSetSelectedStatusRig(jsonDecode(all_status[0].toString()));
+        logout(context);
+       
       }
-      
     } else {
-      showToast("Failed to retrieve data from MASTER_RIG_STATUS " + res.statusCode.toString());
+      showToast("Failed to retrieve data from MASTER_RIG_STATUS " +
+          res.statusCode.toString());
     }
   }
-
-
 
   Future<List<MasterBranches?>> hitGetMasterBranches() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     Response res = await callApi(ApiMethods.GET, '/master/branches');
 
     if (res.statusCode == 200) {
-      await prefs.setString("MASTER_BRANCHES", jsonEncode(res.data.toString()).toString());
+      await prefs.setString(
+          "MASTER_BRANCHES", jsonEncode(res.data.toString()).toString());
       return MasterBranches.listFromJson(jsonDecode(res.data.toString()));
     } else {
       print("Failed to retrieve data from MASTER_BRANCHES ");

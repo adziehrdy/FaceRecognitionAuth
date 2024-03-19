@@ -3,6 +3,7 @@ import 'package:face_net_authentication/repo/user_repos.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_udid/flutter_udid.dart';
+import 'package:lottie/lottie.dart';
 // import 'package:get_mac_address/get_mac_address.dart';
 // import 'package:imei/imei.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -91,12 +92,14 @@ Widget build(BuildContext context) {
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
-              child: Image.asset(
-                "assets/images/image_login.png",
-                width: MediaQuery.of(context).size.width,
-                fit: BoxFit.fitHeight,
-                height: 250,
-              ),
+              child: 
+              // Image.asset(
+              //   "assets/images/image_login.png",
+              //   width: MediaQuery.of(context).size.width,
+              //   fit: BoxFit.fitHeight,
+              //   height: 250,
+              // ),
+             Container(height: 200,child:  Lottie.asset("assets/lottie/opening.json",animate: true,repeat: true),)
             ),
             Padding(
               padding: EdgeInsets.only(left: 32, right: 32),
@@ -177,9 +180,6 @@ Widget build(BuildContext context) {
                               // PinInputDialog.show(context, (p0) {
                               //   print("xx"+p0);
                               // },);
-
-
-                      
                     },
                     child: Container(
                       width: MediaQuery.of(context).size.width,

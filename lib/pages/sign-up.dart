@@ -395,10 +395,20 @@ class SignUpState extends State<SignUp> {
                 await _dataBaseHelper.updateFaceTemplate(
                     widget.user.employee_id!, predictedData, ImagePhoto);
                 this._mlService.setPredictedData([]);
+                bool isApproved = await hitApproveFR(widget.user);
+
+                if(isApproved){
+                   
+                //UPDATE TO DB
 
                 showToast("Registrasi wajah sukses !");
                 Navigator.pop(context);
                 Navigator.pop(context);
+                }else{
+                  showToast("Gagal Approve FR, Mohon Coba Kembali");
+                  Navigator.pop(context);
+                }
+
               } else {
                 showToast("Kesalahan Saat Upload FR Ke server, Mohon Coba Kembali");
                 Navigator.pop(context);

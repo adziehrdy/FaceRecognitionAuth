@@ -1,10 +1,14 @@
 import 'dart:convert';
 
 import 'package:face_net_authentication/globals.dart';
+import 'package:face_net_authentication/models/dk_list_model.dart';
 import 'package:face_net_authentication/models/reliefModel.dart';
 import 'package:face_net_authentication/pages/Dinas%20Khusus/DK_form.dart';
+import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
+import 'package:face_net_authentication/repo/DK_repo.dart';
 import 'package:face_net_authentication/repo/relief_repos.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 
 class DKPage extends StatefulWidget {
   const DKPage({Key? key}) : super(key: key);
@@ -14,13 +18,13 @@ class DKPage extends StatefulWidget {
 }
 
 class _DKPageState extends State<DKPage> {
-  List<ReliefModel> listRelief = [];
+  List<DK_data> listDK = [];
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    getListRelief();
+    getListDK();
   }
 
   @override
@@ -30,9 +34,12 @@ class _DKPageState extends State<DKPage> {
           title: Text('Dinas Khusus'),
           actions: <Widget>[
             ElevatedButton(
-              onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => DKForm()));
+              onPressed: () async {
+                await Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => DKForm()))
+                    .then((value) {
+                  getListDK();
+                });
               },
               child: Row(children: [
                 Icon(Icons.person_add),
@@ -59,156 +66,256 @@ class _DKPageState extends State<DKPage> {
             //       ),
             // )
 
-            ListView.builder(
-          padding: EdgeInsets.all(10),
-          itemCount: listRelief.length,
-          itemBuilder: (context, index) {
-            return InkWell(
-              child: Card(
-                elevation: 2,
-                child: Container(
-                    padding: EdgeInsets.all(10),
+            listDK.isEmpty
+                ? Center(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Row(
-                          children: [
-                            Icon(Icons.swap_horizontal_circle_outlined),
-                            SizedBox(
-                              width: 10,
-                            ),
-                            Text(
-                                (listRelief[index].employeeName ?? "")
-                                    .toUpperCase(),
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold)),
-                          ],
+                        Text(
+                            textAlign: TextAlign.center,
+                            "Dinas Khusus Kosong",
+                            style: TextStyle(
+                                fontSize: 20,
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold)),
+                        Lottie.asset(
+                          'assets/lottie/no_data.json',
+                          width: 300,
+                          height: 300,
+                          fit: BoxFit.fill,
                         ),
-                        Divider(),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Column(
-                              children: [
-                                Text("Rig Asal".toUpperCase(),
-                                    style: TextStyle(
-                                        fontSize: 11, color: Colors.red)),
-                                Text(
-                                    (listRelief[index].fromBranch ?? "")
-                                        .toUpperCase(),
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.red)),
-                              ],
-                            ),
-                            Icon(Icons.arrow_forward_outlined),
-                            Column(
-                              children: [
-                                Text("Rig Tujuan".toUpperCase(),
-                                    style: TextStyle(
-                                        fontSize: 11, color: Colors.blue)),
-                                Text(
-                                    (listRelief[index].toBranch ?? "")
-                                        .toUpperCase(),
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.blue)),
-                              ],
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              "Tanggal Mulai : " +
-                                  (formatDateOnly(
-                                      listRelief[index].reliefStartDate ??
-                                          DateTime.now())),
-                            ),
-                            Text("Tanggal Selesai : " +
-                                (formatDateOnly(
-                                    listRelief[index].reliefEndDate ??
-                                        DateTime.now()))),
-                          ],
-                        ),
-                        // Text("Status Relief : " +
-                        //     (listRelief[index].statusRelief ?? "")),
-                        Text("Deskripsi : " + (listRelief[index].desc ?? "")),
-                        Text("Notes : " + (listRelief[index].note ?? "")),
-                        Divider(),
-                        SizedBox(
-                          height: 5,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            ElevatedButton(
-                                style: ButtonStyle(
-                                    backgroundColor:
-                                        MaterialStatePropertyAll(Colors.red)),
-                                onPressed: () {},
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.cancel,
-                                      color: Colors.red.shade100,
-                                    ),
-                                    SizedBox(
-                                      width: 10,
-                                    ),
-                                    Text(
-                                      "REJECT",
-                                      style:
-                                          TextStyle(color: Colors.red.shade100),
-                                    ),
-                                  ],
-                                )),
-                            ElevatedButton(
-                                style: ButtonStyle(
-                                    backgroundColor:
-                                        MaterialStatePropertyAll(Colors.blue)),
-                                onPressed: () {},
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.check_circle),
-                                    SizedBox(
-                                      width: 10,
-                                    ),
-                                    Text("APPROVE",
-                                        style: TextStyle(color: Colors.white)),
-                                  ],
-                                ))
-                          ],
-                        )
+                        Text(
+                            textAlign: TextAlign.center,
+                            "Untuk Menambahkan Dinas Khusus, Pilih 'Ajukan Dinas Khusus'\n pada pojok kanan atas.",
+                            style: TextStyle(fontSize: 15)),
                       ],
-                    )),
-              ),
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                        content: dialog_detail_relief(
-                            data_relief: listRelief[index]));
-                  },
-                );
-              },
-            );
-          },
-        ));
+                    ),
+                  )
+                : ListView.builder(
+
+                    padding: EdgeInsets.all(10),
+                    itemCount: listDK.length,
+                    itemBuilder: (context, index) {
+                      return InkWell(
+                        child: Card(
+                          elevation: 2,
+                          child: Container(
+                              padding: EdgeInsets.all(10),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.badge),
+                                          SizedBox(
+                                            width: 10,
+                                          ),
+                                          Text(
+                                              (listDK[index].employeeId ?? "")
+                                                  .toUpperCase(),
+                                              style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                      (listDK[index].status ?? "") != "" ? 
+                                      Row(
+                                        children: [
+                                          Icon(Icons.check),
+                                          SizedBox(width: 5,),
+                                          Text(listDK[index].status,style: TextStyle(fontWeight: FontWeight.w900),),
+                                        ],
+                                      ) 
+                                      
+                                      : SizedBox()
+                                    ],
+                                  ),
+                                  Divider(),
+
+                                  SizedBox(
+                                    height: 10,
+                                  ),
+
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.date_range,
+                                        color: Colors.blue,
+                                      ),
+                                      SizedBox(
+                                        width: 10,
+                                      ),
+                                      Text(
+                                        "Tanggal Mulai : " +
+                                            (formatDateOnly(
+                                                listDK[index].fromDate ??
+                                                    DateTime.now())),
+                                      ),
+                                      Icon(
+                                        Icons.arrow_right_rounded,
+                                        color: Colors.blue,
+                                      ),
+                                      Text("Tanggal Selesai : " +
+                                          (formatDateOnly(
+                                              listDK[index].toDate ??
+                                                  DateTime.now()))),
+                                    ],
+                                  ),
+                                  // Row(
+                                  //   children: [
+                                  //     Icon(
+                                  //       Icons.date_range,
+                                  //       color: Colors.blue,
+                                  //     ),
+                                  //     SizedBox(
+                                  //       width: 10,
+                                  //     ),
+                                  //     Text("Tanggal Selesai : " +
+                                  //         (formatDateOnly(
+                                  //             listDK[index].toDate ?? DateTime.now()))),
+                                  //   ],
+                                  // ),
+
+                                  // Text("Status Relief : " +
+                                  //     (listRelief[index].statusRelief ?? "")),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.attach_money,
+                                        color: Colors.blue,
+                                      ),
+                                      SizedBox(
+                                        width: 10,
+                                      ),
+                                      Text("Biaya : " +
+                                          formatRupiah((int.parse(
+                                              listDK[index].amount ?? "0")))),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.note_alt_sharp,
+                                        color: Colors.blue,
+                                      ),
+                                      SizedBox(
+                                        width: 10,
+                                      ),
+                                      Text("Deskripsi : " +
+                                          (listDK[index].desc ?? "")),
+                                    ],
+                                  ),
+                                  SizedBox(
+                                    height: 15,
+                                  ),
+                                  (listDK[index].status ?? "") != ""
+                                      ? SizedBox()
+                                      : Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceAround,
+                                          children: [
+                                            ElevatedButton(
+                                                style: ButtonStyle(
+                                                    backgroundColor:
+                                                        MaterialStatePropertyAll(
+                                                            Colors.red)),
+                                                onPressed: () async {
+                                                  await _approval(
+                                                      listDK[index]
+                                                          .id
+                                                          .toString(),
+                                                      "REJECT");
+                                                },
+                                                child: Row(
+                                                  children: [
+                                                    Icon(
+                                                      Icons.cancel,
+                                                      color:
+                                                          Colors.red.shade100,
+                                                    ),
+                                                    SizedBox(
+                                                      width: 10,
+                                                    ),
+                                                    Text(
+                                                      "REJECT",
+                                                      style: TextStyle(
+                                                          color: Colors
+                                                              .red.shade100),
+                                                    ),
+                                                  ],
+                                                )),
+                                            ElevatedButton(
+                                                style: ButtonStyle(
+                                                    backgroundColor:
+                                                        MaterialStatePropertyAll(
+                                                            Colors.blue)),
+                                                onPressed: () async {
+                                                  await _approval(
+                                                      listDK[index]
+                                                          .id
+                                                          .toString(),
+                                                      "APPROVE");
+                                                },
+                                                child: Row(
+                                                  children: [
+                                                    Icon(Icons.check_circle),
+                                                    SizedBox(
+                                                      width: 10,
+                                                    ),
+                                                    Text("APPROVE",
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.white)),
+                                                  ],
+                                                ))
+                                          ],
+                                        )
+                                ],
+                              )),
+                        ),
+                        onTap: () {
+                          // showDialog(
+                          //   context: context,
+                          //   builder: (BuildContext context) {
+                          //     return AlertDialog(
+                          //         content: dialog_detail_relief(
+                          //             data_relief: listDK[index]));
+                          //   },
+                          // );
+                        },
+                      );
+                    },
+                  ));
   }
 
-  Future getListRelief() async {
-    String jsonRelief = await ReliefRepo().getReliefList();
-    final List<dynamic> parsedList = jsonDecode(jsonRelief);
+  Future<void> _approval(String id, String type) async {
+    PinInputDialog.show(context, (p0) async {
+      String id_rigsub = await getActiveSuperIntendentID();
+      Map<String, dynamic> payload = {
+        "status": type,
+        "approval": id_rigsub,
+      };
+      bool result = await DKRepo().approvalDK(id, payload);
+      if (result == true) {
+        showToast("Dinas Khusus telah di " + type);
+        getListDK();
+      } else {
+        showToast("Kesalahan Pada Saat Approval");
+      }
+    });
+  }
+
+  Future getListDK() async {
+    String jsonRelief = await DKRepo().getListDK();
+
     setState(() {
-      listRelief = parsedList.map((item) => ReliefModel.fromMap(item)).toList();
-      print(listRelief);
+      DkListModel dk = dkListModelFromJson(jsonRelief);
+      listDK = dk.data!;
+      listDK = listDK.reversed.toList();
+      print(listDK);
     });
   }
 }
@@ -233,10 +340,12 @@ class dialog_detail_relief extends StatelessWidget {
               Row(
                 children: [
                   Icon(Icons.swap_horizontal_circle_outlined),
-                  SizedBox(width: 10,),
+                  SizedBox(
+                    width: 10,
+                  ),
                   Text((data_relief.employeeName ?? "").toUpperCase(),
-                      style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold)),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ],
               ),
               Divider(),
@@ -336,7 +445,7 @@ class dialog_detail_relief extends StatelessWidget {
                     TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
 
-               SizedBox(
+              SizedBox(
                 height: 10,
               ),
 
@@ -351,10 +460,6 @@ class dialog_detail_relief extends StatelessWidget {
                     TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
 
-              // Text("Status Relief : " +
-              //     (listRelief[index].statusRelief ?? "")),
-              // Text("Deskripsi : " + (data_relief.desc ?? "")),
-              // Text("Notes : " + (data_relief.note ?? "")),
               Divider(),
               SizedBox(
                 height: 10,

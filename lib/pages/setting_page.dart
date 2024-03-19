@@ -16,7 +16,7 @@ class _SettingPageState extends State<SettingPage> {
   late int _delayTimeout;
   late TextEditingController _delayController;
   late bool landscapeMode;
-  String tolerance = "";
+
 
   @override
   void initState() {
@@ -32,8 +32,6 @@ class _SettingPageState extends State<SettingPage> {
 
 
     LoginModel loginData = await getUserLoginData();
-    tolerance = (loginData.branch?.tolerance ?? 0).toString();
-
     SharedPreferences prefs = await SharedPreferences.getInstance();
     _threshold = await prefs.getDouble('threshold') ?? 0.8;
     setState(() {
@@ -145,7 +143,7 @@ class _SettingPageState extends State<SettingPage> {
               label: _delayTimeout.toString(),
             ),
                         SizedBox(height: 20),
-            Row(children: [ Text('Toleransi Absensi : ' + tolerance + " Jam"),],),
+            
             SizedBox(height: 20),
             // Row(children: [
             //   Text("Mode Landscape"),

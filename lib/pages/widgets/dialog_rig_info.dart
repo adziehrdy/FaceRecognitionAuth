@@ -13,7 +13,7 @@ class dialog_rig_info extends StatefulWidget {
 
 class _dialog_rig_infoState extends State<dialog_rig_info> {
   String RigName = "";
-  BranchStatus? brachStatus;
+  RigStatusShift? brachStatus;
   String tolerance = "0";
   @override
   void initState() {
@@ -91,14 +91,14 @@ class _dialog_rig_infoState extends State<dialog_rig_info> {
                 width: 350,
                 child: ListView.builder(
                   shrinkWrap: true,
-                  itemCount: brachStatus!.shift.length,
+                  itemCount: brachStatus?.shift?.length ?? 0,
                   itemBuilder: (BuildContext context, int index) {
-                    final shift = brachStatus!.shift[index];
+                    final shift = brachStatus!.shift?[index];
                     return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            shift.id,
+                            shift!.id.toString(),
                             style: TextStyle(
                                 fontSize: 12, fontWeight: FontWeight.bold),
                           ),
@@ -116,7 +116,7 @@ class _dialog_rig_infoState extends State<dialog_rig_info> {
               height: 10,
             ),
             
-            Text("Semua shift ditambahkan toleransi keterlambatan sebanyak " +tolerance+" jam.",style: TextStyle(fontSize: 12,color: Colors.orange),),
+            Text("Semua Jam Shift ditambahkan toleransi keterlambatan sebanyak " +tolerance+" jam.",style: TextStyle(fontSize: 12,color: Colors.orange),),
             SizedBox(
               height: 15,
             ),

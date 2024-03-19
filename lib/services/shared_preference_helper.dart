@@ -22,16 +22,16 @@ SpSetALLStatusRig(String status) async {
   await sp.setString("ALL_STATUS_RIG", status);
 }
 
-Future<List<BranchStatus>>SpGetALLStatusRig() async {
+Future<List<RigStatusShift>>SpGetALLStatusRig() async {
 SharedPreferences sp = await initSP();
-List<BranchStatus> result = [];
- String RIG_STATUS = await sp.getString("ALL_STATUS_RIG") ?? "-";
+List<RigStatusShift> result = [];
+ String RIG_STATUS = await sp.getString("ALL_STATUS_RIG") ?? "[]";
 
 
- if(RIG_STATUS != "-"){
+ if(RIG_STATUS != "[]"){
   
-  List<Map<String, dynamic>> parsed = jsonDecode(RIG_STATUS).cast<Map<String, dynamic>>();
-  return parsed.map<BranchStatus>((RIG_STATUS) => BranchStatus.fromJson(RIG_STATUS)).toList();
+  final rigStatusShift = rigStatusShiftFromJson(RIG_STATUS);
+  return rigStatusShift;
  }else{
   return result;
  }
@@ -50,14 +50,15 @@ SpSetSelectedStatusRig(String status) async {
 
 
 
-Future<BranchStatus?> SpGetSelectedStatusRig() async {
+Future<RigStatusShift?> SpGetSelectedStatusRig() async {
 SharedPreferences sp = await initSP();
 
  String RIG_STATUS = await sp.getString("RIG_STATUS_SELECTED") ?? "[]";
 
- BranchStatus?  currentStatus = null;
+ RigStatusShift?  currentStatus = null;
  if(RIG_STATUS != "[]"){
-  currentStatus = BranchStatus.fromJson(jsonDecode(RIG_STATUS));
+  currentStatus = RigStatusShift.fromJson(json.decode(RIG_STATUS));
+  return currentStatus;
  }else{
   return null;
  }

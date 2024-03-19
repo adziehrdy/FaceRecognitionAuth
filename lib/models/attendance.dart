@@ -33,6 +33,8 @@ class Attendance {
   String? shift_id;
   String? approval_status_in;
   String? approval_status_out;
+  String? branch_status_id;
+  String? attendance_location_id;
 
   Attendance();
   
@@ -57,6 +59,8 @@ attendanceId = map["attendance_id"];
     attendancePhotoIn = map['attendance_photo_in'];
     attendancePhotoOut = map['attendance_photo_out'];
     companyId = map['company_id'];
+    branch_status_id = map['branch_status_id'];
+    attendance_location_id = map['attendance_location_id'];
     if(map['approvals'] != null){
       // attendanceApproval = map['approvals'];
       List<dynamic> list = map['approvals'];
@@ -71,6 +75,7 @@ attendanceId = map["attendance_id"];
     shift_id = map['shift_id'];
     approval_status_in = map['approval_status_in'];
     approval_status_out = map['approval_status_out'];
+
   }
 
   Map<String, dynamic> toCreateMap(){
@@ -97,6 +102,8 @@ attendanceId = map["attendance_id"];
     if(employee_name != null) map["employee_name"] = employee_name;
     if(type_absensi != null) map["type_absensi"] = type_absensi;
     if(type_absensi != null) map["type_absensi"] = type_absensi;
+    if(branch_status_id != null) map["branch_status_id"] = branch_status_id;
+    if(attendance_location_id != null) map["attendance_location_id"] = attendance_location_id;
     
     map["company_id"] = companyId;
     map['note_status'] = note_status;
@@ -132,6 +139,9 @@ Map<String, dynamic> toCreateMapForHitAPI(){
     if(attendanceNoteOut != null) map["attendance_note_out"] = attendanceNoteOut;
     if(attendancePhotoIn != null) map["attendance_photo_in"] = attendancePhotoIn;
     if(shift_id != null) map["shift_id"] = shift_id;
+    if(branch_status_id != null) map["branch_status_id"] = branch_status_id;
+    if(attendance_location_id != null) map['attendance_location_id'] = attendance_location_id;
+
     map["company_id"] = companyId;
     
     return map;

@@ -10,9 +10,12 @@ import 'package:dio/dio.dart';
 import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/model_master_shift.dart';
+import 'package:face_net_authentication/models/user.dart';
+import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/pages/force_upgrade.dart';
 import 'package:face_net_authentication/pages/login.dart';
 import 'package:face_net_authentication/repo/custom_exception.dart';
+import 'package:face_net_authentication/repo/user_repos.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -922,6 +925,40 @@ print(deviceType);
       );
     },
   );
+}
+
+  Future<bool> hitApproveFR(User user) async {
+
+   UserRepo repo =  UserRepo();
+    DatabaseHelperEmployee _dataBaseHelper = DatabaseHelperEmployee.instance;
+
+  //  String fr_base64 = encode_FR_ToBase64(user.face_template);
+
+
+   bool hitApproveSuccess = await repo.hitApproveFR(user.employee_id!);
+
+   if(hitApproveSuccess){
+     await _dataBaseHelper.approveFR(user.employee_id);
+    showToast((user.employee_name ?? " ")+" Sukses Di Approve");
+    return true;
+   }else{
+    return false;
+   }
+  }
+
+String formatRupiah(int number) {
+  String rupiah = number.toString();
+  String result = '';
+  int count = 0;
+  for (int i = rupiah.length - 1; i >= 0; i--) {
+    result = rupiah[i] + result;
+    count++;
+    if (count == 3 && i > 0) {
+      result = '.' + result;
+      count = 0;
+    }
+  }
+  return 'Rp. $result';
 }
 
   

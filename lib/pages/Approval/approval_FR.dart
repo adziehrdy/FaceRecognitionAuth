@@ -51,7 +51,7 @@ class _ApprovalFRState extends State<ApprovalFR> {
                       Text(user_list[index].employee_name ?? "Unknown"),
                       const Spacer(),
                       ElevatedButton(onPressed: () async {
-                        await approve(user_list[index]);
+                        await hitApproveFR(user_list[index]);
                       }, child: Text("Approve")),
                       const SizedBox(
                         width: 8,
@@ -76,23 +76,6 @@ class _ApprovalFRState extends State<ApprovalFR> {
                 ),
               ));
   }
-
-  Future<void> approve(User user) async {
-
-   UserRepo repo =  UserRepo();
-
-  //  String fr_base64 = encode_FR_ToBase64(user.face_template);
-
-
-   bool hitApproveSuccess = await repo.hitApproveFR(user.employee_id!);
-
-   if(hitApproveSuccess){
-     await _dataBaseHelper.approveFR(user.employee_id);
-    showToast((user.employee_name ?? " ")+" Sukses Di Approve");
-    _loadUserData();
-   }
-  }
-
 
   Future<void> _loadUserData() async {
     user_list = await _dataBaseHelper.queryAllUsersNotVerifFR();
