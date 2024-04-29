@@ -51,6 +51,11 @@ class DatabaseHelperEmployee {
   static final to_branch = "to_branch";
   static final relief_status = "relief_status";
 
+  //DK
+  static final dk_start_date = "dk_start_date";
+  static final dk_end_date = "dk_end_date";
+  static final status_dk = "status_dk";
+
   DatabaseHelperEmployee._privateConstructor();
   static final DatabaseHelperEmployee instance =
       DatabaseHelperEmployee._privateConstructor();
@@ -98,7 +103,10 @@ $status_relief TEXT,
 $relief_id TEXT,
 $from_branch TEXT,
 $to_branch TEXT,
-$relief_status TEXT
+$relief_status TEXT,
+$dk_start_date TEXT,
+$dk_end_date TEXT,
+$status_dk
           )
           ''');
   }
@@ -184,18 +192,14 @@ $relief_status TEXT
     }
   }
 
-    Future<void> updateShift(String? employeeId, String id_shift, String cin, String cout ) async {
+  Future<void> updateShift(
+      String? employeeId, String id_shift, String cin, String cout) async {
     try {
       Database db = await instance.database;
 
       await db.update(
         table,
-        {
-          shift_id : id_shift,
-          check_in :cin,
-          check_out : cout
-
-        },
+        {shift_id: id_shift, check_in: cin, check_out: cout},
         where: 'employee_id = ?',
         whereArgs: [employeeId],
       );

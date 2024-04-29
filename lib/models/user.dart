@@ -31,61 +31,64 @@ class User {
   String? check_out;
   String? employee_fr_image;
 
-
   String? status_relief;
   String? relief_id;
   String? from_branch;
   String? to_branch;
   String? relief_status;
 
+  String? dk_start_date;
+  String? dk_end_date;
+  String? status_dk;
 
   User({required this.employee_id});
 
   User.fromMap(Map<String, dynamic> map) {
-      try{
-print(map['employee_name']);
-    employee_id = map['employee_id'];
-    username = map['username'];
-    group_access_id = map['group_access_id'];
-    company_id = map['company_id'];
-    employee_name = map['employee_name'];
-    employee_phone = map['employee_phone'];
-    employee_email = map['employee_email'];
-    employee_status = map['employee_status'];
-    // employee_birth_date =
-    //     DateFormat('yyyy-MM').parse(map['employee_birth_date']);
-    employee_position = map['employee_position'];
-    if (map['employee_photo'] == null || map['employee_photo'].length == 0) {
-      employee_photo = AssetImage('assets/images/blank-profile-pic.png');
-    } else {
-      employee_photo = NetworkImage(publicUrl + map['employee_photo']);
+    try {
+      print(map['employee_name']);
+      employee_id = map['employee_id'];
+      username = map['username'];
+      group_access_id = map['group_access_id'];
+      company_id = map['company_id'];
+      employee_name = map['employee_name'];
+      employee_phone = map['employee_phone'];
+      employee_email = map['employee_email'];
+      employee_status = map['employee_status'];
+      // employee_birth_date =
+      //     DateFormat('yyyy-MM').parse(map['employee_birth_date']);
+      employee_position = map['employee_position'];
+      if (map['employee_photo'] == null || map['employee_photo'].length == 0) {
+        employee_photo = AssetImage('assets/images/blank-profile-pic.png');
+      } else {
+        employee_photo = NetworkImage(publicUrl + map['employee_photo']);
+      }
+      branch_id = map['branch_id'];
+      branch_name = map['branch_name'];
+      attendance_type = map['attendance_type'];
+      status = map['status'];
+
+      is_personal = map['is_personal'];
+      is_verif_fr = map['is_verif_fr'];
+
+      shift_id = map['shift_id'];
+      check_in = map['check_in'];
+      check_out = map['check_out'];
+      employee_fr_image = map['employee_fr_image'];
+
+      //RELIEF
+      status_relief = map['status_relief'];
+      relief_id = map['relief_id'];
+      from_branch = map['from_branch'];
+      to_branch = map['to_branch'];
+      relief_status = map['relief_status'];
+
+      //DK
+      dk_start_date = map['dk_start_date'];
+      dk_end_date = map['dk_end_date'];
+      status_dk = map['status_dk'];
+    } catch (e) {
+      log(e.toString());
     }
-    branch_id = map['branch_id'];
-    branch_name = map['branch_name'];
-    attendance_type = map['attendance_type'];
-    status = map['status'];
-
-    is_personal = map['is_personal'];
-    is_verif_fr = map['is_verif_fr'];
-
-    shift_id = map['shift_id'];
-    check_in = map['check_in'];
-    check_out = map['check_out'];
-    employee_fr_image = map['employee_fr_image'];
-
-//RELIEF
-  status_relief = map['status_relief'];
-  relief_id = map['relief_id'];
-  from_branch  = map['from_branch'];
-  to_branch  = map['to_branch'];
-  relief_status = map['relief_status'];
-  }catch(e){
-    log(e.toString());
-  }
-    
-
-
-
 
     if (map['employee_fr_template'] == null ||
         map['employee_fr_template'] == "null") {
@@ -125,14 +128,19 @@ print(map['employee_name']);
       'shift_id': shift_id,
       'check_in': check_in,
       'check_out': check_out,
-      'employee_fr_image':employee_fr_image,
+      'employee_fr_image': employee_fr_image,
 
       //RELIEF
-      'status_relief':status_relief,
-      'relief_id':relief_id,
-      'from_branch':from_branch,
-      'to_branch':to_branch,
-      'relief_status':relief_status,
+      'status_relief': status_relief,
+      'relief_id': relief_id,
+      'from_branch': from_branch,
+      'to_branch': to_branch,
+      'relief_status': relief_status,
+
+      //DK
+      'dk_start_date': dk_start_date,
+      'dk_end_date': dk_end_date,
+      'status_dk': status_dk
     };
   }
 }

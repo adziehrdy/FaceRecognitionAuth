@@ -64,12 +64,14 @@ class _PersonViewState extends State<PersonView> {
     //   });
     // });
 
-        SpGetSelectedStatusRig().then((value) {
-      setState(() {
-        listShift = value!.shift!;
-        listShift.add(ShiftRig(id: "PDC_OFF",checkin: null, checkout: null));
-      });
-    },);
+    SpGetSelectedStatusRig().then(
+      (value) {
+        setState(() {
+          listShift = value!.shift!;
+          listShift.add(ShiftRig(id: "PDC_OFF", checkin: null, checkout: null));
+        });
+      },
+    );
   }
 
   @override
@@ -213,29 +215,52 @@ class _PersonViewState extends State<PersonView> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Container(
-                                      child: Text(
-                                        widget.personList[index].employee_name!
-                                                .toUpperCase() ??
-                                            "Unknown",
-                                        style: TextStyle(
-                                            overflow: TextOverflow.ellipsis,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 15),
+                                      child: Row(
+                                        children: [
+                                          Text(
+                                            widget.personList[index]
+                                                    .employee_name!
+                                                    .toUpperCase() ??
+                                                "Unknown",
+                                            style: TextStyle(
+                                                overflow: TextOverflow.ellipsis,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 15),
+                                          ),
+                                          SizedBox(
+                                            width: 10,
+                                          ),
+                                          DKStatusChecker(
+                                                  widget.personList[index]
+                                                      .dk_start_date,
+                                                  widget.personList[index]
+                                                      .dk_end_date)
+                                              ? Text(
+                                                  "( Dinas Khusus )",
+                                                  style: TextStyle(
+                                                      color: Colors.blue),
+                                                )
+                                              : SizedBox()
+                                        ],
                                       ),
                                     ),
                                     SizedBox(
                                       height: 5,
                                     ),
-                                    Text(
-                                      (widget.personList[index].shift_id ??
-                                              "Shift Belum Di Assign, Mohon Hubungi Admin") +
-                                          " | " +
-                                          (widget.personList[index]
-                                                  .company_id ??
-                                              "-"),
-                                      style: TextStyle(
-                                          color: Colors.grey, fontSize: 12),
-                                    ),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          (widget.personList[index].shift_id ??
+                                                  "Shift Belum Di Assign, Mohon Hubungi Admin") +
+                                              " | " +
+                                              (widget.personList[index]
+                                                      .company_id ??
+                                                  "-"),
+                                          style: TextStyle(
+                                              color: Colors.grey, fontSize: 12),
+                                        ),
+                                      ],
+                                    )
                                   ],
                                 ),
                               ],
@@ -417,97 +442,100 @@ class _PersonViewState extends State<PersonView> {
             items: listShift.map((ShiftRig shift) {
               return DropdownMenuItem<String>(
                 value: shift.id,
-                child: Text(shift.id??"-"),
+                child: Text(shift.id ?? "-"),
               );
             }).toList(),
           ),
         ),
         SizedBox(height: 20),
         ElevatedButton(
-  onPressed: () async {
-    List<String> selectedShiftData = getCheckInCheckOut(selectedShiftId!);
+          onPressed: () async {
+            List<String> selectedShiftData =
+                getCheckInCheckOut(selectedShiftId!);
 
-    GlobalRepo repo = GlobalRepo();
+            GlobalRepo repo = GlobalRepo();
 
-    showDialog(
-      context: context,
-      barrierDismissible: false, // prevent user from dismissing the dialog
-      builder: (BuildContext context) {
-        return AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text("Updating Shift..."),
-            ],
-          ),
-        );
-      },
-    );
+            showDialog(
+              context: context,
+              barrierDismissible:
+                  false, // prevent user from dismissing the dialog
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircularProgressIndicator(),
+                      SizedBox(height: 16),
+                      Text("Updating Shift..."),
+                    ],
+                  ),
+                );
+              },
+            );
 
-    bool isFault = false;
+            bool isFault = false;
 
-    for (int index = 0; index < selectedPerson.length; index++) {
-      if (selectedPerson[index] == true) {
-        print("RESULT " + (widget.personList[index].employee_name ?? ""));
+            for (int index = 0; index < selectedPerson.length; index++) {
+              if (selectedPerson[index] == true) {
+                print(
+                    "RESULT " + (widget.personList[index].employee_name ?? ""));
 
+                if (widget.personList[index].shift_id != null) {
+                  await _dataBaseHelper.updateShift(
+                    widget.personList[index].employee_id,
+                    selectedShiftData[0],
+                    selectedShiftData[1],
+                    selectedShiftData[2],
+                  );
 
-        if(widget.personList[index].shift_id != null){
-           await _dataBaseHelper.updateShift(
-            widget.personList[index].employee_id,
-            selectedShiftData[0],
-            selectedShiftData[1],
-            selectedShiftData[2],
-          );
+                  bool success = await repo.hitUpdateMasterShift(
+                    widget.personList[index].employee_id!,
+                    selectedShiftId!,
+                  );
+                } else {
+                  showToast("Shift untuk " +
+                      (widget.personList[index].employee_name ?? "-") +
+                      " belum bisa diganti, mohon Hubungi admin");
+                  isFault = true;
+                }
 
-          bool success = await repo.hitUpdateMasterShift(
-          widget.personList[index].employee_id!,
-          selectedShiftId!,
-        );
-        }else{
-          showToast("Shift untuk " + (widget.personList[index].employee_name?? "-") + " belum bisa diganti, mohon Hubungi admin");
-          isFault = true;
-        }
+                // if (success) {
+                //   await _dataBaseHelper.updateShift(
+                //     widget.personList[index].employee_id,
+                //     selectedShiftData[0],
+                //     selectedShiftData[1],
+                //     selectedShiftData[2],
+                //   );
 
-       
+                //   selectedPerson[index] = false;
+                // } else {
+                //   showToast(
+                //     "Shift " +
+                //         (widget.personList[index].employee_name ?? "-") +
+                //         " Belum ditambahkan, mohon hubungi admin",
+                //   );
+                //   isFault = true;
+                // }
+              }
+            }
 
-        // if (success) {
-        //   await _dataBaseHelper.updateShift(
-        //     widget.personList[index].employee_id,
-        //     selectedShiftData[0],
-        //     selectedShiftData[1],
-        //     selectedShiftData[2],
-        //   );
+            Navigator.pop(context); // Close the dialog
 
-        //   selectedPerson[index] = false;
-        // } else {
-        //   showToast(
-        //     "Shift " +
-        //         (widget.personList[index].employee_name ?? "-") +
-        //         " Belum ditambahkan, mohon hubungi admin",
-        //   );
-        //   isFault = true;
-        // }
-      }
-    }
+            if (isFault == true) {
+              showToastShort(
+                  "Beberapa Shift karyawan belum bisa di Update, Mohon coba kembali");
+            } else {
+              showToastShort("Semua Shift berhasil dirubah");
+              Navigator.pop(context);
+            }
 
-    Navigator.pop(context); // Close the dialog
-
-    if (isFault == true) {
-      showToastShort("Beberapa Shift karyawan belum bisa di Update, Mohon coba kembali");
-    } else {
-      showToastShort("Semua Shift berhasil dirubah");
-      Navigator.pop(context);
-    }
-
-    setState(() {
-      selectedPerson;
-    });
-    widget.onShiftUpdated();
-  },
-  child: Text("Update Shift"),
-),
+            setState(() {
+              selectedPerson;
+            });
+            widget.onShiftUpdated();
+          },
+          child: Text("Update Shift"),
+        ),
         SizedBox(
           height: 10,
         )
@@ -521,10 +549,10 @@ class _PersonViewState extends State<PersonView> {
       (shift) => shift.id == selectedShiftId,
     );
 
-        setState(() {
-          shiftData.add(selectedShift.id ?? "-");
-          shiftData.add(selectedShift.checkin ?? "-");
-          shiftData.add( selectedShift.checkout ?? "-");
+    setState(() {
+      shiftData.add(selectedShift.id ?? "-");
+      shiftData.add(selectedShift.checkin ?? "-");
+      shiftData.add(selectedShift.checkout ?? "-");
     });
 
     return shiftData;

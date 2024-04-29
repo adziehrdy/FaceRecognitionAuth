@@ -10,20 +10,21 @@ class ReliefModel {
   String? fromBranch;
   String? toBranch;
   String? statusRelief;
+  String? relief_status_approve;
 
-  ReliefModel({
-    required this.employeeName,
-    required this.reliefId,
-    required this.reliefStartDate,
-    required this.reliefEndDate,
-    required this.reliefStatus,
-    required this.note,
-    required this.desc,
-    required this.totalDays,
-    required this.fromBranch,
-    required this.toBranch,
-    required this.statusRelief,
-  });
+  ReliefModel(
+      {required this.employeeName,
+      required this.reliefId,
+      required this.reliefStartDate,
+      required this.reliefEndDate,
+      required this.reliefStatus,
+      required this.note,
+      required this.desc,
+      required this.totalDays,
+      required this.fromBranch,
+      required this.toBranch,
+      required this.statusRelief,
+      required this.relief_status_approve});
 
   factory ReliefModel.fromMap(Map<String, dynamic> map) {
     return ReliefModel(
@@ -38,6 +39,7 @@ class ReliefModel {
       fromBranch: map['from_branch'] ?? '',
       toBranch: map['to_branch'] ?? '',
       statusRelief: map['status_relief'] ?? '',
+      relief_status_approve: map['relief_status_approve'],
     );
   }
 
@@ -54,6 +56,7 @@ class ReliefModel {
       'from_branch': fromBranch,
       'to_branch': toBranch,
       'status_relief': statusRelief,
+      'relief_status_approve': relief_status_approve,
     };
   }
 }

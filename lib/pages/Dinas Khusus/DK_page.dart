@@ -23,6 +23,8 @@ class _DKPageState extends State<DKPage> {
   @override
   void initState() {
     // TODO: implement initState
+    // refreshEmployee(context);
+
     super.initState();
     getListDK();
   }
@@ -92,7 +94,6 @@ class _DKPageState extends State<DKPage> {
                     ),
                   )
                 : ListView.builder(
-
                     padding: EdgeInsets.all(10),
                     itemCount: listDK.length,
                     itemBuilder: (context, index) {
@@ -105,7 +106,8 @@ class _DKPageState extends State<DKPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Row(
                                         children: [
@@ -114,23 +116,30 @@ class _DKPageState extends State<DKPage> {
                                             width: 10,
                                           ),
                                           Text(
-                                              (listDK[index].employeeId ?? "")
+                                              (listDK[index].employee_name ??
+                                                      "")
                                                   .toUpperCase(),
                                               style: TextStyle(
                                                   fontSize: 18,
                                                   fontWeight: FontWeight.bold)),
                                         ],
                                       ),
-                                      (listDK[index].status ?? "") != "" ? 
-                                      Row(
-                                        children: [
-                                          Icon(Icons.check),
-                                          SizedBox(width: 5,),
-                                          Text(listDK[index].status,style: TextStyle(fontWeight: FontWeight.w900),),
-                                        ],
-                                      ) 
-                                      
-                                      : SizedBox()
+                                      (listDK[index].status ?? "") != ""
+                                          ? Row(
+                                              children: [
+                                                Icon(Icons.check),
+                                                SizedBox(
+                                                  width: 5,
+                                                ),
+                                                Text(
+                                                  listDK[index].status,
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w900),
+                                                ),
+                                              ],
+                                            )
+                                          : SizedBox()
                                     ],
                                   ),
                                   Divider(),
@@ -298,8 +307,10 @@ class _DKPageState extends State<DKPage> {
         "status": type,
         "approval": id_rigsub,
       };
+
       bool result = await DKRepo().approvalDK(id, payload);
       if (result == true) {
+        await refreshEmployee(context);
         showToast("Dinas Khusus telah di " + type);
         getListDK();
       } else {
@@ -393,7 +404,6 @@ class dialog_detail_relief extends StatelessWidget {
               SizedBox(
                 height: 10,
               ),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -429,37 +439,30 @@ class dialog_detail_relief extends StatelessWidget {
                   ),
                 ],
               ),
-
               SizedBox(
                 height: 10,
               ),
-
               Text(
                 "Deskripsi Tugas",
                 style: TextStyle(color: Colors.grey),
               ),
-
               Text(
                 data_relief.desc ?? "-",
                 style:
                     TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
-
               SizedBox(
                 height: 10,
               ),
-
               Text(
                 "Catatan",
                 style: TextStyle(color: Colors.grey),
               ),
-
               Text(
                 data_relief.note ?? "-",
                 style:
                     TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
-
               Divider(),
               SizedBox(
                 height: 10,

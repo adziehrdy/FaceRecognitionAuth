@@ -61,6 +61,7 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
   String checkOut_onShift = "";
   String branch_status_id = "";
   String attendance_location_id = "";
+  String Tipe_absensi = "REGULER";
 
   ProgressButton progressbutt = ProgressButton(
     stateWidgets: {
@@ -99,15 +100,21 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
   void initState() {
     super.initState();
 
-    try{
-       SpGetSelectedStatusRig().then((value) {
-      branch_status_id = value!.statusBranchId!;
-    },);
-    }catch(e){
+    //CHECK IS DK OR NOT
+    if (DKStatusChecker(widget.user.dk_start_date, widget.user.dk_end_date)) {
+      Tipe_absensi = "DINAS KHUSUS";
+    }
+
+    try {
+      SpGetSelectedStatusRig().then(
+        (value) {
+          branch_status_id = value!.statusBranchId!;
+        },
+      );
+    } catch (e) {
       showToast("branch_status_id tidak ditemukan, mohon hubungi admin");
       Navigator.pop(context);
     }
-   
 
     setTolerance().then((value) {
       isOvernight =
@@ -317,8 +324,9 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
       "check_in_status": note_status,
       "is_uploaded": "0",
       "shift_id": widget.user.shift_id,
-      "branch_status_id" : branch_status_id,
-      "attendance_location_id" : attendance_location_id
+      "branch_status_id": branch_status_id,
+      "attendance_location_id": attendance_location_id,
+      "type_attendance": Tipe_absensi
     };
     Attendance dataAbsen = Attendance.fromMap(sampleData);
 
@@ -348,7 +356,7 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
 
     // Format the DateTime object into a string
 
-   if (widget.user.check_in != widget.user.check_out) {
+    if (widget.user.check_in != widget.user.check_out) {
       if (!isOvernight) {
         if (await pulangCepatChecker(widget.textJamAbsensi, checkOut_onShift)) {
           note_status = "PULANG CEPAT";
@@ -382,8 +390,9 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
       "check_out_status": note_status,
       "is_uploaded": "0",
       "shift_id": widget.user.shift_id,
-      "branch_status_id" : branch_status_id,
-      "attendance_location_id" : attendance_location_id
+      "branch_status_id": branch_status_id,
+      "attendance_location_id": attendance_location_id,
+      "type_attendance": Tipe_absensi
     };
 
     Attendance dataAbsen = Attendance.fromMap(sampleData);
@@ -467,26 +476,24 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
       showToast(e.toString());
     }
 
-
-
-/// GET SHIFT BY RIG STATUS
+    /// GET SHIFT BY RIG STATUS
     String checkin = widget.user.check_in!;
     String checkout = widget.user.check_out!;
 
     RigStatusShift? statusRig = await SpGetSelectedStatusRig();
 
-    if(statusRig != null){
-      for(ShiftRig rigShift in statusRig.shift!){
-        if(rigShift.id == widget.user.shift_id){
+    if (statusRig != null) {
+      for (ShiftRig rigShift in statusRig.shift!) {
+        if (rigShift.id == widget.user.shift_id) {
           checkin = rigShift.checkin!;
           checkin = rigShift.checkout!;
           break;
         }
       }
     }
-/// GET SHIFT BY RIG STATUS
 
-    
+    /// GET SHIFT BY RIG STATUS
+
     // String checkin = widget.user.check_in!;
     // String checkout = widget.user.check_out!;
 

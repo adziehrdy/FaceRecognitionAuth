@@ -62,8 +62,6 @@ class UserRepo {
     }
   }
 
-
-
   Future registerFcmToken(User user, String token) async {
     try {
       await callApi(ApiMethods.POST, '/notification/set-token', data: {
@@ -88,8 +86,8 @@ class UserRepo {
     }
   }
 
-
-  Future<void> hitLogin(context, id, String password, String versionLabel) async {
+  Future<void> hitLogin(
+      context, id, String password, String versionLabel) async {
     showDialog(
       context: context,
       barrierDismissible: true, // Prevent dismiss by tapping outside
@@ -103,21 +101,16 @@ class UserRepo {
     try {
       Map<String, dynamic> data;
 
-      if(password == "mbed-recn-uhva-ycsy"){
-         data = {
-        "deviceId": "GOOGLE_PLAY_DEMO",
-        "password": password,
-        "version": versionLabel
-      };
-
-      }else{
-         data = {
-        "deviceId": id,
-        "password": password,
-        "version": versionLabel
-      };
+      if (password == "mbed-recn-uhva-ycsy") {
+        data = {
+          "deviceId": "GOOGLE_PLAY_DEMO",
+          "password": password,
+          "version": versionLabel
+        };
+      } else {
+        data = {"deviceId": id, "password": password, "version": versionLabel};
       }
-      
+
       Response res = await callApiWithoutToken(ApiMethods.POST, '/device/login',
           data: data);
       print(res);
@@ -138,21 +131,16 @@ class UserRepo {
           await prefs.setString('TOKEN', data.accessToken!);
           await prefs.setBool('IS_LOGIN', true);
 
-          
-
           bool? hasRigShift = await GlobalRepo().hitAllMasterRigStatus(context);
 
-          if(hasRigShift == true){
-             Navigator.pop(context);
-          Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                 
-                builder: (context) => HomePage(),
-              ));
+          if (hasRigShift == true) {
+            Navigator.pop(context);
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HomePage(),
+                ));
           }
-
-         
         } else {
           Navigator.pop(context);
           showToast("Branch id kosong, mohon setUp di website");
@@ -168,73 +156,66 @@ class UserRepo {
     }
   }
 
-      Future<bool> uploadFR(String employee_id, String face_template, String face_image) async{
-
+  Future<bool> uploadFR(
+      String employee_id, String face_template, String face_image) async {
     try {
-      Response res = await callApi(ApiMethods.POST, '/employee/upload-fr', data: {
+      Response res =
+          await callApi(ApiMethods.POST, '/employee/upload-fr', data: {
         "employee_id": employee_id,
         "face_template": face_template,
-        "face_image": "data:image/png;base64,"+face_image
+        "face_image": "data:image/png;base64," + face_image
       });
 
       // log(res.data);
 
-      if(res.statusCode == 200){
-         return true;
-      }else{
-        
+      if (res.statusCode == 200) {
+        return true;
+      } else {
         return false;
       }
-      
-
     } catch (e) {
-      showToast("Terjadi Kesalahan Saat Upload FR ke Server " );
+      showToast("Terjadi Kesalahan Saat Upload FR ke Server ");
       showToast(e.toString());
       throw e;
     }
   }
 
-  Future<bool> hitApproveFR(String employee_id) async{
-    
+  Future<bool> hitApproveFR(String employee_id) async {
     String id_superIntendent = await getActiveSuperIntendentID();
-         
 
     List<String> list_id = [employee_id];
 
-    
     try {
-      Response res = await callApi(ApiMethods.POST, '/employee/approval-fr', data: {
+      Response res =
+          await callApi(ApiMethods.POST, '/employee/approval-fr', data: {
         "employee_id": list_id,
-         "approved_by": id_superIntendent,
-          "is_approved": true,
+        "approved_by": id_superIntendent,
+        "is_approved": true,
       });
 
-
-
-      if(res.statusCode == 200){
-         return true;
-      }else{
+      if (res.statusCode == 200) {
+        return true;
+      } else {
         return false;
       }
-      
-
     } catch (e) {
       showToast("Terjadi Kesalahan Saat Approve FR ke Server");
       throw e;
     }
   }
 
-
-  Future<bool> hitApproveEmployee(String employee_id) async{
+  Future<bool> hitApproveEmployee(String employee_id) async {
     try {
-      Response res = await callApi(ApiMethods.POST, '/employee/approval-new-employee', data: {
-        "employee_id": employee_id,
-      });
+      Response res = await callApi(
+          ApiMethods.POST, '/employee/approval-new-employee',
+          data: {
+            "employee_id": employee_id,
+          });
       print(res.data);
 
-      if(res.statusCode == 200){
-         return true;
-      }else{
+      if (res.statusCode == 200) {
+        return true;
+      } else {
         return false;
       }
     } catch (e) {

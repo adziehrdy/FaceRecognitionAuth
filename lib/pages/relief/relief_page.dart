@@ -1,10 +1,14 @@
 import 'dart:convert';
 
 import 'package:face_net_authentication/globals.dart';
+import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/reliefModel.dart';
+import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/relief/relief_form.dart';
 import 'package:face_net_authentication/repo/relief_repos.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 class ReliefPage extends StatefulWidget {
   const ReliefPage({Key? key}) : super(key: key);
@@ -14,203 +18,448 @@ class ReliefPage extends StatefulWidget {
 }
 
 class _ReliefPageState extends State<ReliefPage> {
-  List<ReliefModel> listRelief = [];
+  List<ReliefModel> allListRelief = [];
+  List<ReliefModel> ListReliefApproval = [];
+  List<ReliefModel> ListReliefPending = [];
+  int _currentIndex = 0;
+  List<Widget> _pages = [];
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _pages = [
+      widgetListRelief(ListReliefApproval),
+      widgetListRelief(ListReliefPending)
+    ];
     getListRelief();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text('Relief'),
-          actions: <Widget>[
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => ReliefForm()));
-              },
-              child: Row(children: [
-                Icon(Icons.person_add),
-                SizedBox(
-                  width: 10,
-                ),
-                Text("Ajukan Relief"),
-                SizedBox(
-                  width: 10,
-                ),
-              ]),
-            )
-          ],
-        ),
-        body:
-            // Card(
-            //   child:
-            //       Container(padding: EdgeInsets.all(10), child:
-            //       Row(
-            //         children: [
-            //           Text("ADZIE HADI"),
-            //         ],
-            //       )
-            //       ),
-            // )
+      appBar: AppBar(
+        title: Text('Relief'),
+        actions: <Widget>[
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => ReliefForm()));
+            },
+            child: Row(children: [
+              Icon(Icons.person_add),
+              SizedBox(
+                width: 10,
+              ),
+              Text("Ajukan Relief"),
+              SizedBox(
+                width: 10,
+              ),
+            ]),
+          )
+        ],
+      ),
+      body: _pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (int index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: 'Butuh Approval',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.cloud_upload),
+            label: 'Requested',
+          ),
+        ],
+      ),
 
-            ListView.builder(
-          padding: EdgeInsets.all(10),
-          itemCount: listRelief.length,
-          itemBuilder: (context, index) {
-            return InkWell(
-              child: Card(
-                elevation: 2,
-                child: Container(
-                    padding: EdgeInsets.all(10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+      // Card(
+      //   child:
+      //       Container(padding: EdgeInsets.all(10), child:
+      //       Row(
+      //         children: [
+      //           Text("ADZIE HADI"),
+      //         ],
+      //       )
+      //       ),
+      // )
+    );
+  }
+
+  Future getListRelief() async {
+    LoginModel user_data = await getUserLoginData();
+    String jsonRelief = await ReliefRepo().getReliefList();
+    ListReliefApproval.clear();
+    ListReliefPending.clear();
+    final List<dynamic> parsedList = jsonDecode(jsonRelief);
+
+    setState(() {
+      allListRelief =
+          parsedList.map((item) => ReliefModel.fromMap(item)).toList();
+
+      for (var item in allListRelief) {
+        if (item.toBranch == user_data.branch?.branchId) {
+          ListReliefApproval.add(item);
+        } else {
+          ListReliefPending.add(item);
+        }
+      }
+      _pages = [
+        widgetListRelief(ListReliefApproval),
+        widgetListReliefRequest(ListReliefPending)
+      ];
+      print(allListRelief);
+    });
+  }
+}
+
+Widget widgetListRelief(List<ReliefModel> listRelief) {
+  return ListView.builder(
+    padding: EdgeInsets.all(10),
+    itemCount: listRelief.length,
+    itemBuilder: (context, index) {
+      return InkWell(
+        child: Card(
+          elevation: 2,
+          child: Container(
+              padding: EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.swap_horizontal_circle_outlined),
+                          SizedBox(
+                            width: 8,
+                          ),
+                          Text(
+                              (listRelief[index].employeeName ?? "")
+                                  .toUpperCase(),
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                      Text("APPROVE")
+                    ],
+                  ),
+                  Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Column(
+                        children: [
+                          Text("Rig Asal".toUpperCase(),
+                              style:
+                                  TextStyle(fontSize: 11, color: Colors.green)),
+                          Text(
+                              (listRelief[index].fromBranch ?? "")
+                                  .toUpperCase(),
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green)),
+                        ],
+                      ),
+                      Icon(Icons.arrow_forward_outlined),
+                      Column(
+                        children: [
+                          Text("Rig Tujuan".toUpperCase(),
+                              style:
+                                  TextStyle(fontSize: 11, color: Colors.blue)),
+                          Text((listRelief[index].toBranch ?? "").toUpperCase(),
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue)),
+                        ],
+                      ),
+                    ],
+                  ),
+                  // SizedBox(
+                  //   height: 10,
+                  // ),
+                  // Row(
+                  //   children: [
+                  //     Text(
+                  //       "Tanggal Mulai : " +
+                  //           (formatDateOnly(
+                  //               listRelief[index].reliefStartDate ??
+                  //                   DateTime.now())),
+                  //     ),
+                  //     SizedBox(
+                  //       width: 10,
+                  //     ),
+                  //     Text("Tanggal Selesai : " +
+                  //         (formatDateOnly(
+                  //             listRelief[index].reliefEndDate ??
+                  //                 DateTime.now()))),
+                  //   ],
+                  // ),
+                  // // Text("Status Relief : " +
+                  // //     (listRelief[index].statusRelief ?? "")),
+                  // Text("Deskripsi : " + (listRelief[index].desc ?? "")),
+                  // Text("Notes : " + (listRelief[index].note ?? "")),
+                  // Divider(),
+                  SizedBox(
+                    height: 5,
+                  ),
+                  // listRelief[index].relief_status_approve == null
+                  //     ? Row(
+                  //         mainAxisAlignment:
+                  //             MainAxisAlignment.spaceAround,
+                  //         children: [
+                  //           ElevatedButton(
+                  //               style: ButtonStyle(
+                  //                   backgroundColor:
+                  //                       MaterialStatePropertyAll(
+                  //                           Colors.red)),
+                  //               onPressed: () async {
+                  //                 await ReliefRepo().approveRelief(
+                  //                     listRelief[index].reliefId ?? "-",
+                  //                     "REJECT");
+                  //               },
+                  //               child: Row(
+                  //                 children: [
+                  //                   Icon(
+                  //                     Icons.cancel,
+                  //                     color: Colors.red.shade100,
+                  //                   ),
+                  //                   SizedBox(
+                  //                     width: 10,
+                  //                   ),
+                  //                   Text(
+                  //                     "REJECT",
+                  //                     style: TextStyle(
+                  //                         color: Colors.red.shade100),
+                  //                   ),
+                  //                 ],
+                  //               )),
+                  //           ElevatedButton(
+                  //               style: ButtonStyle(
+                  //                   backgroundColor:
+                  //                       MaterialStatePropertyAll(
+                  //                           Colors.blue)),
+                  //               onPressed: () async {
+                  //                 await ReliefRepo().approveRelief(
+                  //                     listRelief[index].reliefId ?? "-",
+                  //                     "APPROVE");
+                  //               },
+                  //               child: Row(
+                  //                 children: [
+                  //                   Icon(Icons.check_circle),
+                  //                   SizedBox(
+                  //                     width: 10,
+                  //                   ),
+                  //                   Text("APPROVE",
+                  //                       style: TextStyle(
+                  //                           color: Colors.white)),
+                  //                 ],
+                  //               ))
+                  //         ],
+                  //       )
+                  //     : Text(
+                  //         listRelief[index].relief_status_approve ?? "-")
+                ],
+              )),
+        ),
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                  content:
+                      dialog_detail_relief(data_relief: listRelief[index]));
+            },
+          );
+        },
+      );
+    },
+  );
+}
+
+Widget widgetListReliefRequest(List<ReliefModel> listRelief) {
+  return ListView.builder(
+    padding: EdgeInsets.all(10),
+    itemCount: listRelief.length,
+    itemBuilder: (context, index) {
+      return InkWell(
+        child: Card(
+          elevation: 2,
+          child: Container(
+              padding: EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Text(listRelief[index].relief_status_approve ??
+                        "MENUNGGU APPROVAL"),
+                  ),
+                  Divider(),
+                  // Column(
+                  //   mainAxisAlignment: MainAxisAlignment.start,
+                  //   children: [
+                  //     Column(
+                  //       children: [
+                  //         Text("Status : APPROVE",
+                  //             style: TextStyle(
+                  //                 fontSize: 16, fontWeight: FontWeight.bold)),
+                  //       ],
+                  //     ),
+                  //   ],
+                  // ),
+                  // Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Container(
+                        width: ((MediaQuery.of(context).size.width / 2) - 50),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.swap_horizontal_circle_outlined),
-                            SizedBox(
-                              width: 10,
-                            ),
+                            Text("NAMA".toUpperCase(),
+                                style:
+                                    TextStyle(fontSize: 8, color: Colors.grey)),
                             Text(
                                 (listRelief[index].employeeName ?? "")
                                     .toUpperCase(),
                                 style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold)),
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black)),
                           ],
                         ),
-                        Divider(),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      ),
+                      Icon(Icons.arrow_forward_outlined),
+                      Container(
+                        width: ((MediaQuery.of(context).size.width / 2) - 50),
+                        child: Column(
                           children: [
-                            Column(
-                              children: [
-                                Text("Rig Asal".toUpperCase(),
-                                    style: TextStyle(
-                                        fontSize: 11, color: Colors.red)),
-                                Text(
-                                    (listRelief[index].fromBranch ?? "")
-                                        .toUpperCase(),
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.red)),
-                              ],
-                            ),
-                            Icon(Icons.arrow_forward_outlined),
-                            Column(
-                              children: [
-                                Text("Rig Tujuan".toUpperCase(),
-                                    style: TextStyle(
-                                        fontSize: 11, color: Colors.blue)),
-                                Text(
-                                    (listRelief[index].toBranch ?? "")
-                                        .toUpperCase(),
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.blue)),
-                              ],
-                            ),
-                          ],
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Row(
-                          children: [
+                            Text("Rig Tujuan".toUpperCase(),
+                                style: TextStyle(
+                                    fontSize: 11, color: Colors.blue)),
                             Text(
-                              "Tanggal Mulai : " +
-                                  (formatDateOnly(
-                                      listRelief[index].reliefStartDate ??
-                                          DateTime.now())),
-                            ),
-                            Text("Tanggal Selesai : " +
-                                (formatDateOnly(
-                                    listRelief[index].reliefEndDate ??
-                                        DateTime.now()))),
+                                (listRelief[index].toBranch ?? "")
+                                    .toUpperCase(),
+                                style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue)),
                           ],
                         ),
-                        // Text("Status Relief : " +
-                        //     (listRelief[index].statusRelief ?? "")),
-                        Text("Deskripsi : " + (listRelief[index].desc ?? "")),
-                        Text("Notes : " + (listRelief[index].note ?? "")),
-                        Divider(),
-                        SizedBox(
-                          height: 5,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            ElevatedButton(
-                                style: ButtonStyle(
-                                    backgroundColor:
-                                        MaterialStatePropertyAll(Colors.red)),
-                                onPressed: () {},
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.cancel,
-                                      color: Colors.red.shade100,
-                                    ),
-                                    SizedBox(
-                                      width: 10,
-                                    ),
-                                    Text(
-                                      "REJECT",
-                                      style:
-                                          TextStyle(color: Colors.red.shade100),
-                                    ),
-                                  ],
-                                )),
-                            ElevatedButton(
-                                style: ButtonStyle(
-                                    backgroundColor:
-                                        MaterialStatePropertyAll(Colors.blue)),
-                                onPressed: () {},
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.check_circle),
-                                    SizedBox(
-                                      width: 10,
-                                    ),
-                                    Text("APPROVE",
-                                        style: TextStyle(color: Colors.white)),
-                                  ],
-                                ))
-                          ],
-                        )
-                      ],
-                    )),
-              ),
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                        content: dialog_detail_relief(
-                            data_relief: listRelief[index]));
-                  },
-                );
-              },
-            );
-          },
-        ));
-  }
+                      )
+                    ],
+                  ),
+                  // SizedBox(
+                  //   height: 10,
+                  // ),
+                  // Row(
+                  //   children: [
+                  //     Text(
+                  //       "Tanggal Mulai : " +
+                  //           (formatDateOnly(
+                  //               listRelief[index].reliefStartDate ??
+                  //                   DateTime.now())),
+                  //     ),
+                  //     SizedBox(
+                  //       width: 10,
+                  //     ),
+                  //     Text("Tanggal Selesai : " +
+                  //         (formatDateOnly(
+                  //             listRelief[index].reliefEndDate ??
+                  //                 DateTime.now()))),
+                  //   ],
+                  // ),
+                  // // Text("Status Relief : " +
+                  // //     (listRelief[index].statusRelief ?? "")),
+                  // Text("Deskripsi : " + (listRelief[index].desc ?? "")),
+                  // Text("Notes : " + (listRelief[index].note ?? "")),
+                  // Divider(),
+                  SizedBox(
+                    height: 5,
+                  ),
 
-  Future getListRelief() async {
-    String jsonRelief = await ReliefRepo().getReliefList();
-    final List<dynamic> parsedList = jsonDecode(jsonRelief);
-    setState(() {
-      listRelief = parsedList.map((item) => ReliefModel.fromMap(item)).toList();
-      print(listRelief);
-    });
-  }
+                  // listRelief[index].relief_status_approve == null
+                  //     ? Row(
+                  //         mainAxisAlignment:
+                  //             MainAxisAlignment.spaceAround,
+                  //         children: [
+                  //           ElevatedButton(
+                  //               style: ButtonStyle(
+                  //                   backgroundColor:
+                  //                       MaterialStatePropertyAll(
+                  //                           Colors.red)),
+                  //               onPressed: () async {
+                  //                 await ReliefRepo().approveRelief(
+                  //                     listRelief[index].reliefId ?? "-",
+                  //                     "REJECT");
+                  //               },
+                  //               child: Row(
+                  //                 children: [
+                  //                   Icon(
+                  //                     Icons.cancel,
+                  //                     color: Colors.red.shade100,
+                  //                   ),
+                  //                   SizedBox(
+                  //                     width: 10,
+                  //                   ),
+                  //                   Text(
+                  //                     "REJECT",
+                  //                     style: TextStyle(
+                  //                         color: Colors.red.shade100),
+                  //                   ),
+                  //                 ],
+                  //               )),
+                  //           ElevatedButton(
+                  //               style: ButtonStyle(
+                  //                   backgroundColor:
+                  //                       MaterialStatePropertyAll(
+                  //                           Colors.blue)),
+                  //               onPressed: () async {
+                  //                 await ReliefRepo().approveRelief(
+                  //                     listRelief[index].reliefId ?? "-",
+                  //                     "APPROVE");
+                  //               },
+                  //               child: Row(
+                  //                 children: [
+                  //                   Icon(Icons.check_circle),
+                  //                   SizedBox(
+                  //                     width: 10,
+                  //                   ),
+                  //                   Text("APPROVE",
+                  //                       style: TextStyle(
+                  //                           color: Colors.white)),
+                  //                 ],
+                  //               ))
+                  //         ],
+                  //       )
+                  //     : Text(
+                  //         listRelief[index].relief_status_approve ?? "-")
+                ],
+              )),
+        ),
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                  content:
+                      dialog_detail_relief(data_relief: listRelief[index]));
+            },
+          );
+        },
+      );
+    },
+  );
 }
 
 class dialog_detail_relief extends StatelessWidget {
@@ -228,15 +477,18 @@ class dialog_detail_relief extends StatelessWidget {
       child: Container(
           padding: EdgeInsets.all(10),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   Icon(Icons.swap_horizontal_circle_outlined),
-                  SizedBox(width: 10,),
+                  SizedBox(
+                    width: 10,
+                  ),
                   Text((data_relief.employeeName ?? "").toUpperCase(),
-                      style: TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold)),
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 ],
               ),
               Divider(),
@@ -336,7 +588,7 @@ class dialog_detail_relief extends StatelessWidget {
                     TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
               ),
 
-               SizedBox(
+              SizedBox(
                 height: 10,
               ),
 
@@ -359,46 +611,70 @@ class dialog_detail_relief extends StatelessWidget {
               SizedBox(
                 height: 10,
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  ElevatedButton(
-                      style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStatePropertyAll(Colors.red)),
-                      onPressed: () {},
-                      child: Row(
+
+              data_relief.relief_status_approve == null
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        ElevatedButton(
+                            style: ButtonStyle(
+                                backgroundColor:
+                                    MaterialStatePropertyAll(Colors.red)),
+                            onPressed: () async {
+                              await ReliefRepo().approveRelief(
+                                  data_relief.reliefId ?? "-", "REJECT");
+                            },
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.cancel,
+                                  color: Colors.red.shade100,
+                                ),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                Text(
+                                  "REJECT",
+                                  style: TextStyle(color: Colors.red.shade100),
+                                ),
+                              ],
+                            )),
+                        ElevatedButton(
+                            style: ButtonStyle(
+                                backgroundColor:
+                                    MaterialStatePropertyAll(Colors.blue)),
+                            onPressed: () async {
+                              await ReliefRepo().approveRelief(
+                                  data_relief.reliefId ?? "-", "APPROVE");
+                            },
+                            child: Row(
+                              children: [
+                                Icon(Icons.check_circle),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                Text("APPROVE",
+                                    style: TextStyle(color: Colors.white)),
+                              ],
+                            ))
+                      ],
+                    )
+                  : Center(
+                      child: Column(
                         children: [
-                          Icon(
-                            Icons.cancel,
-                            color: Colors.red.shade100,
-                          ),
-                          SizedBox(
-                            width: 10,
+                          Text(
+                            "STATUS",
+                            style: TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            "REJECT",
-                            style: TextStyle(color: Colors.red.shade100),
-                          ),
+                            data_relief.relief_status_approve ?? "-",
+                            style: TextStyle(
+                                fontSize: 25, fontWeight: FontWeight.bold),
+                          )
                         ],
-                      )),
-                  ElevatedButton(
-                      style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStatePropertyAll(Colors.blue)),
-                      onPressed: () {},
-                      child: Row(
-                        children: [
-                          Icon(Icons.check_circle),
-                          SizedBox(
-                            width: 10,
-                          ),
-                          Text("APPROVE",
-                              style: TextStyle(color: Colors.white)),
-                        ],
-                      ))
-                ],
-              )
+                      ),
+                    )
             ],
           )),
     );

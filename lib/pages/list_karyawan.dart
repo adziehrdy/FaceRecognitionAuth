@@ -1,13 +1,10 @@
 import 'dart:convert';
 
 import 'package:face_net_authentication/globals.dart';
-import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/pages/widgets/personview.dart';
-import 'package:face_net_authentication/repo/user_repos.dart';
 import 'package:flutter/material.dart';
-import 'package:sn_progress_dialog/sn_progress_dialog.dart';
 
 class ListKaryawan extends StatefulWidget {
   const ListKaryawan({Key? key}) : super(key: key);
@@ -25,15 +22,9 @@ class _ListKaryawanState extends State<ListKaryawan> {
   @override
   void initState() {
     // TODO: implement initState
-    _loadUserData();
+    loadUserData();
 
-    getUserLogin();
     super.initState();
-  }
-
-  Future<void> getUserLogin() async {
-    LoginModel loginData = await getUserLoginData();
-      branchID = loginData.branch!.branchId!;
   }
 
   @override
@@ -41,34 +32,36 @@ class _ListKaryawanState extends State<ListKaryawan> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daftar Karyawan'),
-        toolbarHeight: 30,
+        toolbarHeight: 35,
         centerTitle: true,
-        actions: [PopupMenuButton(
-          itemBuilder: (context){
-            return [
-                  // PopupMenuItem<int>(
-                  //     value: 0,
-                  //     child: Row(children: [Icon(Icons.person_add,color: Colors.black,),SizedBox(width: 15,),Text("Registrasi Karyawan Baru")],),
-                  // ),
-                    PopupMenuItem<int>(
-                      value: 1,
-                      child: Row(children: [Icon(Icons.sync,color: Colors.black,),SizedBox(width: 15,),Text("Update Ulang Data Karyawan")],),
+        actions: [
+          Row(
+            children: [
+              // isLoked ? Icon(Icons.lock,color: Colors.grey,): Icon(Icons.lock_open,color: Colors.blue,),
+              // SizedBox(width: 15),
+              ElevatedButton(
+                onPressed: () {
+                  showConfirmationDialog(
+                    context,
+                    () {
+                      refreshEmployee(context);
+                    },
+                  );
+                },
+                child: Row(children: [
+                  Icon(Icons.refresh),
+                  SizedBox(
+                    width: 10,
                   ),
-
-              ];
-          },
-          onSelected:(value){
-            if(value == 0){
-            // Navigator.push(context, MaterialPageRoute(builder: (context) => FormRegistrasiKaryawan(),));
-            }else if(value == 1){
-              showConfirmationDialog(context,() {
-                refreshEmployee(context);
-                
-              },);
-            }
-
-          }
-        ),],
+                  Text("Update Karyawan"),
+                  SizedBox(
+                    width: 10,
+                  ),
+                ]),
+              ),
+            ],
+          )
+        ],
       ),
       body: Container(
         margin: const EdgeInsets.only(left: 16.0, right: 16.0),
@@ -77,40 +70,11 @@ class _ListKaryawanState extends State<ListKaryawan> {
             const SizedBox(
               height: 20,
             ),
-            // Row(
-            //   children: <Widget>[
-            //     Expanded(
-            //       flex: 1,
-            //       child: ElevatedButton.icon(
-            //         label: const Text('Update ulang data karyawan'),
-            //         icon: const Icon(
-            //           Icons.person_add,
-            //           // color: Colors.white70,
-            //         ),
-            //         style: ElevatedButton.styleFrom(
-            //             padding: const EdgeInsets.only(top: 10, bottom: 10),
-            //             // foregroundColor: Colors.white70,
-            //             backgroundColor:
-            //                 Theme.of(context).colorScheme.primaryContainer,
-            //             shape: const RoundedRectangleBorder(
-            //               borderRadius: BorderRadius.all(Radius.circular(12.0)),
-            //             )),
-            //         onPressed: () {
-            //           showConfirmationDialog(context);
-            //         },
-            //         // onPressed: () {
 
-            //         // },
-            //       ),
-            //     ),
-            //     const SizedBox(width: 20),
-            //   ],
-            // ),
             const SizedBox(height: 6),
             Row(
               children: <Widget>[
                 const SizedBox(width: 20),
-
               ],
             ),
             const SizedBox(
@@ -121,21 +85,23 @@ class _ListKaryawanState extends State<ListKaryawan> {
                 child: Stack(
               children: [
                 PersonView(
-                  personList: user_list, onFinish: () { 
-                    _loadUserData();
-                   }, onUserSelected: (int ) { 
+                  personList: user_list,
+                  onFinish: () {
+                    loadUserData();
+                  },
+                  onUserSelected: (int) {
                     print(int.toString());
                     print(selected);
-                    }, selected: [], onShiftUpdated: () { 
-                      _loadUserData();
-                     },
+                  },
+                  selected: [],
+                  onShiftUpdated: () {
+                    loadUserData();
+                  },
                   // homePageState: this,
                 ),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-
-                  ],
+                  children: <Widget>[],
                 )
               ],
             )),
@@ -148,107 +114,55 @@ class _ListKaryawanState extends State<ListKaryawan> {
     );
   }
 
-
-  Future<void> showConfirmationDialog(BuildContext context, Function() callback) async {
-  return showDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Konfirmasi',style: TextStyle(color: Colors.red),),
-        content: SingleChildScrollView(
-          child: ListBody(
-            children: <Widget>[
-              Text('Anda yakin ingin memperbarui data karyawan?'),
-            ],
+  Future<void> showConfirmationDialog(
+      BuildContext context, Function() callback) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Konfirmasi',
+            style: TextStyle(color: Colors.red),
           ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            child: Text('Batal'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Anda yakin ingin memperbarui data karyawan?'),
+              ],
+            ),
           ),
-          TextButton(
-            child: Text('Ya',style :TextStyle(color: Colors.red)),
-            onPressed: () async {
-              
-              Navigator.of(context).pop();
-              callback();
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
-
-  Future<void> refreshEmployee(BuildContext context) async {
-    UserRepo userRepo = UserRepo();
-    ProgressDialog progressDialog = ProgressDialog(context: context);
-      progressDialog.show(max: 100, msg: 'Fetching data...');
-    String? jsonKaryawan = await userRepo.apiGetAllEmployeeByBranch(branchID).onError((error, stackTrace) {
-      progressDialog.close();
-    });
-
-    if (jsonKaryawan != null) {
-    // jsonKaryawan = DummyJson;
-      print(jsonKaryawan);
-      try {
-        List<dynamic> jsonDataList = jsonDecode(jsonKaryawan);
-
-        user_list.clear();
-        _dataBaseHelper.deleteAll();
-
-        int totalItems = jsonDataList.length;
-        int processedItems = 0;
-
-        try {
-          for (var jsonData in jsonDataList) {
-            var person = User.fromMap(jsonData);
-            await _dataBaseHelper.insert(person);
-
-            processedItems++;
-            progressDialog.update(
-
-              value: ((processedItems / totalItems) * 100).toInt(),
-              msg: 'Updating data... ($processedItems/$totalItems)',
-            );
-            selected.add(false);
-          }
-        } catch (e) {
-          await _dataBaseHelper.deleteAll();
-          print(e.toString());
-        }
-
-        await _loadUserData();
-
-      } catch (e) {
-        print(e); progressDialog.close();
-
-      } finally {
-        progressDialog.close();
-      }
-    } else {
-      showToast('Terjadi kesalahan saat mengambil data karyawan');
-       progressDialog.close();
-    }
-
-  }         
-
-  Future<void> _loadUserData() async {
-  user_list = await _dataBaseHelper.queryAllUsers();
-  if(user_list.isEmpty){
-    refreshEmployee(context);
+          actions: <Widget>[
+            TextButton(
+              child: Text('Batal'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Ya', style: TextStyle(color: Colors.red)),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                callback();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
-  // print(user_list);
-  setState(() {});
-}
 
-void _onUserSelected(int index) {
-  setState(() {
-    selected[index] = !selected[index];
-  });
-}
+  Future<void> loadUserData() async {
+    selected = await refreshEmployee(context);
+    user_list = await _dataBaseHelper.queryAllUsers();
+    if (user_list.isEmpty) {}
+    // print(user_list);
+    setState(() {});
+  }
+
+  void _onUserSelected(int index) {
+    setState(() {
+      selected[index] = !selected[index];
+    });
+  }
 }
