@@ -4,8 +4,9 @@ import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/pages/Approval/approval_main_page.dart';
 import 'package:face_net_authentication/pages/Dinas%20Khusus/DK_page.dart';
+import 'package:face_net_authentication/pages/List%20Karyawan/page_list_karyawan.dart';
 import 'package:face_net_authentication/pages/history_absensi_mainPage.dart';
-import 'package:face_net_authentication/pages/list_karyawan.dart';
+import 'package:face_net_authentication/pages/List%20Karyawan/list_karyawan.dart';
 import 'package:face_net_authentication/pages/register_pin.dart';
 import 'package:face_net_authentication/pages/relief/relief_page.dart';
 import 'package:face_net_authentication/pages/sign-in.dart';
@@ -247,7 +248,7 @@ class _HomePageState extends State<HomePage> {
                       callback: (p0) {
                         PinInputDialog.show(context, (p0) {
                           Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => ListKaryawan()));
+                              builder: (context) => PageListKaryawan()));
                         });
                       },
                     ),

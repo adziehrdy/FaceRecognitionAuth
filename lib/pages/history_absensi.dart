@@ -1,6 +1,6 @@
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/attendance.dart';
-import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
+import 'package:face_net_authentication/db/databse_helper_absensi.dart';
 import 'package:face_net_authentication/pages/widgets/attendance_single.dart';
 import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
 import 'package:face_net_authentication/repo/attendance_repos.dart';

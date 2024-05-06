@@ -2,7 +2,7 @@ import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/model_master_shift.dart';
 import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
+import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/pages/sign-up.dart';
 import 'package:face_net_authentication/pages/widgets/dialog_detail_employee.dart';
 import 'package:face_net_authentication/repo/global_repos.dart';

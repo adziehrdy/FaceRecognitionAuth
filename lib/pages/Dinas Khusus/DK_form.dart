@@ -2,7 +2,7 @@ import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/master_register_model.dart';
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
+import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/repo/DK_repo.dart';
 import 'package:face_net_authentication/repo/relief_repos.dart';
 import 'package:flutter/material.dart';
@@ -130,7 +130,6 @@ class _DKFormState extends State<DKForm> {
                   ),
                   subtitle: Text(deskripsiController.text),
                 ),
-                
               ],
             ),
           )),
@@ -142,10 +141,8 @@ class _DKFormState extends State<DKForm> {
               child: Text('Cancel'),
             ),
             ElevatedButton(
-
-              
               onPressed: () async {
-                if(biayaDinasController.text.isNotEmpty){
+                if (biayaDinasController.text.isNotEmpty) {
                   biaya = biayaDinasController.text;
                 }
                 // Lakukan logika pengiriman data atau simpan ke database di sini
@@ -171,33 +168,27 @@ class _DKFormState extends State<DKForm> {
                 print("Tanggal Selesai: $tanggalSelesai");
 
                 print("Deskripsi Tugas: ${deskripsiController.text}");
-                
-
 
                 LoginModel user = await getUserLoginData();
 
                 Map<String, dynamic> payload = {
                   "employee_id": pekerjaDropdownValue!.employee_id.toString(),
-                  "branch_id" : user.branch!.branchId,
+                  "branch_id": user.branch!.branchId,
                   "from_date": startDateFormatted,
                   "to_date": endDateFormatted,
                   "desc": deskripsiController.text,
                   "amount": biaya,
-
                 };
                 print(payload);
 
                 DKRepo repo = DKRepo();
-                
-                if(await repo.createDK(payload)){
+
+                if (await repo.createDK(payload)) {
                   Navigator.of(context).pop();
-                 Navigator.of(context).pop();
+                  Navigator.of(context).pop();
                 }
 
                 // Lakukan pengiriman data atau simpan ke database di sini
-
-                
-
               },
               child: Text('Submit'),
             ),
@@ -235,7 +226,13 @@ class _DKFormState extends State<DKForm> {
               SizedBox(
                 height: 50,
               ),
-              Text("Form Dinas Khusus",style: TextStyle(color: Colors.blue,fontWeight: FontWeight.bold, fontSize: 30),),
+              Text(
+                "Form Dinas Khusus",
+                style: TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 30),
+              ),
               SizedBox(
                 height: 15,
               ),
@@ -348,10 +345,9 @@ class _DKFormState extends State<DKForm> {
                 ),
                 maxLines: 3,
               ),
-             
 
               // TextInput untuk Catatan
-              
+
               SizedBox(height: 32.0),
 
               // Tombol Submit

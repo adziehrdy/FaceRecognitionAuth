@@ -62,6 +62,17 @@ class UserRepo {
     }
   }
 
+  Future<String?> apiGetAllEmployeeRelief(String id_branch) async {
+    print(id_branch);
+    try {
+      Response res = await callApi(
+          ApiMethods.GET, '/master/employees-relief/' + id_branch);
+      return json.encode(res.data);
+    } catch (e) {
+      throw e;
+    }
+  }
+
   Future registerFcmToken(User user, String token) async {
     try {
       await callApi(ApiMethods.POST, '/notification/set-token', data: {

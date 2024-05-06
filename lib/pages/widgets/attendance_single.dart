@@ -1,6 +1,6 @@
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/attendance.dart';
-import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
+import 'package:face_net_authentication/db/databse_helper_absensi.dart';
 import 'package:face_net_authentication/pages/widgets/dialog_approval_absensi.dart';
 import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
 import 'package:flutter/material.dart';
@@ -313,27 +313,27 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                                             return dialog_approval_absensi(
                                                                 onSelected:
                                                                     (value) async {
-
-                                                                      PinInputDialog.show(context, (p0) async {
-
-                                                                        await _dataBaseHelper
-                                                                  .approveAbsensi(
-                                                                      widget
-                                                                          .data
-                                                                          .attendanceId!,
-                                                                      await getActiveSuperIntendentID(),
-                                                                      value[1],
-                                                                      true,
-                                                                      value[0]);
-                                                              setState(() {
+                                                              PinInputDialog.show(
+                                                                  context,
+                                                                  (p0) async {
+                                                                await _dataBaseHelper
+                                                                    .approveAbsensi(
+                                                                        widget
+                                                                            .data
+                                                                            .attendanceId!,
+                                                                        await getActiveSuperIntendentID(),
+                                                                        value[
+                                                                            1],
+                                                                        true,
+                                                                        value[
+                                                                            0]);
                                                                 setState(() {
-                                                                  widget
-                                                                      .onUpdate();
+                                                                  setState(() {
+                                                                    widget
+                                                                        .onUpdate();
+                                                                  });
                                                                 });
                                                               });
-                                                                        
-                                                                      });
-                                                              
                                                             });
                                                           },
                                                         );
@@ -570,19 +570,23 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                                           return dialog_approval_absensi(
                                                               onSelected:
                                                                   (value) async {
-                                                           PinInputDialog.show(context, (p0) async {
-                                                             await _dataBaseHelper
-                                                                .approveAbsensi(
-                                                                    widget.data
-                                                                        .attendanceId!,
-                                                                    await getActiveSuperIntendentID(),
-                                                                    value[1],
-                                                                    false,
-                                                                    value[0]);
-                                                            setState(() {
-                                                              widget.onUpdate();
+                                                            PinInputDialog.show(
+                                                                context,
+                                                                (p0) async {
+                                                              await _dataBaseHelper
+                                                                  .approveAbsensi(
+                                                                      widget
+                                                                          .data
+                                                                          .attendanceId!,
+                                                                      await getActiveSuperIntendentID(),
+                                                                      value[1],
+                                                                      false,
+                                                                      value[0]);
+                                                              setState(() {
+                                                                widget
+                                                                    .onUpdate();
+                                                              });
                                                             });
-                                                           });
                                                           });
                                                         },
                                                       );
@@ -702,18 +706,17 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                 builder: (BuildContext context) {
                                   return dialog_approval_absensi(
                                       onSelected: (value) async {
-                                        PinInputDialog.show(context, (p0) async {
-                                          await _dataBaseHelper.approveAbsensi(
-                                        widget.data.attendanceId!,
-                                        await getActiveSuperIntendentID(),
-                                        value[1],
-                                        false,
-                                        value[0]);
-                                    setState(() {
-                                      widget.onUpdate();
+                                    PinInputDialog.show(context, (p0) async {
+                                      await _dataBaseHelper.approveAbsensi(
+                                          widget.data.attendanceId!,
+                                          await getActiveSuperIntendentID(),
+                                          value[1],
+                                          false,
+                                          value[0]);
+                                      setState(() {
+                                        widget.onUpdate();
+                                      });
                                     });
-                                        });
-                                    
                                   });
                                 },
                               );

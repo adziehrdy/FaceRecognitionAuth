@@ -1,7 +1,7 @@
 import 'package:date_picker_timeline/date_picker_timeline.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/attendance.dart';
-import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
+import 'package:face_net_authentication/db/databse_helper_absensi.dart';
 import 'package:face_net_authentication/pages/widgets/attendance_uploaded_single.dart';
 import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
 import 'package:flutter/material.dart';
@@ -89,7 +89,7 @@ class _HistoryAbsensiUploadedState extends State<HistoryAbsensiUploaded> {
         children: [
           Container(
             height: 20,
-             color: Colors.blue.shade100.withOpacity(0.2),
+            color: Colors.blue.shade100.withOpacity(0.2),
           ),
 
           // Text('Data Absensi Terupload'),
@@ -148,7 +148,9 @@ class _HistoryAbsensiUploadedState extends State<HistoryAbsensiUploaded> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      SizedBox(height: 10,),
+                      SizedBox(
+                        height: 10,
+                      ),
                       Text(
                           textAlign: TextAlign.center,
                           "History Absensi Terupload",

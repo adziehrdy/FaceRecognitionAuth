@@ -7,7 +7,7 @@ import 'package:camera/camera.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
+import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/pages/widgets/FacePainter.dart';
 import 'package:face_net_authentication/pages/widgets/auth-action-button.dart';
 import 'package:face_net_authentication/pages/widgets/camera_header.dart';
@@ -397,20 +397,19 @@ class SignUpState extends State<SignUp> {
                 this._mlService.setPredictedData([]);
                 bool isApproved = await hitApproveFR(widget.user);
 
-                if(isApproved){
-                   
-                //UPDATE TO DB
+                if (isApproved) {
+                  //UPDATE TO DB
 
-                showToast("Registrasi wajah sukses !");
-                Navigator.pop(context);
-                Navigator.pop(context);
-                }else{
+                  showToast("Registrasi wajah sukses !");
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                } else {
                   showToast("Gagal Approve FR, Mohon Coba Kembali");
                   Navigator.pop(context);
                 }
-
               } else {
-                showToast("Kesalahan Saat Upload FR Ke server, Mohon Coba Kembali");
+                showToast(
+                    "Kesalahan Saat Upload FR Ke server, Mohon Coba Kembali");
                 Navigator.pop(context);
               }
             },

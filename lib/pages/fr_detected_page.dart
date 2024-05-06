@@ -5,7 +5,7 @@ import 'package:face_net_authentication/models/attendance.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
+import 'package:face_net_authentication/db/databse_helper_absensi.dart';
 import 'package:face_net_authentication/repo/attendance_repos.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';

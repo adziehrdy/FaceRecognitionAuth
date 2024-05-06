@@ -2,7 +2,7 @@ import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/model_master_shift.dart';
 import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
+import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/repo/global_repos.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +22,7 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
   DatabaseHelperEmployee _dataBaseHelper = DatabaseHelperEmployee.instance;
   String selectedShiftId = "-";
   List<ShiftRig> listShift = [];
-  
+
   String checkin = "-";
   String checkOut = "-";
   String shift_id = "-";
@@ -39,12 +39,14 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
     //   });
     // });
 
-    SpGetSelectedStatusRig().then((value) {
-      setState(() {
-        listShift = value!.shift!;
-        listShift.add(ShiftRig(id: "PDC_OFF",checkin: null, checkout: null));
-      });
-    },);
+    SpGetSelectedStatusRig().then(
+      (value) {
+        setState(() {
+          listShift = value!.shift!;
+          listShift.add(ShiftRig(id: "PDC_OFF", checkin: null, checkout: null));
+        });
+      },
+    );
 
     setState(() {
       shift_id = widget.user_detail.shift_id ?? "Shift Belum Dipilih";
@@ -116,7 +118,9 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
               style: TextStyle(fontSize: 21, fontWeight: FontWeight.w600),
             ),
             Text(
-              (widget.user_detail.employee_id ?? "-" )+ " - " + (widget.user_detail.branch_id ?? "-"),
+              (widget.user_detail.employee_id ?? "-") +
+                  " - " +
+                  (widget.user_detail.branch_id ?? "-"),
               maxLines: 2,
               style: TextStyle(
                   fontSize: 12,
@@ -246,8 +250,7 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
                 Navigator.pop(context);
                 EasyLoading.dismiss();
                 showToastShort("Shift Berhasil dirubah");
-
-              }else{
+              } else {
                 await _dataBaseHelper.updateShift(
                     widget.user_detail.employee_id,
                     shift_id,
@@ -255,7 +258,8 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
                     checkOut);
                 Navigator.pop(context);
                 EasyLoading.dismiss();
-                showToastShort("Perubahan Shift berhasil karna Disimpan di Local");
+                showToastShort(
+                    "Perubahan Shift berhasil karna Disimpan di Local");
               }
             },
             child: Text("Update Shift")),

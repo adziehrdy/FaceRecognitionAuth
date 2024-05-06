@@ -9,10 +9,11 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:face_net_authentication/constants/constants.dart';
+import 'package:face_net_authentication/db/databse_helper_employee_relief.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/model_master_shift.dart';
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
+import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/pages/force_upgrade.dart';
 import 'package:face_net_authentication/pages/login.dart';
 import 'package:face_net_authentication/repo/custom_exception.dart';
@@ -181,7 +182,7 @@ Dio dio = Dio(options);
 
 Future<Response<dynamic>> callApi(ApiMethods method, String url,
     {Map<String, dynamic>? data}) async {
-  EasyLoading.show(status: "Loading..");
+  // EasyLoading.show(status: "Loading..");
 
   final dio = Dio();
 
@@ -946,6 +947,67 @@ Future<List<bool>> refreshEmployee(BuildContext context) async {
   progressDialog.show(max: 100, msg: 'Fetching data...');
   String? jsonKaryawan = await userRepo
       .apiGetAllEmployeeByBranch(branchID)
+      .onError((error, stackTrace) {
+    progressDialog.close();
+  });
+
+  if (jsonKaryawan != null) {
+    // jsonKaryawan = DummyJson;
+    print(jsonKaryawan);
+    try {
+      List<dynamic> jsonDataList = jsonDecode(jsonKaryawan);
+
+      user_list.clear();
+      _dataBaseHelper.deleteAll();
+
+      int totalItems = jsonDataList.length;
+      int processedItems = 0;
+
+      try {
+        for (var jsonData in jsonDataList) {
+          var person = User.fromMap(jsonData);
+          await _dataBaseHelper.insert(person);
+
+          processedItems++;
+          progressDialog.update(
+            value: ((processedItems / totalItems) * 100).toInt(),
+            msg: 'Updating data... ($processedItems/$totalItems)',
+          );
+          selected.add(false);
+        }
+      } catch (e) {
+        await _dataBaseHelper.deleteAll();
+
+        print(e.toString());
+      }
+
+      return selected;
+      // await loadUserData();
+    } catch (e) {
+      print(e);
+      progressDialog.close();
+    } finally {
+      progressDialog.close();
+    }
+  } else {
+    showToast('Terjadi kesalahan saat mengambil data karyawan');
+    progressDialog.close();
+  }
+  return selected;
+}
+
+Future<List<bool>> refreshEmployeeRelief(BuildContext context) async {
+  LoginModel loginData = await getUserLoginData();
+  String branchID = loginData.branch!.branchId;
+  List<User> user_list = [];
+  List<bool> selected = [];
+  DatabaseHelperEmployeeRelief _dataBaseHelper =
+      DatabaseHelperEmployeeRelief.instance;
+  UserRepo userRepo = UserRepo();
+  ProgressDialog progressDialog = ProgressDialog(context: context);
+  progressDialog.show(max: 100, msg: 'Fetching data...');
+  String? jsonKaryawan = await userRepo
+      .apiGetAllEmployeeRelief(branchID)
       .onError((error, stackTrace) {
     progressDialog.close();
   });

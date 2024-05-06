@@ -27,6 +27,8 @@ class ReliefRepo {
       Response res = await callApi(ApiMethods.POST, '/master/employee-relief',
           data: form_data);
       log(json.encode(res.data));
+      showToast(
+          "RELIEF SUKSES DI AJUKAN, MOHON MENUNGGU APPROVE DARI RIG TUJUAN");
       return json.encode(res.data);
     } catch (e) {
       print("ERROR SUBMIT RELIEF");
@@ -35,10 +37,12 @@ class ReliefRepo {
   }
 
   Future approveRelief(String relief_id, String status) async {
+    String supt_id = await getActiveSuperIntendentID();
     Map<String, dynamic> form_data;
     form_data = {
       "relief_id": relief_id,
       "relief_status": status,
+      "approved_by": supt_id
     };
     try {
       Response res = await callApi(

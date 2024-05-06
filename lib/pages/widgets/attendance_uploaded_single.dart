@@ -1,13 +1,14 @@
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/attendance.dart';
-import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
+import 'package:face_net_authentication/db/databse_helper_absensi.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 typedef void OnDeleteCallback(String deleteType);
 
 class AttendanceUploadedSingle extends StatefulWidget {
-  const AttendanceUploadedSingle({Key? key, required this.data, required this.onDelete})
+  const AttendanceUploadedSingle(
+      {Key? key, required this.data, required this.onDelete})
       : super(key: key);
 
   final Attendance data;
@@ -15,11 +16,11 @@ class AttendanceUploadedSingle extends StatefulWidget {
   final OnDeleteCallback onDelete; // Gunakan tipe OnDeleteCallback
 
   @override
-  _AttendanceUploadedSingleState createState() => _AttendanceUploadedSingleState();
+  _AttendanceUploadedSingleState createState() =>
+      _AttendanceUploadedSingleState();
 }
 
 class _AttendanceUploadedSingleState extends State<AttendanceUploadedSingle> {
-
   DatabaseHelperAbsensi _dataBaseHelper = DatabaseHelperAbsensi.instance;
 
   String jam_in = "-";
@@ -81,7 +82,6 @@ class _AttendanceUploadedSingleState extends State<AttendanceUploadedSingle> {
                       )
                     ],
                   ),
-                  
                 ],
               ),
             ),
@@ -147,7 +147,7 @@ class _AttendanceUploadedSingleState extends State<AttendanceUploadedSingle> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        Tanggal +" "+bulan,
+                        Tanggal + " " + bulan,
                         style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ],
@@ -181,7 +181,6 @@ class _AttendanceUploadedSingleState extends State<AttendanceUploadedSingle> {
                                               color: bg_color,
                                               fontSize: 10),
                                         ),
-                                        
                                       ],
                                     ),
                                     Container(
@@ -189,7 +188,10 @@ class _AttendanceUploadedSingleState extends State<AttendanceUploadedSingle> {
                                           EdgeInsets.symmetric(vertical: 0),
                                       child: Row(
                                         children: [
-                                          Icon(Icons.timer_outlined,size: 15,),
+                                          Icon(
+                                            Icons.timer_outlined,
+                                            size: 15,
+                                          ),
                                           SizedBox(
                                             width: 5,
                                           ),
@@ -214,22 +216,35 @@ class _AttendanceUploadedSingleState extends State<AttendanceUploadedSingle> {
                                             width: 40,
                                           ),
                                           Container(
-                                            height: 25,
-                                            child:
-                                                InkWell(
-                                                  onTap: (){
-                                                    showToast("Notes : "+(widget.data.attendanceNoteIn ?? "-") );
-                                                  },
-                                                  child: Row(
+                                              height: 25,
+                                              child: InkWell(
+                                                onTap: () {
+                                                  showToast("Notes : " +
+                                                      (widget.data
+                                                              .attendanceNoteIn ??
+                                                          "-"));
+                                                },
+                                                child: Row(
                                                   children: [
-                                                    Icon(Icons.notes_sharp,size: 15,),
-                                                    SizedBox(width: 5,),
+                                                    Icon(
+                                                      Icons.notes_sharp,
+                                                      size: 15,
+                                                    ),
+                                                    SizedBox(
+                                                      width: 5,
+                                                    ),
                                                     Text(
-                                                        (widget.data.approval_status_in ??
-                                                            ""),style: TextStyle(fontWeight: FontWeight.bold,fontSize: 10),),
+                                                      (widget.data
+                                                              .approval_status_in ??
+                                                          ""),
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 10),
+                                                    ),
                                                   ],
-                                                ),)
-                                          )
+                                                ),
+                                              ))
                                         ],
                                       ),
                                     ),
@@ -278,7 +293,7 @@ class _AttendanceUploadedSingleState extends State<AttendanceUploadedSingle> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        Tanggal +" "+bulan,
+                        Tanggal + " " + bulan,
                         style: TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ],
@@ -312,7 +327,6 @@ class _AttendanceUploadedSingleState extends State<AttendanceUploadedSingle> {
                                               color: bg_color,
                                               fontSize: 10),
                                         ),
-                                        
                                       ],
                                     ),
                                     Container(
@@ -320,7 +334,10 @@ class _AttendanceUploadedSingleState extends State<AttendanceUploadedSingle> {
                                           EdgeInsets.symmetric(vertical: 0),
                                       child: Row(
                                         children: [
-                                          Icon(Icons.timer_outlined,size: 15,),
+                                          Icon(
+                                            Icons.timer_outlined,
+                                            size: 15,
+                                          ),
                                           SizedBox(
                                             width: 5,
                                           ),
@@ -345,22 +362,35 @@ class _AttendanceUploadedSingleState extends State<AttendanceUploadedSingle> {
                                             width: 40,
                                           ),
                                           Container(
-                                            height: 25,
-                                            child:
-                                                InkWell(
-                                                  onTap: (){
-                                                    showToast("Notes : "+(widget.data.attendanceNoteOut ?? "-") );
-                                                  },
-                                                  child: Row(
+                                              height: 25,
+                                              child: InkWell(
+                                                onTap: () {
+                                                  showToast("Notes : " +
+                                                      (widget.data
+                                                              .attendanceNoteOut ??
+                                                          "-"));
+                                                },
+                                                child: Row(
                                                   children: [
-                                                    Icon(Icons.notes_sharp,size: 15,),
-                                                    SizedBox(width: 5,),
+                                                    Icon(
+                                                      Icons.notes_sharp,
+                                                      size: 15,
+                                                    ),
+                                                    SizedBox(
+                                                      width: 5,
+                                                    ),
                                                     Text(
-                                                        (widget.data.approval_status_out ??
-                                                            ""),style: TextStyle(fontWeight: FontWeight.bold,fontSize: 10),),
+                                                      (widget.data
+                                                              .approval_status_out ??
+                                                          ""),
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 10),
+                                                    ),
                                                   ],
-                                                ),)
-                                          )
+                                                ),
+                                              ))
                                         ],
                                       ),
                                     ),
