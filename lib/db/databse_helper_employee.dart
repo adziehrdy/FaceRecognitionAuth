@@ -50,6 +50,9 @@ class DatabaseHelperEmployee {
   static final from_branch = "from_branch";
   static final to_branch = "to_branch";
   static final relief_status = "relief_status";
+  static final relief_start_date = "relief_start_date";
+  static final relief_end_date = "relief_end_date";
+  static final is_relief_employee = "is_relief_employee";
 
   //DK
   static final dk_start_date = "dk_start_date";
@@ -104,6 +107,9 @@ $relief_id TEXT,
 $from_branch TEXT,
 $to_branch TEXT,
 $relief_status TEXT,
+$relief_start_date,
+$relief_end_date,
+$is_relief_employee,
 $dk_start_date TEXT,
 $dk_end_date TEXT,
 $status_dk

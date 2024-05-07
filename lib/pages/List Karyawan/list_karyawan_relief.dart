@@ -4,7 +4,7 @@ import 'package:face_net_authentication/db/databse_helper_employee_relief.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/db/databse_helper_employee.dart';
-import 'package:face_net_authentication/pages/widgets/personview.dart';
+import 'package:face_net_authentication/pages/widgets/personViewRelief.dart';
 import 'package:flutter/material.dart';
 
 class ListKaryawanRelief extends StatefulWidget {
@@ -33,7 +33,7 @@ class _ListKaryawanReliefState extends State<ListKaryawanRelief> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Daftar Karyawan'),
+        title: const Text('Daftar Karyawan Relief'),
         toolbarHeight: 35,
         centerTitle: true,
         actions: [
@@ -46,7 +46,10 @@ class _ListKaryawanReliefState extends State<ListKaryawanRelief> {
                   showConfirmationDialog(
                     context,
                     () {
-                      refreshEmployee(context);
+                      setState(() async {
+                        await refreshEmployeeRelief(context);
+                        loadUserData();
+                      });
                     },
                   );
                 },
@@ -55,7 +58,7 @@ class _ListKaryawanReliefState extends State<ListKaryawanRelief> {
                   SizedBox(
                     width: 10,
                   ),
-                  Text("Update Karyawan"),
+                  Text("Update Karyawan Relief"),
                   SizedBox(
                     width: 10,
                   ),
@@ -86,7 +89,7 @@ class _ListKaryawanReliefState extends State<ListKaryawanRelief> {
             Expanded(
                 child: Stack(
               children: [
-                PersonView(
+                PersonViewRelief(
                   personList: user_list,
                   onFinish: () {
                     loadUserData();
@@ -130,7 +133,7 @@ class _ListKaryawanReliefState extends State<ListKaryawanRelief> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('Anda yakin ingin memperbarui data karyawan?'),
+                Text('Anda yakin ingin memperbarui data karyawan Relief?'),
               ],
             ),
           ),
@@ -155,10 +158,12 @@ class _ListKaryawanReliefState extends State<ListKaryawanRelief> {
   }
 
   Future<void> loadUserData() async {
-    selected = await refreshEmployeeRelief(context);
+    // selected = await refreshEmployeeRelief(context);
     user_list = await _dataBaseHelper.queryAllUsers();
-    if (user_list.isEmpty) {}
-    // print(user_list);
+    if (user_list.isEmpty) {
+      selected = await refreshEmployeeRelief(context);
+    }
+    print(user_list);
     setState(() {});
   }
 

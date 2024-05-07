@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:ffi';
 
 import 'package:face_net_authentication/globals.dart';
 import 'package:flutter/material.dart';
@@ -32,12 +31,17 @@ class User {
   String? check_out;
   String? employee_fr_image;
 
+//RELIEF
   String? status_relief;
   String? relief_id;
   String? from_branch;
   String? to_branch;
   String? relief_status;
+  String? relief_start_date;
+  String? relief_end_date;
+  String? is_relief_employee;
 
+//DK
   String? dk_start_date;
   String? dk_end_date;
   String? status_dk;
@@ -82,6 +86,9 @@ class User {
       from_branch = map['from_branch'];
       to_branch = map['to_branch'];
       relief_status = map['relief_status'];
+      relief_start_date = map['relief_start_date'];
+      relief_end_date = map['relief_end_date'];
+      is_relief_employee = map['is_relief_employee'];
 
       //DK
       dk_start_date = map['dk_start_date'];
@@ -137,6 +144,9 @@ class User {
       'from_branch': from_branch,
       'to_branch': to_branch,
       'relief_status': relief_status,
+      'relief_start_date': relief_start_date,
+      'relief_end_date': relief_end_date,
+      'is_relief_employee': is_relief_employee,
 
       //DK
       'dk_start_date': dk_start_date,

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:ffi';
 import 'dart:io';
+import 'dart:math' as mt;
 
 import 'package:camera/camera.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -1038,7 +1039,6 @@ Future<List<bool>> refreshEmployeeRelief(BuildContext context) async {
         }
       } catch (e) {
         await _dataBaseHelper.deleteAll();
-
         print(e.toString());
       }
 
@@ -1069,6 +1069,55 @@ bool DKStatusChecker(String? startDate, String? endDate) {
     return false;
   }
 }
+
+String formatDateString(String dateString) {
+  try {
+    DateTime date = DateTime.parse(dateString);
+    DateFormat formatter = DateFormat("dd MMMM yyyy", "id");
+    return formatter.format(date);
+  } catch (e) {
+    return "-";
+  }
+}
+
+// void testReliefChecker() {
+//   List<DateTime> startDates =
+//       List.generate(10, (i) => DateTime.now().add(Duration(days: i * 2)));
+//   List<DateTime> endDates =
+//       List.generate(10, (i) => DateTime.now().add(Duration(days: (i * 2) + 5)));
+
+//   for (int i = 0; i < 10; i++) {
+//     String startDateStr =
+//         DateFormat("yyyy-MM-dd HH:mm:ss").format(startDates[i]);
+//     String endDateStr = DateFormat("yyyy-MM-dd HH:mm:ss").format(endDates[i]);
+
+//     bool result = reliefChecker(startDateStr, endDateStr);
+//     print(
+//         'Test rel $i: Start Date: $startDateStr, End Date: $endDateStr, Result: $result');
+//   }
+// }
+
+bool reliefChecker(String? startDate, String? endDate) {
+  if (startDate != null && endDate != null) {
+    // startDate = "2024-05-06 00:00:00";
+    // endDate = "2024-05-06 00:00:00";
+    final start = DateFormat("yyyy-MM-dd HH:mm:ss").parse(startDate);
+    final end =
+        DateFormat("yyyy-MM-dd HH:mm:ss").parse(endDate).add(Duration(days: 1));
+    final currentDate = DateTime.now();
+
+    bool result =
+        (currentDate.isAfter(start) || currentDate.isAtSameMomentAs(start)) &&
+            (currentDate.isBefore(end) || currentDate.isAtSameMomentAs(end));
+
+    return result;
+  } else {
+    return false;
+  }
+}
+
+
+
 
   
 

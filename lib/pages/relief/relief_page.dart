@@ -43,9 +43,10 @@ class _ReliefPageState extends State<ReliefPage> {
         title: Text('Relief'),
         actions: <Widget>[
           ElevatedButton(
-            onPressed: () {
-              Navigator.push(context,
+            onPressed: () async {
+              await Navigator.push(context,
                   MaterialPageRoute(builder: (context) => ReliefForm()));
+              getListRelief();
             },
             child: Row(children: [
               Icon(Icons.person_add),

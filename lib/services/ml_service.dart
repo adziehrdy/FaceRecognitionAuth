@@ -4,6 +4,8 @@ import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:face_net_authentication/constants/constants.dart';
+import 'package:face_net_authentication/db/databse_helper_employee_relief.dart';
+import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/services/image_converter.dart';
@@ -167,8 +169,17 @@ class MLService {
 
   getAlluser() async {
     DatabaseHelperEmployee _dbHelper = DatabaseHelperEmployee.instance;
-
     users = await _dbHelper.queryAllUsersForMLKit();
+
+    //FOR RELIEF
+    DatabaseHelperEmployeeRelief _dbHelperRelief =
+        DatabaseHelperEmployeeRelief.instance;
+    List<User> userRelief = await _dbHelperRelief.queryAllUsersForMLKit();
+    for (User user in userRelief) {
+      if (reliefChecker(user.relief_start_date, user.relief_end_date)) {
+        users.add(user);
+      }
+    }
 
     //ADZIEHRDY
     // users = await _dbHelper.queryAllUsers();

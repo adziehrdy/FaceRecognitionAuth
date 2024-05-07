@@ -24,9 +24,9 @@ class _ReliefFormState extends State<ReliefForm> {
 
   // Variabel untuk menyimpan nilai dari Date dan Time Picker
   DateTime tanggalMulai = DateTime.now();
-  TimeOfDay jamMulai = TimeOfDay.now();
+  TimeOfDay jamMulai = TimeOfDay(hour: 0, minute: 0);
   DateTime tanggalSelesai = DateTime.now();
-  TimeOfDay jamSelesai = TimeOfDay.now();
+  TimeOfDay jamSelesai = TimeOfDay(hour: 0, minute: 0);
 
   List<Employee> _approvalList = [];
   List<Division> _divisiList = [];
@@ -235,6 +235,7 @@ class _ReliefFormState extends State<ReliefForm> {
                 // Lakukan pengiriman data atau simpan ke database di sini
 
                 Navigator.of(context).pop();
+                Navigator.of(context).pop();
               },
               child: Text('Submit'),
             ),
@@ -355,22 +356,22 @@ class _ReliefFormState extends State<ReliefForm> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 16.0),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => _selectTime(context, true),
-                      child: InputDecorator(
-                        decoration: InputDecoration(
-                          labelText: 'Jam Mulai',
-                          border: OutlineInputBorder(),
-                        ),
-                        child: Text(
-                          "${jamMulai.format(context)}",
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ),
-                  ),
+                  // SizedBox(width: 16.0),
+                  // Expanded(
+                  //   child: InkWell(
+                  //     onTap: () => _selectTime(context, true),
+                  //     child: InputDecorator(
+                  //       decoration: InputDecoration(
+                  //         labelText: 'Jam Mulai',
+                  //         border: OutlineInputBorder(),
+                  //       ),
+                  //       child: Text(
+                  //         "${jamMulai.format(context)}",
+                  //         style: TextStyle(fontSize: 16),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
               SizedBox(height: 16.0),
@@ -394,22 +395,22 @@ class _ReliefFormState extends State<ReliefForm> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 16.0),
-                  Expanded(
-                    child: InkWell(
-                      onTap: () => _selectTime(context, false),
-                      child: InputDecorator(
-                        decoration: InputDecoration(
-                          labelText: 'Jam Selesai',
-                          border: OutlineInputBorder(),
-                        ),
-                        child: Text(
-                          "${jamSelesai.format(context)}",
-                          style: TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    ),
-                  ),
+                  // SizedBox(width: 16.0),
+                  // Expanded(
+                  //   child: InkWell(
+                  //     onTap: () => _selectTime(context, false),
+                  //     child: InputDecorator(
+                  //       decoration: InputDecoration(
+                  //         labelText: 'Jam Selesai',
+                  //         border: OutlineInputBorder(),
+                  //       ),
+                  //       child: Text(
+                  //         "${jamSelesai.format(context)}",
+                  //         style: TextStyle(fontSize: 16),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
               SizedBox(height: 16.0),
@@ -453,6 +454,7 @@ class _ReliefFormState extends State<ReliefForm> {
 
   Future<void> hitGetMasterRegister() async {
     String? data = await GlobalRepo().getMasterRegister();
+    String rigAsal = await getBranchID();
 
     setState(() {
       if (data != null) {
@@ -468,10 +470,11 @@ class _ReliefFormState extends State<ReliefForm> {
               // _lokasiList.add(Location(
               // branchId: device_data.branch?.branchId ?? "",
               // branchName: device_data.branch?.branchName ?? "",
-
-              daftarRigTujuan.add(
-                lokasi.branchId ?? "-",
-              );
+              if (lokasi.branchId != rigAsal) {
+                daftarRigTujuan.add(
+                  lokasi.branchId ?? "-",
+                );
+              }
             }
           });
         });

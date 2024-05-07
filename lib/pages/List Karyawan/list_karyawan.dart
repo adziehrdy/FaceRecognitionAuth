@@ -43,8 +43,9 @@ class _ListKaryawanState extends State<ListKaryawan> {
                 onPressed: () {
                   showConfirmationDialog(
                     context,
-                    () {
-                      refreshEmployee(context);
+                    () async {
+                      await refreshEmployee(context);
+                      loadUserData();
                     },
                   );
                 },
@@ -153,10 +154,11 @@ class _ListKaryawanState extends State<ListKaryawan> {
   }
 
   Future<void> loadUserData() async {
-    selected = await refreshEmployee(context);
     user_list = await _dataBaseHelper.queryAllUsers();
-    if (user_list.isEmpty) {}
-    // print(user_list);
+    if (user_list.isEmpty) {
+      selected = await refreshEmployee(context);
+    }
+
     setState(() {});
   }
 
