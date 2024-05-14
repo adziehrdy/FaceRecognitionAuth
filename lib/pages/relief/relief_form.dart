@@ -28,12 +28,6 @@ class _ReliefFormState extends State<ReliefForm> {
   DateTime tanggalSelesai = DateTime.now();
   TimeOfDay jamSelesai = TimeOfDay(hour: 0, minute: 0);
 
-  List<Employee> _approvalList = [];
-  List<Division> _divisiList = [];
-  List<Location> _lokasiList = [];
-  List<Role> _roleList = [];
-  bool _dataLoaded = false;
-
   master_register_model? master_data;
 
   DatabaseHelperEmployee _dataBaseHelper = DatabaseHelperEmployee.instance;
@@ -86,8 +80,6 @@ class _ReliefFormState extends State<ReliefForm> {
 
   // Method untuk menangani submit form
   Future<void> _showSummaryDialog() async {
-    String superIntendentID = await getActiveSuperIntendentID();
-
     // Validasi nama TKJP
     if (pekerjaDropdownValue == null || rigTujuanDropdownValue == null) {
       showDialog(
@@ -220,7 +212,6 @@ class _ReliefFormState extends State<ReliefForm> {
                   "employee_id": pekerjaDropdownValue!.employee_id.toString(),
                   "start_date": startDateFormatted,
                   "end_date": endDateFormatted,
-                  "approved_by": superIntendentID,
                   "desc": deskripsiController.text,
                   "note": catatanController.text,
                   "total_days":

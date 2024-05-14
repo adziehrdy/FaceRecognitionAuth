@@ -22,48 +22,36 @@ SpSetALLStatusRig(String status) async {
   await sp.setString("ALL_STATUS_RIG", status);
 }
 
-Future<List<RigStatusShift>>SpGetALLStatusRig() async {
-SharedPreferences sp = await initSP();
-List<RigStatusShift> result = [];
- String RIG_STATUS = await sp.getString("ALL_STATUS_RIG") ?? "[]";
+Future<List<RigStatusShift>> SpGetALLStatusRig() async {
+  SharedPreferences sp = await initSP();
+  List<RigStatusShift> result = [];
+  String RIG_STATUS = await sp.getString("ALL_STATUS_RIG") ?? "[]";
 
-
- if(RIG_STATUS != "[]"){
-  
-  final rigStatusShift = rigStatusShiftFromJson(RIG_STATUS);
-  return rigStatusShift;
- }else{
-  return result;
- }
-
- 
+  if (RIG_STATUS != "[]") {
+    final rigStatusShift = rigStatusShiftFromJson(RIG_STATUS);
+    return rigStatusShift;
+  } else {
+    return result;
+  }
 }
-
-
 
 SpSetSelectedStatusRig(String status) async {
   SharedPreferences sp = await initSP();
   await sp.setString("RIG_STATUS_SELECTED", status);
 }
 
-
-
-
-
 Future<RigStatusShift?> SpGetSelectedStatusRig() async {
-SharedPreferences sp = await initSP();
+  SharedPreferences sp = await initSP();
 
- String RIG_STATUS = await sp.getString("RIG_STATUS_SELECTED") ?? "[]";
+  String RIG_STATUS = await sp.getString("RIG_STATUS_SELECTED") ?? "[]";
 
- RigStatusShift?  currentStatus = null;
- if(RIG_STATUS != "[]"){
-  currentStatus = RigStatusShift.fromJson(json.decode(RIG_STATUS));
-  return currentStatus;
- }else{
-  return null;
- }
-
- 
+  RigStatusShift? currentStatus = null;
+  if (RIG_STATUS != "[]") {
+    currentStatus = RigStatusShift.fromJson(json.decode(RIG_STATUS));
+    return currentStatus;
+  } else {
+    return null;
+  }
 }
 
 Future<double> SpGetLastLat() async {
@@ -94,30 +82,24 @@ Future<double> SpGetLastlong() async {
   }
 }
 
-
 Future<String> SpGetLastLatlong() async {
   double lat = await SpGetLastLat();
-   double long = await SpGetLastlong();
+  double long = await SpGetLastlong();
 
-   return lat.toString()+" , "+long.toString();
-
+  return lat.toString() + " , " + long.toString();
 }
 
 Future<String> SpGetLastAlamat() async {
   SharedPreferences sp = await initSP();
-  
 
-  String? alamat =  await sp.getString("LOC");
+  String? alamat = await sp.getString("LOC");
 
-  if(alamat != null){
+  if (alamat != null) {
     return alamat;
-  }else{
+  } else {
     LoginModel data = await getUserLoginData();
     return data.branch!.branchName!;
   }
-
-  
-
 }
 
 double convertLatLongString(String coordinates, bool isGetLat) {
@@ -131,4 +113,3 @@ double convertLatLongString(String coordinates, bool isGetLat) {
         parts[1]); // Mengonversi bagian kedua menjadi double (longitude)
   }
 }
-

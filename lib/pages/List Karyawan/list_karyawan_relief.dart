@@ -5,6 +5,7 @@ import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/pages/widgets/personViewRelief.dart';
+import 'package:face_net_authentication/repo/relief_repos.dart';
 import 'package:flutter/material.dart';
 
 class ListKaryawanRelief extends StatefulWidget {
@@ -20,6 +21,7 @@ class _ListKaryawanReliefState extends State<ListKaryawanRelief> {
   List<User> user_list = [];
   List<bool> selected = [];
   String branchID = "";
+  ReliefRepo repo = ReliefRepo();
 
   @override
   void initState() {
@@ -47,7 +49,7 @@ class _ListKaryawanReliefState extends State<ListKaryawanRelief> {
                     context,
                     () {
                       setState(() async {
-                        await refreshEmployeeRelief(context);
+                        await repo.refreshEmployeeRelief(context);
                         loadUserData();
                       });
                     },
@@ -161,7 +163,7 @@ class _ListKaryawanReliefState extends State<ListKaryawanRelief> {
     // selected = await refreshEmployeeRelief(context);
     user_list = await _dataBaseHelper.queryAllUsers();
     if (user_list.isEmpty) {
-      selected = await refreshEmployeeRelief(context);
+      selected = await repo.refreshEmployeeRelief(context);
     }
     print(user_list);
     setState(() {});

@@ -234,9 +234,17 @@ $status_dk
               ' is NOT NULL ) AND ( ' +
               check_in +
               " is NOT NULL )");
+
       // List<Map<String, dynamic>> users = await db.rawQuery('SELECT * FROM $table WHERE is_verif_fr = 0');
       // print(users.length);
-      return users.map((u) => User.fromMap(u)).toList();
+      List<User> userFiltered = [];
+      List<User> users_unfilter = users.map((u) => User.fromMap(u)).toList();
+      for (User usr in users_unfilter) {
+        if (reliefChecker(usr.relief_start_date, relief_end_date)) {
+          userFiltered.add(usr);
+        }
+      }
+      return userFiltered;
     } catch (e) {
       print(e);
       return [];
