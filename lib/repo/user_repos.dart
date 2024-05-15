@@ -159,7 +159,11 @@ class UserRepo {
       }
     } catch (e) {
       if (e is DioException) {
-        showToast(e.response!.data['message']);
+        if (e.response?.data['message'] == null) {
+          showToast("Cek Koneksi Internet");
+        } else {
+          showToast(e.response!.data['message']);
+        }
       } else {
         showToast(e.toString());
       }

@@ -105,6 +105,12 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
       Tipe_absensi = "DINAS KHUSUS";
     }
 
+    //CHECK IS RELIEF OR NOT
+
+    if (widget.user.is_relief_employee == "1") {
+      Tipe_absensi = "RELIEF";
+    }
+
     try {
       SpGetSelectedStatusRig().then(
         (value) {

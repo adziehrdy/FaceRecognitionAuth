@@ -505,6 +505,7 @@ class dialog_detail_relief extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ReliefRepo repo = ReliefRepo();
     return Container(
       width: double.maxFinite,
       child: Container(
@@ -644,9 +645,19 @@ class dialog_detail_relief extends StatelessWidget {
                                       backgroundColor:
                                           MaterialStatePropertyAll(Colors.red)),
                                   onPressed: () async {
-                                    await ReliefRepo().approveRelief(
-                                        data_relief.reliefId ?? "-",
-                                        "REJECTED");
+                                    var result = await ReliefRepo()
+                                        .approveRelief(
+                                            data_relief.reliefId ?? "-",
+                                            "REJECTED");
+                                    if (result != []) {
+                                      showToast("Relief Berhasil di reject");
+                                      await repo.refreshEmployeeRelief(context);
+
+                                      Navigator.pop(context);
+                                      Navigator.pop(context);
+                                    } else {
+                                      showToast("Relief gagal di reject");
+                                    }
                                   },
                                   child: Row(
                                     children: [
@@ -669,9 +680,19 @@ class dialog_detail_relief extends StatelessWidget {
                                       backgroundColor: MaterialStatePropertyAll(
                                           Colors.blue)),
                                   onPressed: () async {
-                                    await ReliefRepo().approveRelief(
-                                        data_relief.reliefId ?? "-",
-                                        "APPROVED");
+                                    var result = await ReliefRepo()
+                                        .approveRelief(
+                                            data_relief.reliefId ?? "-",
+                                            "APPROVED");
+                                    if (result != []) {
+                                      showToast("Relief Berhasil di Approve");
+                                      await repo.refreshEmployeeRelief(context);
+
+                                      Navigator.pop(context);
+                                      Navigator.pop(context);
+                                    } else {
+                                      showToast("Relief gagal di Approve");
+                                    }
                                   },
                                   child: Row(
                                     children: [

@@ -4,6 +4,7 @@ import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/pages/Dinas%20Khusus/DK_page.dart';
 import 'package:face_net_authentication/pages/List%20Karyawan/page_list_karyawan.dart';
+import 'package:face_net_authentication/pages/Rig%20Status%20History/rigStatusHistory.dart';
 import 'package:face_net_authentication/pages/history_absensi_mainPage.dart';
 import 'package:face_net_authentication/pages/register_pin.dart';
 import 'package:face_net_authentication/pages/relief/relief_page.dart';
@@ -145,7 +146,7 @@ class _HomePageState extends State<HomePage> {
                 height: 400,
                 fit: BoxFit.fill,
               ),
-              Text(_progressMessage),
+              Text(_progressMessage, style: TextStyle(color: Colors.black)),
             ],
           ),
         ),
@@ -250,6 +251,18 @@ class _HomePageState extends State<HomePage> {
                         });
                       },
                     ),
+
+                    // new HomeMenu(
+                    //   "Rig Status History",
+                    //   "assets/images/absent_personal.png",
+                    //   -1,
+                    //   callback: (p0) {
+                    //     PinInputDialog.show(context, (p0) {
+                    //       Navigator.of(context).push(MaterialPageRoute(
+                    //           builder: (context) => rigStatusHistory()));
+                    //     });
+                    //   },
+                    // ),
 
                     // new HomeMenu(
                     //   "Approval",
@@ -379,14 +392,14 @@ class _HomePageState extends State<HomePage> {
                 children: <Widget>[
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Icon(icon, color: Colors.white, size: 25),
+                    child: Icon(icon, color: Colors.black, size: 25),
                   ),
                   Text(text1,
-                      style: TextStyle(color: Colors.white, fontSize: 10)),
+                      style: TextStyle(color: Colors.black, fontSize: 10)),
                   text2 == null
                       ? Container()
                       : Text(text2,
-                          style: TextStyle(fontSize: 10, color: Colors.white))
+                          style: TextStyle(fontSize: 10, color: Colors.black))
                 ],
               ),
             ),
@@ -424,16 +437,16 @@ class _HomePageState extends State<HomePage> {
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: Icon(
                         icon,
-                        color: Colors.white,
+                        color: Colors.black,
                         size: 25,
                       ),
                     ),
                     Text(text1,
-                        style: TextStyle(color: Colors.white, fontSize: 10)),
+                        style: TextStyle(color: Colors.black, fontSize: 10)),
                     text2 == null
                         ? Container()
                         : Text(text2,
-                            style: TextStyle(fontSize: 10, color: Colors.white))
+                            style: TextStyle(fontSize: 10, color: Colors.black))
                   ],
                 ),
               ),

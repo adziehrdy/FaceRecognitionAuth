@@ -16,36 +16,147 @@ class FaceDetectorService {
   bool get faceDetected => _faces.isNotEmpty;
 
   void initialize() {
-    _faceDetector = GoogleMlKit.vision.faceDetector(
-      FaceDetectorOptions(
-        performanceMode: FaceDetectorMode.fast,
-        minFaceSize: 0.1
-        ,
-      ),
-    );
-// ====
+//     _faceDetector = GoogleMlKit.vision.faceDetector(
+//       FaceDetectorOptions(
+//         performanceMode: FaceDetectorMode.fast,
+//         minFaceSize: 0.1,
+//       ),
+//     );
+// // ====
     _faceDetector = FaceDetector(
         options: FaceDetectorOptions(
-            performanceMode: FaceDetectorMode.fast,
+            performanceMode: FaceDetectorMode.accurate,
             minFaceSize: 0.9,
-            enableContours: true,
-            enableClassification: true));
-            // /====
+            enableContours: false,
+            enableLandmarks: false,
+            enableTracking: false,
+            enableClassification: false));
+    // /====
   }
 
+  // Future<void> detectFacesFromImage(CameraImage image) async {
+  //   InputImageData _firebaseImageMetadata = InputImageData(
+  //     imageRotation:
+  //         _cameraService.cameraRotation ?? InputImageRotation.rotation0deg,
+
+  //     // inputImageFormat: InputImageFormat.yuv_420_888,
+
+  //     inputImageFormat: InputImageFormatValue.fromRawValue(image.format.raw)
+  //         // InputImageFormatMethods.fromRawValue(image.format.raw)
+  //         //for new version
+  //         ??
+  //         InputImageFormat.yuv_420_888,
+  //     size: Size(image.width.toDouble(), image.height.toDouble()),
+  //     planeData: image.planes.map(
+  //       (Plane plane) {
+  //         return InputImagePlaneMetadata(
+  //           bytesPerRow: plane.bytesPerRow,
+  //           height: plane.height,
+  //           width: plane.width,
+  //         );
+  //       },
+  //     ).toList(),
+  //   );
+
+  //   // for mlkit 13
+  //   final WriteBuffer allBytes = WriteBuffer();
+  //   for (final Plane plane in image.planes) {
+  //     allBytes.putUint8List(plane.bytes);
+  //   }
+  //   final bytes = allBytes.done().buffer.asUint8List();
+
+  //   InputImage _firebaseVisionImage = InputImage.fromBytes(
+  //     // bytes: image.planes[0].bytes,
+  //     bytes: bytes,
+  //     inputImageData: _firebaseImageMetadata,
+  //   );
+  //   // for mlkit 13
+
+  //   _faces = await _faceDetector.processImage(_firebaseVisionImage);
+  // }
+
+  // Future<List<Face>> detect(CameraImage image, InputImageRotation rotation) {
+  //   final faceDetector = GoogleMlKit.vision.faceDetector(
+  //     FaceDetectorOptions(
+  //         performanceMode: FaceDetectorMode.fast,
+  //         minFaceSize: 0.9,
+  //         // enableLandmarks: true,
+  //         enableContours: false,
+  //         // enableTracking: true,
+  //         enableClassification: false),
+  //   );
+  //   final WriteBuffer allBytes = WriteBuffer();
+  //   for (final Plane plane in image.planes) {
+  //     allBytes.putUint8List(plane.bytes);
+  //   }
+  //   final bytes = allBytes.done().buffer.asUint8List();
+
+  //   final Size imageSize =
+  //       Size(image.width.toDouble(), image.height.toDouble());
+  //   final inputImageFormat =
+  //       InputImageFormatValue.fromRawValue(image.format.raw) ??
+  //           InputImageFormat.yuv_420_888;
+
+  //   final planeData = image.planes.map(
+  //     (Plane plane) {
+  //       return InputImagePlaneMetadata(
+  //         bytesPerRow: plane.bytesPerRow,
+  //         height: plane.height,
+  //         width: plane.width,
+  //       );
+  //     },
+  //   ).toList();
+
+  //   final inputImageData = InputImageData(
+  //     size: imageSize,
+  //     imageRotation: rotation,
+  //     inputImageFormat: inputImageFormat,
+  //     planeData: planeData,
+  //   );
+
+  //   return faceDetector.processImage(
+  //     InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData),
+  //   );
+  // }
+
+  ///for new version
   Future<void> detectFacesFromImage(CameraImage image) async {
-    InputImageData _firebaseImageMetadata = InputImageData(
-      imageRotation:_cameraService.cameraRotation ?? InputImageRotation.rotation0deg,
+    // InputImageData _firebaseImageMetadata = InputImageData(
+    //   imageRotation: _cameraService.cameraRotation ?? InputImageRotation.rotation0deg,
+    //   inputImageFormat: InputImageFormatMethods ?? InputImageFormat.nv21,
+    //   size: Size(image.width.toDouble(), image.height.toDouble()),
+    //   planeData: image.planes.map(
+    //     (Plane plane) {
+    //       return InputImagePlaneMetadata(
+    //         bytesPerRow: plane.bytesPerRow,
+    //         height: plane.height,
+    //         width: plane.width,
+    //       );
+    //     },
+    //   ).toList(),
+    // );
 
-      // inputImageFormat: InputImageFormat.yuv_420_888,
+    final WriteBuffer allBytes = WriteBuffer();
+    for (Plane plane in image.planes) {
+      allBytes.putUint8List(plane.bytes);
+    }
+    final bytes = allBytes.done().buffer.asUint8List();
 
-      inputImageFormat: 
-      InputImageFormatValue.fromRawValue(image.format.raw)
-          // InputImageFormatMethods.fromRawValue(image.format.raw) 
-          //for new version
-          ??
-          InputImageFormat.yuv_420_888,
-      size: Size(image.width.toDouble(), image.height.toDouble()),
+    final Size imageSize =
+        Size(image.width.toDouble(), image.height.toDouble());
+
+    // print("PLANE H = " +
+    //     image.height.toString() +
+    //     " | W = " +
+    //     image.width.toString());
+
+    InputImageRotation imageRotation =
+        _cameraService.cameraRotation ?? InputImageRotation.rotation0deg;
+
+    final inputImageData = InputImageData(
+      size: imageSize,
+      imageRotation: imageRotation,
+      inputImageFormat: InputImageFormat.yuv420,
       planeData: image.planes.map(
         (Plane plane) {
           return InputImagePlaneMetadata(
@@ -57,117 +168,13 @@ class FaceDetectorService {
       ).toList(),
     );
 
-    // for mlkit 13
-    final WriteBuffer allBytes = WriteBuffer();
-    for (final Plane plane in image.planes) {
-      allBytes.putUint8List(plane.bytes);
-    }
-    final bytes = allBytes.done().buffer.asUint8List();
-
     InputImage _firebaseVisionImage = InputImage.fromBytes(
-      // bytes: image.planes[0].bytes,
       bytes: bytes,
-      inputImageData: _firebaseImageMetadata,
+      inputImageData: inputImageData,
     );
-    // for mlkit 13
 
     _faces = await _faceDetector.processImage(_firebaseVisionImage);
   }
-
-  Future<List<Face>> detect(CameraImage image, InputImageRotation rotation) {
-    final faceDetector = GoogleMlKit.vision.faceDetector(
-      FaceDetectorOptions(
-        performanceMode: FaceDetectorMode.fast,
-         minFaceSize: 0.9,
-        // enableLandmarks: true,
-        enableContours: true,
-        // enableTracking: true,
-        enableClassification: true
-      ),
-    );
-    final WriteBuffer allBytes = WriteBuffer();
-    for (final Plane plane in image.planes) {
-      allBytes.putUint8List(plane.bytes);
-    }
-    final bytes = allBytes.done().buffer.asUint8List();
-
-    final Size imageSize =
-        Size(image.width.toDouble(), image.height.toDouble());
-    final inputImageFormat =
-        InputImageFormatValue.fromRawValue(image.format.raw) ??
-            InputImageFormat.yuv_420_888;
-
-    final planeData = image.planes.map(
-      (Plane plane) {
-        return InputImagePlaneMetadata(
-          bytesPerRow: plane.bytesPerRow,
-          height: plane.height,
-          width: plane.width,
-        );
-      },
-    ).toList();
-
-    final inputImageData = InputImageData(
-      size: imageSize,
-      imageRotation: rotation,
-      inputImageFormat: inputImageFormat,
-      planeData: planeData,
-    );
-
-    return faceDetector.processImage(
-      InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData),
-    );
-  }
-
-  ///for new version
-  // Future<void> detectFacesFromImage(CameraImage image) async {
-  //   // InputImageData _firebaseImageMetadata = InputImageData(
-  //   //   imageRotation: _cameraService.cameraRotation ?? InputImageRotation.rotation0deg,
-  //   //   inputImageFormat: InputImageFormatMethods ?? InputImageFormat.nv21,
-  //   //   size: Size(image.width.toDouble(), image.height.toDouble()),
-  //   //   planeData: image.planes.map(
-  //   //     (Plane plane) {
-  //   //       return InputImagePlaneMetadata(
-  //   //         bytesPerRow: plane.bytesPerRow,
-  //   //         height: plane.height,
-  //   //         width: plane.width,
-  //   //       );
-  //   //     },
-  //   //   ).toList(),
-  //   // );
-  //
-  //   final WriteBuffer allBytes = WriteBuffer();
-  //   for (Plane plane in image.planes) {
-  //     allBytes.putUint8List(plane.bytes);
-  //   }
-  //   final bytes = allBytes.done().buffer.asUint8List();
-  //
-  //   final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
-  //
-  //   InputImageRotation imageRotation = _cameraService.cameraRotation ?? InputImageRotation.rotation0deg;
-  //
-  //   final inputImageData = InputImageData(
-  //     size: imageSize,
-  //     imageRotation: imageRotation,
-  //     inputImageFormat: InputImageFormat.yuv420,
-  //     planeData: image.planes.map(
-  //           (Plane plane) {
-  //         return InputImagePlaneMetadata(
-  //           bytesPerRow: plane.bytesPerRow,
-  //           height: plane.height,
-  //           width: plane.width,
-  //         );
-  //       },
-  //     ).toList(),
-  //   );
-  //
-  //   InputImage _firebaseVisionImage = InputImage.fromBytes(
-  //     bytes: bytes,
-  //     inputImageData: inputImageData,
-  //   );
-  //
-  //   _faces = await _faceDetector.processImage(_firebaseVisionImage);
-  // }
 
   dispose() {
     _faceDetector.close();

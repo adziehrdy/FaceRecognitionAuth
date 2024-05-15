@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
+import 'package:face_net_authentication/FR_ENGINE/AntiSpoof.dart';
 import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/db/databse_helper_employee_relief.dart';
 import 'package:face_net_authentication/globals.dart';
@@ -22,6 +23,8 @@ class MLService {
   List get predictedData => _predictedData;
   List users = [];
   bool landscape_mode = false;
+  late AdziehrdyAntiSpoof antiSpoof;
+  Future<List<double>?> FASoutputs = Future.value([]);
 
   Future initialize() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
@@ -52,33 +55,61 @@ class MLService {
 
       this._interpreter = await Interpreter.fromAsset('mobilefacenet.tflite',
           options: interpreterOptions);
+
+      antiSpoof = AdziehrdyAntiSpoof();
     } catch (e) {
       print('Failed to load model.');
       print(e);
     }
   }
 
-  void setCurrentPrediction(CameraImage cameraImage, Face? face) {
+  Future<void> setCurrentPrediction(CameraImage cameraImage, Face? face) async {
     if (_interpreter == null) throw Exception('Interpreter is null');
     if (face == null) throw Exception('Face is null');
-    List input = _preProcess(cameraImage, face);
+    List? input = await _preProcess(cameraImage, face);
 
-    input = input.reshape([1, 112, 112, 3]);
-    List output = List.generate(1, (index) => List.filled(192, 0));
+    if (input != null) {
+      input = input.reshape([1, 112, 112, 3]);
+      List output = List.generate(1, (index) => List.filled(192, 0));
 
-    this._interpreter?.run(input, output);
-    output = output.reshape([192]);
+      this._interpreter?.run(input, output);
+      output = output.reshape([192]);
 
-    this._predictedData = List.from(output);
+      this._predictedData = List.from(output);
+    }
   }
 
   Future<User?> predict() async {
     return _searchResult(this._predictedData);
   }
 
-  List _preProcess(CameraImage image, Face faceDetected) {
+  Future<List?> _preProcess(CameraImage image, Face faceDetected) async {
     imglib.Image croppedImage = cropFace(image, faceDetected);
     imglib.Image img = imglib.copyResizeCropSquare(croppedImage, 112);
+
+    // final results =
+    //     await antiSpoof.MODIFIEDisFaceSpoofedWithModel(image, faceDetected);
+
+    // if (results != null) {
+    //   double output = results[1][0];
+    //   // Mengakses processedImage dan probabilities dari list
+
+    //   if (results.isNotEmpty) {
+    //     if (output > 0.3) {
+    //       print("SPOFF = ASLI | " + output.toString());
+    //       Float32List imageAsList = imageToByteListFloat32(img);
+    //       return imageAsList;
+    //     } else {
+    //       print("SPOFF = PALSU | " + output.toString());
+    //       return null;
+    //     }
+    //   }
+
+    //   // print("SPOFF" + (outputs?[0].toString() ?? "NOT"));
+    // } else {
+    //   // Menangani kasus ketika hasilnya null (misalnya, terjadi kesalahan)
+    //   print('Error: No results returned from MODIFIEDisFaceSpoofedWithModel');
+    //   return [];
 
     Float32List imageAsList = imageToByteListFloat32(img);
     return imageAsList;
@@ -132,6 +163,7 @@ class MLService {
         buffer[pixelIndex++] = (imglib.getBlue(pixel) - 128) / 128;
       }
     }
+
     return convertedBytes.buffer.asFloat32List();
   }
 
@@ -153,14 +185,13 @@ class MLService {
             (u.employee_name ?? "NO NAME") +
             " | " +
             currDist.toString());
-        ;
 
         if (currDist <= threshold && currDist < minDist && currDist != 0.0) {
           minDist = currDist;
-          print("FR- FINAL DISTANCE" + currDist.toString());
+          // print("FR- FINAL DISTANCE" + currDist.toString());
           predictedResult = u;
         } else {
-          print("FR - SCANNED DISTANCE" + currDist.toString());
+          // print("FR - SCANNED DISTANCE" + currDist.toString());
         }
       }
     }
@@ -201,5 +232,9 @@ class MLService {
 
   dispose() {
     users.clear();
+  }
+
+  Future<List<double>?> getFASoutputs() {
+    return FASoutputs;
   }
 }
