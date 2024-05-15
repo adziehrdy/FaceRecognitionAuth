@@ -146,7 +146,7 @@ class _HomePageState extends State<HomePage> {
                 height: 400,
                 fit: BoxFit.fill,
               ),
-              Text(_progressMessage),
+              Text(_progressMessage, style: TextStyle(color: Colors.black)),
             ],
           ),
         ),
@@ -392,14 +392,14 @@ class _HomePageState extends State<HomePage> {
                 children: <Widget>[
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8.0),
-                    child: Icon(icon, color: Colors.white, size: 25),
+                    child: Icon(icon, color: Colors.black, size: 25),
                   ),
                   Text(text1,
-                      style: TextStyle(color: Colors.white, fontSize: 10)),
+                      style: TextStyle(color: Colors.black, fontSize: 10)),
                   text2 == null
                       ? Container()
                       : Text(text2,
-                          style: TextStyle(fontSize: 10, color: Colors.white))
+                          style: TextStyle(fontSize: 10, color: Colors.black))
                 ],
               ),
             ),
@@ -437,16 +437,16 @@ class _HomePageState extends State<HomePage> {
                       padding: const EdgeInsets.only(bottom: 8.0),
                       child: Icon(
                         icon,
-                        color: Colors.white,
+                        color: Colors.black,
                         size: 25,
                       ),
                     ),
                     Text(text1,
-                        style: TextStyle(color: Colors.white, fontSize: 10)),
+                        style: TextStyle(color: Colors.black, fontSize: 10)),
                     text2 == null
                         ? Container()
                         : Text(text2,
-                            style: TextStyle(fontSize: 10, color: Colors.white))
+                            style: TextStyle(fontSize: 10, color: Colors.black))
                   ],
                 ),
               ),

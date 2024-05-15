@@ -16,21 +16,20 @@ class CameraDetectionPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
-    return OrientationBuilder(
-      builder: (context, orientation) {
-        if (orientation == Orientation.landscape) {
-          is_landscape = true;
-          return landscapeLayout(context);
-        } else {
-          is_landscape = false;
-          return portraitLayout(context);
-        }
-      });
-}
-Widget portraitLayout(BuildContext context) {
-  final width = MediaQuery.of(context).size.width;
-return Transform.scale(
+    return OrientationBuilder(builder: (context, orientation) {
+      if (orientation == Orientation.landscape) {
+        is_landscape = true;
+        return landscapeLayout(context);
+      } else {
+        is_landscape = false;
+        return portraitLayout(context);
+      }
+    });
+  }
+
+  Widget portraitLayout(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    return Transform.scale(
       scale: 1.0,
       child: AspectRatio(
         aspectRatio: MediaQuery.of(context).size.aspectRatio,
@@ -60,22 +59,23 @@ return Transform.scale(
         ),
       ),
     );
-}
+  }
 
-Widget landscapeLayout(BuildContext context) {
-  final height = MediaQuery.of(context).size.height;
-return Transform.scale(
-    scale: 1.0,
-    child: AspectRatio(
-      aspectRatio: MediaQuery.of(context).size.aspectRatio,
-      child: OverflowBox(
-        alignment: Alignment.center,
-        child: FittedBox(
-          fit: BoxFit.fitWidth,
-          child: Container(
-            width: height * _cameraService.cameraController!.value.aspectRatio,
-            height: height,
-            child: Stack(
+  Widget landscapeLayout(BuildContext context) {
+    final height = MediaQuery.of(context).size.height;
+    return Transform.scale(
+      scale: 1.0,
+      child: AspectRatio(
+        aspectRatio: MediaQuery.of(context).size.aspectRatio,
+        child: OverflowBox(
+          alignment: Alignment.center,
+          child: FittedBox(
+            fit: BoxFit.fitWidth,
+            child: Container(
+              width:
+                  height * _cameraService.cameraController!.value.aspectRatio,
+              height: height,
+              child: Stack(
                 fit: StackFit.expand,
                 children: <Widget>[
                   CameraPreview(_cameraService.cameraController!),
@@ -88,11 +88,10 @@ return Transform.scale(
                     )
                 ],
               ),
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
-}
-

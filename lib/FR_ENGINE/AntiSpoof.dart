@@ -9,13 +9,13 @@ import 'package:image/image.dart' as imglib;
 import 'package:onnxruntime/onnxruntime.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart' as path;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 import '../services/image_converter.dart';
 
 class AdziehrdyAntiSpoof {
   Interpreter? _interpreter;
-  double threshold = 0.5;
   List _predictedData = [];
   List get predictedData => _predictedData;
   double dist = 0;
@@ -27,6 +27,8 @@ class AdziehrdyAntiSpoof {
 
   Future<OrtSession> loadModelFromAssets() async {
     OrtEnv.instance.init();
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    landscape_mode = pref.getBool("LANDSCAPE_MODE") ?? false;
     final sessionOptions = OrtSessionOptions();
     // const assetFileName = 'assets/FaceBagNet_color_96.onnx';
     // const assetFileName = 'assets/AntiSpoofing_print-replay_128.onnx';
@@ -39,7 +41,7 @@ class AdziehrdyAntiSpoof {
     return session;
   }
 
-  // // ORIGINAL
+  // ORIGINAL
   // Future<List<double>?> isFaceSpoofedWithModel(
   //     CameraImage cameraImage, Face? face) async {
   //   print("===> isFaceSpoofedWithModel Starts");
@@ -166,7 +168,7 @@ class AdziehrdyAntiSpoof {
     }
   }
 
-  // // ORIGINAL
+  // ORIGINAL
   // Future<List> _preProcess(CameraImage image, Face faceDetected) async {
   //   imglib.Image croppedImage = _cropFace(image, faceDetected);
 
@@ -196,7 +198,7 @@ class AdziehrdyAntiSpoof {
 
     imglib.Image img;
     // img = imglib.copyResizeCropSquare(croppedImage, 128);
-    img = imglib.copyResizeCropSquare(croppedImage, 80);
+    img = imglib.copyResizeCropSquare(croppedImage, 128);
     // final directory = await path.getApplicationDocumentsDirectory();
     // final file = File(join(directory.path, 'resized.png'));
     // await file.writeAsBytes(imglib.encodePng(img));
@@ -229,22 +231,24 @@ class AdziehrdyAntiSpoof {
 
   imglib.Image _cropFace(CameraImage image, Face faceDetected) {
     imglib.Image convertedImage = _convertCameraImage(image);
+
     double x;
     double y;
     double h;
     double w;
 
     // if (landscape_mode) {
+    //   x = faceDetected.boundingBox.left - 10.0;
+    //   y = faceDetected.boundingBox.top - 10.0;
+    //   h = faceDetected.boundingBox.width + 10.0;
+    //   w = faceDetected.boundingBox.height + 10.0;
+    // } else {
     x = faceDetected.boundingBox.left - 10.0;
     y = faceDetected.boundingBox.top - 10.0;
-    h = faceDetected.boundingBox.width + 10.0;
-    w = faceDetected.boundingBox.height + 10.0;
-    // } else {
-    // x = faceDetected.boundingBox.left - 10.0;
-    // y = faceDetected.boundingBox.top - 10.0;
-    // w = faceDetected.boundingBox.width + 10.0;
-    // h = faceDetected.boundingBox.height + 10.0;
+    w = faceDetected.boundingBox.width + 10.0;
+    h = faceDetected.boundingBox.height + 10.0;
     // }
+
     return imglib.copyCrop(
         convertedImage, x.round(), y.round(), w.round(), h.round());
   }

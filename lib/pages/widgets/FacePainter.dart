@@ -16,7 +16,7 @@ class FacePainter extends CustomPainter {
       paint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3.0
-        ..color = Colors.red;
+        ..color = Colors.orange;
     } else {
       paint = Paint()
         ..style = PaintingStyle.stroke
@@ -35,7 +35,6 @@ class FacePainter extends CustomPainter {
             scaleX: scaleX ?? 1,
             scaleY: scaleY ?? 1),
         paint);
-
   }
 
   @override
@@ -47,12 +46,7 @@ class FacePainter extends CustomPainter {
 RRect _scaleRect(
     {required Rect rect,
     required Size imageSize,
-
-
     required Size widgetSize,
-
-    
-
     double scaleX = 1,
     double scaleY = 1}) {
   // return RRect.fromLTRBR(
@@ -62,10 +56,10 @@ RRect _scaleRect(
   //     rect.bottom.toDouble() * scaleY,
   //     Radius.circular(10));
 
-       return RRect.fromLTRBR(
+  return RRect.fromLTRBR(
       (widgetSize.width - rect.left.toDouble() * scaleX),
       rect.top.toDouble() * scaleY,
       widgetSize.width - rect.right.toDouble() * scaleX,
       rect.bottom.toDouble() * scaleY,
-      Radius.circular(10));
+      Radius.circular(50));
 }
