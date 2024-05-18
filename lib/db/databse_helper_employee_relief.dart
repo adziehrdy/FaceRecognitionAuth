@@ -173,7 +173,14 @@ $status_dk
               '$employee_fr_image IS NOT NULL AND ' +
               'is_verif_fr = 0 AND ' +
               '$employee_fr_template IS NOT NULL');
-      return users.map((u) => User.fromMap(u)).toList();
+      List<User> userFiltered = [];
+      List<User> users_unfilter = users.map((u) => User.fromMap(u)).toList();
+      for (User usr in users_unfilter) {
+        if (reliefChecker(usr.relief_start_date, relief_end_date)) {
+          userFiltered.add(usr);
+        }
+      }
+      return userFiltered;
     } catch (e) {
       print(e);
       return [];

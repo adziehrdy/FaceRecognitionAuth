@@ -13,7 +13,7 @@ class CONSTANT_VAR {
   static String PLAYSTORE_URL =
       "https://play.google.com/store/apps/details?id=com.pdc.smartcheck.multiple";
 
-  static double DEFAULT_TRESHOLD = 0.75;
+  static double DEFAULT_TRESHOLD = 0.85;
   static int LAMA_JAM_BEKERJA = 9;
 
   // static String SHIFT_RIG_DUMMY =

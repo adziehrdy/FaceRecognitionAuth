@@ -16,23 +16,32 @@ class FaceDetectorService {
   bool get faceDetected => _faces.isNotEmpty;
 
   void initialize() {
-    _faceDetector = GoogleMlKit.vision.faceDetector(
-      FaceDetectorOptions(
-        performanceMode: FaceDetectorMode.fast,
-        minFaceSize: 0.1,
-      ),
-    );
+    // _faceDetector = GoogleMlKit.vision.faceDetector(
+    //   FaceDetectorOptions(
+    //     performanceMode: FaceDetectorMode.fast,
+    //     minFaceSize: 0.1,
+    //   ),
+    // );
 // ====
     _faceDetector = FaceDetector(
         options: FaceDetectorOptions(
             performanceMode: FaceDetectorMode.fast,
             minFaceSize: 0.9,
-            enableContours: true,
-            enableClassification: true));
+            enableContours: false,
+            enableClassification: false));
     // /====
   }
 
+  double compareSizePercentage(Size size1, Size size2) {
+    double widthPercentage = (size1.width / size2.width) * 100;
+    double heightPercentage = (size1.height / size2.height) * 100;
+    return (widthPercentage + heightPercentage) / 2;
+  }
+
   Future<void> detectFacesFromImage(CameraImage image) async {
+    Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
+
+    print(imageSize);
     InputImageData _firebaseImageMetadata = InputImageData(
       imageRotation:
           _cameraService.cameraRotation ?? InputImageRotation.rotation0deg,
@@ -44,7 +53,7 @@ class FaceDetectorService {
           //for new version
           ??
           InputImageFormat.yuv_420_888,
-      size: Size(image.width.toDouble(), image.height.toDouble()),
+      size: imageSize,
       planeData: image.planes.map(
         (Plane plane) {
           return InputImagePlaneMetadata(
@@ -70,52 +79,68 @@ class FaceDetectorService {
     );
     // for mlkit 13
 
-    _faces = await _faceDetector.processImage(_firebaseVisionImage);
+    List<Face> _faces_preprocess =
+        await _faceDetector.processImage(_firebaseVisionImage);
+
+    // if (_faces_preprocess.isNotEmpty) {
+    //     double precentace = compareSizePercentage(
+    //         imageSize,
+    //         Size(_faces_preprocess[0].boundingBox.width.toDouble(),
+    //             _faces_preprocess[0].boundingBox.height.toDouble()));
+
+    //     print("COMPARE SIZE " + precentace.toString());
+
+    //     if (precentace > 300 && precentace < 500) {
+    //       _faces = _faces_preprocess;
+    //     }
+    //   }
+    // }
+    _faces = _faces_preprocess;
   }
 
-  Future<List<Face>> detect(CameraImage image, InputImageRotation rotation) {
-    final faceDetector = GoogleMlKit.vision.faceDetector(
-      FaceDetectorOptions(
-          performanceMode: FaceDetectorMode.fast,
-          minFaceSize: 0.9,
-          // enableLandmarks: true,
-          enableContours: false,
-          // enableTracking: true,
-          enableClassification: false),
-    );
-    final WriteBuffer allBytes = WriteBuffer();
-    for (final Plane plane in image.planes) {
-      allBytes.putUint8List(plane.bytes);
-    }
-    final bytes = allBytes.done().buffer.asUint8List();
+  // Future<List<Face>> detect(CameraImage image, InputImageRotation rotation) {
+  //   final faceDetector = GoogleMlKit.vision.faceDetector(
+  //     FaceDetectorOptions(
+  //         performanceMode: FaceDetectorMode.fast,
+  //         minFaceSize: 0.9,
+  //         enableLandmarks: false,
+  //         enableContours: false,
+  //         // enableTracking: true,
+  //         enableClassification: false),
+  //   );
+  //   final WriteBuffer allBytes = WriteBuffer();
+  //   for (final Plane plane in image.planes) {
+  //     allBytes.putUint8List(plane.bytes);
+  //   }
+  //   final bytes = allBytes.done().buffer.asUint8List();
 
-    final Size imageSize =
-        Size(image.width.toDouble(), image.height.toDouble());
-    final inputImageFormat =
-        InputImageFormatValue.fromRawValue(image.format.raw) ??
-            InputImageFormat.yuv_420_888;
+  //   final Size imageSize =
+  //       Size(image.width.toDouble(), image.height.toDouble());
+  //   final inputImageFormat =
+  //       InputImageFormatValue.fromRawValue(image.format.raw) ??
+  //           InputImageFormat.yuv_420_888;
 
-    final planeData = image.planes.map(
-      (Plane plane) {
-        return InputImagePlaneMetadata(
-          bytesPerRow: plane.bytesPerRow,
-          height: plane.height,
-          width: plane.width,
-        );
-      },
-    ).toList();
+  //   final planeData = image.planes.map(
+  //     (Plane plane) {
+  //       return InputImagePlaneMetadata(
+  //         bytesPerRow: plane.bytesPerRow,
+  //         height: plane.height,
+  //         width: plane.width,
+  //       );
+  //     },
+  //   ).toList();
 
-    final inputImageData = InputImageData(
-      size: imageSize,
-      imageRotation: rotation,
-      inputImageFormat: inputImageFormat,
-      planeData: planeData,
-    );
+  //   final inputImageData = InputImageData(
+  //     size: imageSize,
+  //     imageRotation: rotation,
+  //     inputImageFormat: inputImageFormat,
+  //     planeData: planeData,
+  //   );
 
-    return faceDetector.processImage(
-      InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData),
-    );
-  }
+  //   return faceDetector.processImage(
+  //     InputImage.fromBytes(bytes: bytes, inputImageData: inputImageData),
+  //   );
+  // }
 
   ///for new version
   // Future<void> detectFacesFromImage(CameraImage image) async {

@@ -6,6 +6,7 @@ import 'package:face_net_authentication/pages/Dinas%20Khusus/DK_page.dart';
 import 'package:face_net_authentication/pages/List%20Karyawan/page_list_karyawan.dart';
 import 'package:face_net_authentication/pages/Rig%20Status%20History/rigStatusHistory.dart';
 import 'package:face_net_authentication/pages/history_absensi_mainPage.dart';
+import 'package:face_net_authentication/pages/menu_admin.dart';
 import 'package:face_net_authentication/pages/register_pin.dart';
 import 'package:face_net_authentication/pages/relief/relief_page.dart';
 import 'package:face_net_authentication/pages/sign-in.dart';
@@ -240,14 +241,26 @@ class _HomePageState extends State<HomePage> {
                             builder: (context) => HistoryAbsensiMainPage()));
                       },
                     ),
+                    // new HomeMenu(
+                    //   "Daftar Karyawan",
+                    //   "assets/images/absent_personal.png",
+                    //   -1,
+                    //   callback: (p0) {
+                    //     PinInputDialog.show(context, (p0) {
+                    //       Navigator.of(context).push(MaterialPageRoute(
+                    //           builder: (context) => PageListKaryawan()));
+                    //     });
+                    //   },
+                    // ),
+
                     new HomeMenu(
-                      "Daftar Karyawan",
+                      "Menu Admin",
                       "assets/images/absent_personal.png",
                       -1,
                       callback: (p0) {
                         PinInputDialog.show(context, (p0) {
                           Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => PageListKaryawan()));
+                              builder: (context) => MenuAdmin()));
                         });
                       },
                     ),
@@ -277,29 +290,29 @@ class _HomePageState extends State<HomePage> {
                     //   },
                     // ),
 
-                    new HomeMenu(
-                      "Relief",
-                      "assets/images/absent_approval.png",
-                      waitingApproval!,
-                      callback: (p0) {
-                        PinInputDialog.show(context, (p0) {
-                          Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => ReliefPage()));
-                          // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
-                        });
-                      },
-                    ),
+                    // new HomeMenu(
+                    //   "Relief",
+                    //   "assets/images/absent_approval.png",
+                    //   waitingApproval!,
+                    //   callback: (p0) {
+                    //     PinInputDialog.show(context, (p0) {
+                    //       Navigator.of(context).push(MaterialPageRoute(
+                    //           builder: (context) => ReliefPage()));
+                    //       // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
+                    //     });
+                    //   },
+                    // ),
 
-                    new HomeMenu(
-                      "Dinas Khusus",
-                      "assets/images/absent_approval.png",
-                      waitingApproval!,
-                      callback: (p0) {
-                        Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => DKPage()));
-                        // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
-                      },
-                    ),
+                    // new HomeMenu(
+                    //   "Dinas Khusus",
+                    //   "assets/images/absent_approval.png",
+                    //   waitingApproval!,
+                    //   callback: (p0) {
+                    //     Navigator.of(context).push(
+                    //         MaterialPageRoute(builder: (context) => DKPage()));
+                    //     // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
+                    //   },
+                    // ),
 
                     // new HomeMenu(
                     //   "Testing Button",
