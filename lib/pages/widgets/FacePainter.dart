@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 
 class FacePainter extends CustomPainter {
-  FacePainter({required this.imageSize, required this.face});
+  FacePainter(
+      {required this.imageSize, required this.face, required this.isSpoofing});
   final Size imageSize;
+  bool isSpoofing;
   double? scaleX, scaleY;
   Face? face;
   @override
@@ -16,12 +18,19 @@ class FacePainter extends CustomPainter {
       paint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3.0
-        ..color = Colors.red;
+        ..color = Colors.orange;
     } else {
-      paint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3.0
-        ..color = Colors.green;
+      if (isSpoofing) {
+        paint = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3.0
+          ..color = Colors.red;
+      } else {
+        paint = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3.0
+          ..color = Colors.green;
+      }
     }
 
     scaleX = size.width / imageSize.width;
@@ -35,7 +44,6 @@ class FacePainter extends CustomPainter {
             scaleX: scaleX ?? 1,
             scaleY: scaleY ?? 1),
         paint);
-
   }
 
   @override
@@ -47,12 +55,7 @@ class FacePainter extends CustomPainter {
 RRect _scaleRect(
     {required Rect rect,
     required Size imageSize,
-
-
     required Size widgetSize,
-
-    
-
     double scaleX = 1,
     double scaleY = 1}) {
   // return RRect.fromLTRBR(
@@ -62,7 +65,7 @@ RRect _scaleRect(
   //     rect.bottom.toDouble() * scaleY,
   //     Radius.circular(10));
 
-       return RRect.fromLTRBR(
+  return RRect.fromLTRBR(
       (widgetSize.width - rect.left.toDouble() * scaleX),
       rect.top.toDouble() * scaleY,
       widgetSize.width - rect.right.toDouble() * scaleX,

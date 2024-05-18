@@ -9,13 +9,13 @@ import 'package:image/image.dart' as imglib;
 import 'package:onnxruntime/onnxruntime.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart' as path;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 import '../services/image_converter.dart';
 
 class AdziehrdyAntiSpoof {
   Interpreter? _interpreter;
-  double threshold = 0.5;
   List _predictedData = [];
   List get predictedData => _predictedData;
   double dist = 0;
@@ -27,10 +27,12 @@ class AdziehrdyAntiSpoof {
 
   Future<OrtSession> loadModelFromAssets() async {
     OrtEnv.instance.init();
+    SharedPreferences pref = await SharedPreferences.getInstance();
+    landscape_mode = pref.getBool("LANDSCAPE_MODE") ?? false;
     final sessionOptions = OrtSessionOptions();
     // const assetFileName = 'assets/FaceBagNet_color_96.onnx';
-    // const assetFileName = 'assets/AntiSpoofing_print-replay_128.onnx';
-    const assetFileName = 'assets/2.7_80x80_MiniFASNetV2.onnx';
+    const assetFileName = 'assets/AntiSpoofing_print-replay_128.onnx';
+    // const assetFileName = 'assets/2.7_80x80_MiniFASNetV2.onnx';
 
     final rawAssetFile = await rootBundle.load(assetFileName);
     final bytes = rawAssetFile.buffer.asUint8List();
@@ -39,7 +41,7 @@ class AdziehrdyAntiSpoof {
     return session;
   }
 
-  // // ORIGINAL
+  // ORIGINAL
   // Future<List<double>?> isFaceSpoofedWithModel(
   //     CameraImage cameraImage, Face? face) async {
   //   print("===> isFaceSpoofedWithModel Starts");
@@ -104,7 +106,7 @@ class AdziehrdyAntiSpoof {
   // MODIFIED
   Future<List?> MODIFIEDisFaceSpoofedWithModel(
       CameraImage cameraImage, Face? face) async {
-    print("===> isFaceSpoofedWithModel Starts");
+    // print("===> isFaceSpoofedWithModel Starts");
 
     try {
       // Assuming you have a method to load the model from assets
@@ -114,12 +116,11 @@ class AdziehrdyAntiSpoof {
 
       final processedData = await _MODIFIEDpreProcess(cameraImage, face);
       // Access img and imageAsList from the returned list
-      final processedImg = processedData[0] as imglib.Image;
-      final input = processedData[1] as Float32List;
+      final input = processedData;
 
       // Create OrtValue from input
-      // final shape = [1, 3, 128, 128];
-      final shape = [1, 3, 80, 80];
+      final shape = [1, 3, 128, 128];
+      // final shape = [1, 3, 80, 80];
       // final shape = [1, 80, 80, 3];
       final inputOrt =
           OrtValueTensor.createTensorWithDataList(await input, shape);
@@ -136,8 +137,8 @@ class AdziehrdyAntiSpoof {
 
       final FAStensor = outputs[0]?.value;
 
-      print("===> outputs.length: " + outputs.length.toString());
-      print("===> FAStensor: " + FAStensor.toString());
+      // print("===> outputs.length: " + outputs.length.toString());
+      // print("===> FAStensor: " + FAStensor.toString());
 
       List<double> FASTensorList = [];
 
@@ -151,22 +152,22 @@ class AdziehrdyAntiSpoof {
       List<double> probabilities = softmax(FASTensorList);
       // probabilities = [0.6734, 0.3266];
       // probabilities = [0.3349, 0.6651];
-      print("===> probabilities: " +
-          probabilities.toString()); // prints the probabilities
+      // print("===> probabilities: " +
+      //     probabilities.toString()); // prints the probabilities
 
       // release onnx components
       inputOrt.release();
       runOptions.release();
       session.release();
-      print("===> isFaceSpoofedWithModel Ends");
-      return [processedImg, probabilities];
+      // print("===> isFaceSpoofedWithModel Ends");
+      return probabilities;
     } catch (e) {
       print('An error occurred: $e');
       return null;
     }
   }
 
-  // // ORIGINAL
+  // ORIGINAL
   // Future<List> _preProcess(CameraImage image, Face faceDetected) async {
   //   imglib.Image croppedImage = _cropFace(image, faceDetected);
 
@@ -191,32 +192,33 @@ class AdziehrdyAntiSpoof {
   // }
 
   // MODIFIED
-  Future<List> _MODIFIEDpreProcess(CameraImage image, Face faceDetected) async {
+  Future<Float32List> _MODIFIEDpreProcess(
+      CameraImage image, Face faceDetected) async {
     imglib.Image croppedImage = _cropFace(image, faceDetected);
 
-    imglib.Image img;
+    // imglib.Image img;
+    // // img = imglib.copyResizeCropSquare(croppedImage, 128);
     // img = imglib.copyResizeCropSquare(croppedImage, 128);
-    img = imglib.copyResizeCropSquare(croppedImage, 80);
     // final directory = await path.getApplicationDocumentsDirectory();
     // final file = File(join(directory.path, 'resized.png'));
     // await file.writeAsBytes(imglib.encodePng(img));
-    final directory = await path.getExternalStorageDirectory();
-    final file = File(join(directory!.path, 'resized.png'));
-    try {
-      await file.writeAsBytes(imglib.encodePng(img));
-      print("===> file.path: " + file.path);
-    } catch (e) {
-      print('Error: $e');
-    }
+    // // final directory = await path.getExternalStorageDirectory();
+    // // final file = File(join(directory!.path, 'resized.png'));
+    // try {
+    //   await file.writeAsBytes(imglib.encodePng(img));
+    //   print("===> file.path: " + file.path);
+    // } catch (e) {
+    //   print('Error: $e');
+    // }
 
     // Float32List imageAsList = imageToByteListFloat32(croppedImage, 128);
-    Float32List imageAsList = imageToByteListFloat32(croppedImage, 80);
+    Float32List imageAsList = imageToByteListFloat32(croppedImage, 128);
 
     // normalization
     for (int i = 0; i < imageAsList.length; i++) {
       imageAsList[i] = imageAsList[i];
     }
-    return [img, imageAsList];
+    return imageAsList;
   }
 
   List<double> softmax(List<double> scores) {
@@ -224,27 +226,31 @@ class AdziehrdyAntiSpoof {
     List<double> expScores =
         scores.map((score) => exp(score - maxScore)).toList();
     double sumExpScores = expScores.reduce((a, b) => a + b);
-    return expScores.map((score) => score / sumExpScores).toList();
+    List<double> softmaxScores =
+        expScores.map((score) => score / sumExpScores).toList();
+    return softmaxScores;
   }
 
   imglib.Image _cropFace(CameraImage image, Face faceDetected) {
     imglib.Image convertedImage = _convertCameraImage(image);
+
     double x;
     double y;
     double h;
     double w;
 
     // if (landscape_mode) {
+    //   x = faceDetected.boundingBox.left - 10.0;
+    //   y = faceDetected.boundingBox.top - 10.0;
+    //   h = faceDetected.boundingBox.width + 10.0;
+    //   w = faceDetected.boundingBox.height + 10.0;
+    // } else {
     x = faceDetected.boundingBox.left - 10.0;
     y = faceDetected.boundingBox.top - 10.0;
-    h = faceDetected.boundingBox.width + 10.0;
-    w = faceDetected.boundingBox.height + 10.0;
-    // } else {
-    // x = faceDetected.boundingBox.left - 10.0;
-    // y = faceDetected.boundingBox.top - 10.0;
-    // w = faceDetected.boundingBox.width + 10.0;
-    // h = faceDetected.boundingBox.height + 10.0;
+    w = faceDetected.boundingBox.width + 10.0;
+    h = faceDetected.boundingBox.height + 10.0;
     // }
+
     return imglib.copyCrop(
         convertedImage, x.round(), y.round(), w.round(), h.round());
   }

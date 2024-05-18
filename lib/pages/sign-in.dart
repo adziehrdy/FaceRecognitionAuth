@@ -1,13 +1,13 @@
 import 'dart:async';
 
 import 'package:camera/camera.dart';
+import 'package:face_net_authentication/FR_ENGINE/AntiSpoof.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/fr_detected_page.dart';
 import 'package:face_net_authentication/pages/widgets/camera_detection_preview.dart';
 import 'package:face_net_authentication/pages/widgets/camera_header.dart';
-import 'package:face_net_authentication/pages/widgets/signin_form.dart';
 import 'package:face_net_authentication/pages/widgets/single_picture.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/face_detector_service.dart';
@@ -30,12 +30,16 @@ class SignInState extends State<SignIn> {
   CameraService _cameraService = locator<CameraService>();
   FaceDetectorService _faceDetectorService = locator<FaceDetectorService>();
   MLService _mlService = locator<MLService>();
+  late AdziehrdyAntiSpoof antiSpoof;
+
+  bool isSpoofing = false;
 
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   double lat = 0;
   double long = 0;
   String alamat = "-";
+  int notSpoofCounter = 0;
 
   bool _isPictureTaken = false;
   bool _isInitializing = false;
@@ -48,14 +52,14 @@ class SignInState extends State<SignIn> {
   DateTime? jamAbsensi;
   String? textJamAbsensi;
 
-
-  Image? DetectedFaceImage ;
+  Image? DetectedFaceImage;
 
   @override
   void initState() {
     super.initState();
 
     getLastLocation();
+    antiSpoof = AdziehrdyAntiSpoof();
 
     _start();
   }
@@ -83,46 +87,76 @@ class SignInState extends State<SignIn> {
   Future _start() async {
     setState(() => _isInitializing = true);
     await _cameraService.initialize();
+    await _mlService.initialize();
     setState(() => _isInitializing = false);
     _frameFaces();
   }
 
   _frameFaces() async {
     bool processing = false;
-    _cameraService.cameraController!
-        .startImageStream((CameraImage image) async {
-      if (processing) return; // prevents unnecessary overprocessing.
-      processing = true;
-      await _predictFacesDetect(image: image);
+    try {
+      _cameraService.cameraController!
+          .startImageStream((CameraImage image) async {
+        if (processing) return; // prevents unnecessary overprocessing.
+        processing = true;
+        await _predictFacesDetect(image: image);
 
-      processing = false;
-    });
+        processing = false;
+      });
+    } catch (e) {
+      print('An error occurred: $e');
+    }
   }
 
   Future<void> _predictFacesDetect({@required CameraImage? image}) async {
     assert(image != null, 'Image is null');
-     await _faceDetectorService.detectFacesFromImage(image!);
-     
-  
-    if (_faceDetectorService.faceDetected) {
-       
+    await _faceDetectorService.detectFacesFromImage(image!);
 
+    if (_faceDetectorService.faceDetected) {
 //---------
 
       if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
           _faceDetectorService.faces[0].headEulerAngleY! < -10) {
         print("=== POSISI MUKA TIDAK BAGUS=== ");
       } else {
-
-
-      _mlService.setCurrentPrediction(image, _faceDetectorService.faces[0]);
-
-       
-
         //SET FACE
 
         print("POSISI MUKA BAGUS");
-        RECONIZE_FACE(image);
+        final results = await antiSpoof.MODIFIEDisFaceSpoofedWithModel(
+            image, _faceDetectorService.faces[0]);
+
+        if (results != null) {
+          // Mengakses processedImage dan probabilities dari list
+          final FASoutputs = Future.value(results);
+
+          // final outputs = await FASoutputs;
+
+          if (results[0] == 0.0) {
+            print("SPOFF = ASLI | " + results[0].toString());
+            isSpoofing = false;
+
+            notSpoofCounter++;
+
+            if (notSpoofCounter >= 4) {
+              notSpoofCounter = 0;
+              await _mlService.setCurrentPrediction(
+                  image, _faceDetectorService.faces[0]);
+
+              RECONIZE_FACE(image);
+            } else {
+              isSpoofing = true;
+            }
+          } else {
+            print("SPOFF = PALSU | " + results[0].toString());
+
+            notSpoofCounter = 0;
+            isSpoofing = true;
+          }
+        } else {
+          // Menangani kasus ketika hasilnya null (misalnya, terjadi kesalahan)
+          print(
+              'Error: No results returned from MODIFIEDisFaceSpoofedWithModel');
+        }
       }
 // RECONIZE_FACE();
 
@@ -144,61 +178,54 @@ class SignInState extends State<SignIn> {
   }
 
   RECONIZE_FACE(CameraImage image) async {
-    if(enable_recognize_process){
+    if (enable_recognize_process) {
+      if (_faceDetectorService.faceDetected) {
+        User? user = await _mlService.predict();
+        if (user != null) {
+          enable_recognize_process = false;
+          //  await _cameraService.takePicture();
+          getDateTimeNow();
+          pauseCameraAndMLKit();
+          imglib.Image faceImage =
+              _mlService.cropFace(image, _faceDetectorService.faces[0]);
 
-       if (_faceDetectorService.faceDetected) {
-      User? user = await _mlService.predict();
-      if (user != null) {
+          //  //TESTING ABSENSI
 
+          //  textJamAbsensi = "2024-02-11 07:30:00";
+          //  jamAbsensi = DateTime.parse(textJamAbsensi!);
 
-        
-        enable_recognize_process = false;
-        //  await _cameraService.takePicture();
-        getDateTimeNow();
-        pauseCameraAndMLKit();
-       imglib.Image faceImage =  _mlService.cropFace(image, _faceDetectorService.faces[0]);
+          //  //TESTING ABSENSI
 
-      //  //TESTING ABSENSI
+          await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FrDetectedPage(
+                  // employee_name: user.employee_name!,
+                  textJamAbsensi: textJamAbsensi!,
+                  jamAbsensi: jamAbsensi!,
+                  alamat: alamat,
+                  lat: lat.toString(),
+                  long: long.toString(),
+                  // company_id: user.company_id!,
+                  // employee_id: user.employee_id!,
+                  type_absensi: widget.MODE,
+                  faceImage: convertImagelibToUint8List(faceImage),
+                  user: user,
+                ),
+              ));
 
-      //  textJamAbsensi = "2024-02-11 07:30:00";
-      //  jamAbsensi = DateTime.parse(textJamAbsensi!);
+          // _reload();
 
-      //  //TESTING ABSENSI
+          resumeCameraAndMLKit();
+          enable_recognize_process = true;
+        }
+        // namaReconized = user?.employee_name ?? "UNRECONIZE";
 
-        await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => FrDetectedPage(
-                // employee_name: user.employee_name!,
-                textJamAbsensi: textJamAbsensi!,
-                jamAbsensi: jamAbsensi!,
-                alamat: alamat,
-                lat: lat.toString(),
-                long: long.toString(),
-                // company_id: user.company_id!,
-                // employee_id: user.employee_id!,
-                type_absensi: widget.MODE, faceImage: 
-                convertImagelibToUint8List(faceImage) ,
-                user: user,
-
-              ),
-            ));
-
-        // _reload();
-
-        resumeCameraAndMLKit();
-        enable_recognize_process = true;
+        // var bottomSheetController = scaffoldKey.currentState!
+        //     .showBottomSheet((context) => signInSheet(user: user));
+        // bottomSheetController.closed.whenComplete(_reload);
       }
-      // namaReconized = user?.employee_name ?? "UNRECONIZE";
-
-      // var bottomSheetController = scaffoldKey.currentState!
-      //     .showBottomSheet((context) => signInSheet(user: user));
-      // bottomSheetController.closed.whenComplete(_reload);
     }
-
-      
-    }
-   
   }
 
   _onBackPressed() {
@@ -249,7 +276,9 @@ class SignInState extends State<SignIn> {
     if (_isInitializing) return Center(child: CircularProgressIndicator());
     if (_isPictureTaken)
       return SinglePicture(imagePath: _cameraService.imagePath!);
-    return CameraDetectionPreview();
+    return CameraDetectionPreview(
+      isSpoofing: isSpoofing,
+    );
   }
 
   @override
@@ -266,30 +295,33 @@ class SignInState extends State<SignIn> {
           body,
           Column(children: [
             header,
-            Column(
-               
-                children: [Column(
-                  children: [
-                    DigitalClock(
-                        textScaleFactor: 2,
-                        showSeconds: true,
-                        isLive: true,
-                        decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.rectangle,
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(15))),
-                        datetime: DateTime.now()),
-                    // Text(_latitude + "," + _longitude),
-                    // Text(alamat)
-                  ],
-                )]),
+            Column(children: [
+              Column(
+                children: [
+                  DigitalClock(
+                      textScaleFactor: 2,
+                      showSeconds: true,
+                      isLive: true,
+                      decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.all(Radius.circular(15))),
+                      datetime: DateTime.now()),
+                  // Text(_latitude + "," + _longitude),
+                  // Text(alamat)
+                ],
+              )
+            ]),
             SizedBox(height: 5),
             Text(lat.toString() + " , " + long.toString()),
             SizedBox(height: 5),
             Padding(
               padding: const EdgeInsets.all(15),
-              child: Text(alamat,textAlign: TextAlign.center,maxLines: 2,),
+              child: Text(
+                alamat,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+              ),
             )
           ]),
         ],
@@ -298,49 +330,6 @@ class SignInState extends State<SignIn> {
       floatingActionButton: fab,
     );
   }
-
-  signInSheet({@required User? user}) => user == null
-      ? Container(
-          width: MediaQuery.of(context).size.width,
-          padding: EdgeInsets.all(20),
-          child: Text(
-            'User not found 😞',
-            style: TextStyle(fontSize: 20),
-          ),
-        )
-      : SignInSheet(user: user);
-
-  //        void startRecognitionLoop() {
-  //   if (!_isRecognizing) {
-  //     _isRecognizing = true;
-  //     _continuousRecognitionLoop();
-  //   }
-  // }
-
-  //   void _continuousRecognitionLoop() async {
-  //   while (_isRecognizing) {
-  //     try {
-  //       bool faceDetected = await widget.onPressed();
-  //       if (faceDetected) {
-  //         if (widget.isLogin) {
-  //           var user = await _predictUser();
-  //           if (user != null) {
-  //             this.predictedUser = user;
-  //             // Automatically perform sign-in logic
-  //             _signIn(context);
-  //           }
-  //         }
-  //         // ... Show bottom sheet ...
-  //       }
-  //     } catch (e) {
-  //       print(e);
-  //     }
-  //   }
-  // }
-
-  //  void stopRecognitionLoop() {
-  //   _isRecognizing = false;
-  // }
 
   getDateTimeNow() {
     setState(() {

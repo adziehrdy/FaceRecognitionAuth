@@ -17,7 +17,7 @@ import 'package:tflite_flutter/tflite_flutter.dart';
 
 class MLService {
   Interpreter? _interpreter;
-  double threshold = 0.6;
+  double threshold = 0.75;
 
   List _predictedData = [];
   List get predictedData => _predictedData;
@@ -28,8 +28,8 @@ class MLService {
 
   Future initialize() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
-    threshold = pref.getDouble("threshold") ?? CONSTANT_VAR.DEFAULT_TRESHOLD;
-
+    // threshold = pref.getDouble("threshold") ?? CONSTANT_VAR.DEFAULT_TRESHOLD;
+    threshold = CONSTANT_VAR.DEFAULT_TRESHOLD;
     landscape_mode = pref.getBool("LANDSCAPE_MODE") ?? false;
 
     late Delegate delegate;
@@ -55,8 +55,6 @@ class MLService {
 
       this._interpreter = await Interpreter.fromAsset('mobilefacenet.tflite',
           options: interpreterOptions);
-
-      antiSpoof = AdziehrdyAntiSpoof();
     } catch (e) {
       print('Failed to load model.');
       print(e);
@@ -85,43 +83,43 @@ class MLService {
     imglib.Image croppedImage = cropFace(image, faceDetected);
     imglib.Image img = imglib.copyResizeCropSquare(croppedImage, 112);
 
-    final results =
-        await antiSpoof.MODIFIEDisFaceSpoofedWithModel(image, faceDetected);
+    // final results =
+    //     await antiSpoof.MODIFIEDisFaceSpoofedWithModel(image, faceDetected);
 
-    if (results != null) {
-      // Mengakses processedImage dan probabilities dari list
-      FASoutputs = Future.value(results[1] as List<double>);
+    // if (results != null) {
+    //   // Mengakses processedImage dan probabilities dari list
+    //   FASoutputs = Future.value(results[1] as List<double>);
 
-      final outputs = await FASoutputs;
+    //   final outputs = await FASoutputs;
 
-      if (outputs != null) {
-        // print(
-        //   "SPOFF DATA | 0 = " +
-        //       outputs[0].toString() +
-        //       " | 1 = " +
-        //       outputs[1].toString() +
-        //       " | 2 = " +
-        //       outputs[2].toString(),
-        // );
-      }
+    //   if (outputs != null) {
+    //     // print(
+    //     //   "SPOFF DATA | 0 = " +
+    //     //       outputs[0].toString() +
+    //     //       " | 1 = " +
+    //     //       outputs[1].toString() +
+    //     //       " | 2 = " +
+    //     //       outputs[2].toString(),
+    //     // );
+    //   }
 
-      // print("SPOFF" + (outputs?[0].toString() ?? "NOT"));
-      if (outputs != null && outputs.isNotEmpty && outputs[1] < 0.5) {
-        print("SPOFF = PALSU | " + outputs[0].toString());
-        return [];
-      } else {
-        print("SPOFF = ASLI | " + outputs![0].toString());
-        Float32List imageAsList = imageToByteListFloat32(img);
-        return imageAsList;
-      }
-    } else {
-      // Menangani kasus ketika hasilnya null (misalnya, terjadi kesalahan)
-      print('Error: No results returned from MODIFIEDisFaceSpoofedWithModel');
-      return [];
+    // print("SPOFF" + (outputs?[0].toString() ?? "NOT"));
+    //   if (outputs != null && outputs.isNotEmpty && outputs[0] < 0.2) {
+    //     print("SPOFF = PALSU | " + outputs[0].toString());
+    //     return [];
+    //   } else {
+    //     print("SPOFF = ASLI | " + outputs![0].toString());
+    //     Float32List imageAsList = imageToByteListFloat32(img);
+    //     return imageAsList;
+    //   }
+    // } else {
+    //   // Menangani kasus ketika hasilnya null (misalnya, terjadi kesalahan)
+    //   print('Error: No results returned from MODIFIEDisFaceSpoofedWithModel');
+    //   return [];
 
-      // Float32List imageAsList = imageToByteListFloat32(img);
-      // return imageAsList;
-    }
+    Float32List imageAsList = imageToByteListFloat32(img);
+    return imageAsList;
+    // }
   }
 
   imglib.Image cropFace(CameraImage image, Face faceDetected) {

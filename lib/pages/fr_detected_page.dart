@@ -378,9 +378,9 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
         }
       }
     }
-    String attendndaceDateString = dateFormat.format(widget.jamAbsensi);
+    // String attendndaceDateString = dateFormat.format(widget.jamAbsensi);
     Map<String, dynamic> sampleData = {
-      "attendance_date": attendndaceDateString,
+      // "attendance_date": attendndaceDateString,
       "check_out_actual": widget.textJamAbsensi,
       "attendance_address_out": widget.alamat,
       "attendance_location_out": widget.lat + ", " + widget.long,
