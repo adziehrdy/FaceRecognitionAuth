@@ -79,7 +79,7 @@ class _MenuAdminState extends State<MenuAdmin> {
 
             new HomeMenu(
               "Relief",
-              "assets/images/absent_approval.png",
+              "assets/images/relief.png",
               waitingApproval!,
               callback: (p0) {
                 Navigator.of(context).push(
@@ -91,7 +91,7 @@ class _MenuAdminState extends State<MenuAdmin> {
 
             new HomeMenu(
               "Dinas Khusus",
-              "assets/images/absent_approval.png",
+              "assets/images/DK.png",
               waitingApproval!,
               callback: (p0) {
                 Navigator.of(context)
@@ -102,7 +102,18 @@ class _MenuAdminState extends State<MenuAdmin> {
 
             new HomeMenu(
               "Rig Status History",
-              "assets/images/absent_approval.png",
+              "assets/images/rig_history.png",
+              waitingApproval!,
+              callback: (p0) {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => rigStatusHistory()));
+                // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
+              },
+            ),
+
+            new HomeMenu(
+              "Catering",
+              "assets/images/food.png",
               waitingApproval!,
               callback: (p0) {
                 Navigator.of(context).push(MaterialPageRoute(
