@@ -28,7 +28,6 @@ class _HomeWigetState extends State<HomeWiget> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    
 
     DateTime now = DateTime.now();
     formattedDate = DateFormat('EEEE, dd MMMM yyyy', 'id').format(now);
@@ -166,11 +165,15 @@ class _HomeWigetState extends State<HomeWiget> {
                     ),
                     IconButton(
                         onPressed: () {
-                          PinInputDialog.show(context, (p0) {
-                            dialog_update_kordinat.show(context, (p0) {
-                              
-                            },);
-                          },);
+                          PinInputDialog.show(
+                            context,
+                            (p0) {
+                              dialog_update_kordinat.show(
+                                context,
+                                (p0) {},
+                              );
+                            },
+                          );
                         },
                         icon: Icon(
                           Icons.pin_invoke_outlined,

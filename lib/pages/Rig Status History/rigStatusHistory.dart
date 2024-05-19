@@ -1,202 +1,184 @@
 import 'package:flutter/material.dart';
-import 'package:order_tracker_zen/order_tracker_zen.dart';
-
-const kTileHeight = 50.0;
+// import 'package:order_tracker_zen/order_tracker_zen.dart';
+import 'package:timeline_tile/timeline_tile.dart';
 
 class rigStatusHistory extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[200],
-      appBar: AppBar(
-        title: Text("Rig Status History"),
+        backgroundColor: Colors.grey.shade200,
+        appBar: AppBar(
+          title: Text("Rig Status History"),
+        ),
+        body: Container(
+          padding: EdgeInsets.all(20),
+          child: ListView(
+            children: <Widget>[
+              _buildTimelineTile(
+                context,
+                title: 'Office Inauguration Function',
+                subtitle: 'Started journey with new office',
+                date: 'Oct 01, 2020',
+                images: [
+                  'https://via.placeholder.com/150',
+                  'https://via.placeholder.com/150',
+                  'https://via.placeholder.com/150',
+                ],
+              ),
+              _buildTimelineTile(
+                context,
+                title: 'Maintanance',
+                subtitle: 'Perubahan Status Menjadi Maintanace',
+                date: 'Sept 12, 2020',
+              ),
+              _buildTimelineTile(
+                context,
+                title: 'Reached New Record',
+                subtitle:
+                    'Lifetime accreditation from IAO (First Business Advisory Firm in India)',
+                date: 'Sept 16, 2020',
+              ),
+              _buildTimelineTile(
+                context,
+                title: 'New People Joined with our Journey',
+                subtitle: 'John Smith, Designer',
+                date: 'Aug 20, 2020',
+                imageUrl: 'https://via.placeholder.com/150',
+              ),
+              _buildTimelineTile(
+                context,
+                title: 'Office Inauguration Function',
+                subtitle: 'Started journey with new office',
+                date: 'Oct 01, 2020',
+                images: [
+                  'https://via.placeholder.com/150',
+                  'https://via.placeholder.com/150',
+                  'https://via.placeholder.com/150',
+                ],
+              ),
+              _buildTimelineTile(
+                context,
+                title: 'Design Meetup',
+                subtitle:
+                    'This is where it all goes down. You will compete head to head with your friends and rivals. Get ready!',
+                date: 'Sept 12, 2020',
+              ),
+              _buildTimelineTile(
+                context,
+                title: 'Reached New Record',
+                subtitle:
+                    'Lifetime accreditation from IAO (First Business Advisory Firm in India)',
+                date: 'Sept 16, 2020',
+              ),
+              _buildTimelineTile(
+                context,
+                title: 'New People Joined with our Journey',
+                subtitle: 'John Smith, Designer',
+                date: 'Aug 20, 2020',
+                imageUrl: 'https://via.placeholder.com/150',
+              ),
+            ],
+          ),
+        ));
+  }
+}
+
+Widget _buildTimelineTile(BuildContext context,
+    {required String title,
+    required String subtitle,
+    required String date,
+    List<String>? images,
+    String? imageUrl}) {
+  return TimelineTile(
+    alignment: TimelineAlign.manual,
+    lineXY: 0.3,
+    isFirst: false,
+    isLast: false,
+    indicatorStyle: IndicatorStyle(
+      width: 20,
+      color: Colors.blue,
+      indicatorXY: 0.5,
+    ),
+    beforeLineStyle: LineStyle(
+      color: Colors.blue,
+      thickness: 3,
+    ),
+    afterLineStyle: LineStyle(
+      color: Colors.blue,
+      thickness: 3,
+    ),
+    startChild: Container(
+      constraints: BoxConstraints(
+        minHeight: 120,
       ),
-      body: SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.all(9),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Add padding around the OrderTrackerZen widget for better presentation.
-            Card(
-                elevation: 2,
-                margin: EdgeInsets.all(20),
-                // OrderTrackerZen is the main widget of the package which displays the order tracking information.
-                child: Container(
-                  color: Colors.white,
-                  padding: EdgeInsets.all(20),
-                  child: OrderTrackerZen(
-                    animation_duration: 5,
-                    isShrinked: false,
-                    // Provide an array of TrackerData objects to display the order tracking information.
-                    tracker_data: [
-                      // TrackerData represents a single step in the order tracking process.
-                      TrackerData(
-                        title: "MAINTANACE",
-                        date: "",
-                        // Provide an array of TrackerDetails objects to display more details about this step.
-                        tracker_details: [
-                          // TrackerDetails contains detailed information about a specific event in the order tracking process.
-                          TrackerDetails(
-                            title: "Perubahan Rig Status Menjadi Maintanace",
-                            datetime: "Sat, 8 Apr '22 - 17:17",
-                          ),
-                        ],
-                      ),
-                      // yet another TrackerData object
-                      TrackerData(
-                        title: "OPERATION",
-                        date: "Sat, 8 Apr '22",
-                        tracker_details: [
-                          TrackerDetails(
-                            title: "Perubahan Rig Status Menjadi Operation",
-                            datetime: "Sat, 8 Apr '22 - 17:50",
-                          ),
-                        ],
-                      ),
-                      // And yet another TrackerData object
-                      TrackerData(
-                        title: "MAINTANACE",
-                        date: "Sat,8 Apr '22",
-                        tracker_details: [
-                          TrackerDetails(
-                            title: "You received your order, by MailDeli",
-                            datetime: "Sat, 8 Apr '22 - 17:51",
-                          ),
-                        ],
-                      ),
-                      TrackerData(
-                        title: "MAINTANACE",
-                        date: "Sat,8 Apr '22",
-                        tracker_details: [
-                          TrackerDetails(
-                            title: "You received your order, by MailDeli",
-                            datetime: "Sat, 8 Apr '22 - 17:51",
-                          ),
-                        ],
-                      ),
-                      TrackerData(
-                        title: "MAINTANACE",
-                        date: "Sat,8 Apr '22",
-                        tracker_details: [
-                          TrackerDetails(
-                            title: "You received your order, by MailDeli",
-                            datetime: "Sat, 8 Apr '22 - 17:51",
-                          ),
-                        ],
-                      ),
-                      TrackerData(
-                        title: "MAINTANACE",
-                        date: "",
-                        // Provide an array of TrackerDetails objects to display more details about this step.
-                        tracker_details: [
-                          // TrackerDetails contains detailed information about a specific event in the order tracking process.
-                          TrackerDetails(
-                            title: "Perubahan Rig Status Menjadi Maintanace",
-                            datetime: "Sat, 8 Apr '22 - 17:17",
-                          ),
-                        ],
-                      ),
-                      // yet another TrackerData object
-                      TrackerData(
-                        title: "OPERATION",
-                        date: "Sat, 8 Apr '22",
-                        tracker_details: [
-                          TrackerDetails(
-                            title: "Perubahan Rig Status Menjadi Operation",
-                            datetime: "Sat, 8 Apr '22 - 17:50",
-                          ),
-                        ],
-                      ),
-                      // And yet another TrackerData object
-                      TrackerData(
-                        title: "MAINTANACE",
-                        date: "Sat,8 Apr '22",
-                        tracker_details: [
-                          TrackerDetails(
-                            title: "You received your order, by MailDeli",
-                            datetime: "Sat, 8 Apr '22 - 17:51",
-                          ),
-                        ],
-                      ),
-                      TrackerData(
-                        title: "MAINTANACE",
-                        date: "Sat,8 Apr '22",
-                        tracker_details: [
-                          TrackerDetails(
-                            title: "You received your order, by MailDeli",
-                            datetime: "Sat, 8 Apr '22 - 17:51",
-                          ),
-                        ],
-                      ),
-                      TrackerData(
-                        title: "MAINTANACE",
-                        date: "Sat,8 Apr '22",
-                        tracker_details: [
-                          TrackerDetails(
-                            title: "You received your order, by MailDeli",
-                            datetime: "Sat, 8 Apr '22 - 17:51",
-                          ),
-                        ],
-                      ),
-                      TrackerData(
-                        title: "MAINTANACE",
-                        date: "",
-                        // Provide an array of TrackerDetails objects to display more details about this step.
-                        tracker_details: [
-                          // TrackerDetails contains detailed information about a specific event in the order tracking process.
-                          TrackerDetails(
-                            title: "Perubahan Rig Status Menjadi Maintanace",
-                            datetime: "Sat, 8 Apr '22 - 17:17",
-                          ),
-                        ],
-                      ),
-                      // yet another TrackerData object
-                      TrackerData(
-                        title: "OPERATION",
-                        date: "Sat, 8 Apr '22",
-                        tracker_details: [
-                          TrackerDetails(
-                            title: "Perubahan Rig Status Menjadi Operation",
-                            datetime: "Sat, 8 Apr '22 - 17:50",
-                          ),
-                        ],
-                      ),
-                      // And yet another TrackerData object
-                      TrackerData(
-                        title: "MAINTANACE",
-                        date: "Sat,8 Apr '22",
-                        tracker_details: [
-                          TrackerDetails(
-                            title: "You received your order, by MailDeli",
-                            datetime: "Sat, 8 Apr '22 - 17:51",
-                          ),
-                        ],
-                      ),
-                      TrackerData(
-                        title: "MAINTANACE",
-                        date: "Sat,8 Apr '22",
-                        tracker_details: [
-                          TrackerDetails(
-                            title: "You received your order, by MailDeli",
-                            datetime: "Sat, 8 Apr '22 - 17:51",
-                          ),
-                        ],
-                      ),
-                      TrackerData(
-                        title: "MAINTANACE",
-                        date: "Sat,8 Apr '22",
-                        tracker_details: [
-                          TrackerDetails(
-                            title: "You received your order, by MailDeli",
-                            datetime: "Sat, 8 Apr '22 - 17:51",
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                )),
+            Text(
+              date,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
           ],
         ),
       ),
-    );
-  }
+    ),
+    endChild: Container(
+        padding: EdgeInsets.all(10),
+        constraints: BoxConstraints(
+          minHeight: 120,
+        ),
+        child: Card(
+          elevation: 0,
+          child: Container(
+            padding: const EdgeInsets.all(15.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(subtitle),
+                if (images != null)
+                  Row(
+                    children: images
+                        .map((url) => Padding(
+                              padding: const EdgeInsets.only(right: 4.0),
+                              child: Image.network(
+                                url,
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.cover,
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                if (imageUrl != null)
+                  Image.network(
+                    imageUrl,
+                    width: 50,
+                    height: 50,
+                    fit: BoxFit.cover,
+                  ),
+                SizedBox(
+                  height: 10,
+                ),
+                Container(
+                  alignment: Alignment.bottomRight,
+                  child: ElevatedButton(onPressed: () {}, child: Text("Edit")),
+                )
+              ],
+            ),
+          ),
+        )),
+  );
 }

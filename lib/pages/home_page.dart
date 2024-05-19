@@ -255,7 +255,7 @@ class _HomePageState extends State<HomePage> {
 
                     new HomeMenu(
                       "Menu Admin",
-                      "assets/images/absent_personal.png",
+                      "assets/images/admin_menu.png",
                       -1,
                       callback: (p0) {
                         PinInputDialog.show(context, (p0) {
