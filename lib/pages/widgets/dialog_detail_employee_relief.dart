@@ -7,7 +7,7 @@ import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/repo/global_repos.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
+// import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:pinput/pinput.dart';
 
 class widget_detail_employee_relief extends StatefulWidget {
@@ -239,7 +239,7 @@ class _widget_detail_employeeState
 
               GlobalRepo repo = GlobalRepo();
 
-              EasyLoading.show(status: "Uploading Shift..");
+              // EasyLoading.show(status: "Uploading Shift..");
 
               bool success = await repo.hitUpdateMasterShift(
                   widget.user_detail.employee_id!, shift_id);
@@ -251,7 +251,7 @@ class _widget_detail_employeeState
                     checkin,
                     checkOut);
                 Navigator.pop(context);
-                EasyLoading.dismiss();
+                // EasyLoading.dismiss();
                 showToastShort("Shift Berhasil dirubah");
               } else {
                 await _dataBaseHelper.updateShift(
@@ -260,7 +260,7 @@ class _widget_detail_employeeState
                     checkin,
                     checkOut);
                 Navigator.pop(context);
-                EasyLoading.dismiss();
+                // EasyLoading.dismiss();
                 showToastShort(
                     "Perubahan Shift berhasil karna Disimpan di Local");
               }

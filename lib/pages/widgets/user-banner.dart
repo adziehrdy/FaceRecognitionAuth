@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/model_rig_shift.dart';
@@ -8,6 +10,9 @@ import 'package:face_net_authentication/pages/widgets/dialog_rig_info.dart';
 import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
+
+import '../../db/database_helper_rig_status_history.dart';
+import '../../models/rig_status_history_model.dart';
 
 class UserBanner extends StatefulWidget {
   const UserBanner({Key? key}) : super(key: key);
@@ -141,15 +146,19 @@ class _UserBannerState extends State<UserBanner> {
                                     ),
                                   ),
                                   onTap: () async {
-                                    await showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        return dialog_change_rig_status();
-                                      },
-                                    );
-                                    status_rig = await SpGetSelectedStatusRig();
-                                    setState(() {
-                                      status_rig;
+                                    PinInputDialog.show(context, (p0) async {
+                                      await showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return dialog_change_rig_status(
+                                            onStatusSelected: (selectedStatus) {
+                                              setState(() {
+                                                saveRigStatus(selectedStatus);
+                                              });
+                                            },
+                                          );
+                                        },
+                                      );
                                     });
                                   },
                                 )),
@@ -228,5 +237,49 @@ class _UserBannerState extends State<UserBanner> {
           ],
         ),
       );
+  }
+
+  Future<void> saveRigStatus(RigStatusShift statusRig) async {
+    await SpSetSelectedStatusRig(jsonEncode(statusRig));
+    setState(() {
+      status_rig = statusRig;
+    });
+
+    DatabaseHelperRigStatusHistory dbHelper =
+        DatabaseHelperRigStatusHistory.instance;
+
+    List<RigStatusHistoryModel> historyStatus = await dbHelper.queryAllStatus();
+
+    DateTime today = DateTime.now();
+
+    if (historyStatus[0].date.contains(formatDateOnly(today))) {
+      RigStatusHistoryModel dataPreUpdate = RigStatusHistoryModel(
+          id: historyStatus[0].id,
+          branchId: historyStatus[0].branchId,
+          branchStatusId: statusRig.statusBranchId ?? "-",
+          requester: historyStatus[0].requester,
+          status: statusRig.statusBranch ?? "-",
+          date: historyStatus[0].date);
+
+      dbHelper.insert(dataPreUpdate);
+    } else {
+      String branch_id = await getBranchID();
+      String requester = await getActiveSuperIntendentID();
+      DateTime date = DateTime.now();
+
+      dbHelper.insert(RigStatusHistoryModel(
+          branchId: branch_id,
+          requester: requester,
+          status: statusRig.statusBranch ?? "-",
+          branchStatusId: statusRig.statusBranchId ?? "-",
+          date: formatDateTime(date)));
+    }
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return dialog_rig_info();
+      },
+    );
   }
 }

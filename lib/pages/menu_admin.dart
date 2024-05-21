@@ -18,7 +18,7 @@ class MenuAdmin extends StatefulWidget {
 
 class _MenuAdminState extends State<MenuAdmin> {
   int? waitingApproval = 0;
-  int itemPerRow = 3;
+  int itemPerRow = 4;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,7 +106,7 @@ class _MenuAdminState extends State<MenuAdmin> {
               waitingApproval!,
               callback: (p0) {
                 Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => rigStatusHistory()));
+                    builder: (context) => RigStatusHistory()));
                 // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
               },
             ),
@@ -117,7 +117,7 @@ class _MenuAdminState extends State<MenuAdmin> {
               waitingApproval!,
               callback: (p0) {
                 Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => rigStatusHistory()));
+                    builder: (context) => RigStatusHistory()));
                 // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
               },
             ),

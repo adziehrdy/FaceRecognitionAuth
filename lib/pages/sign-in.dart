@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:camera/camera.dart';
 import 'package:face_net_authentication/FR_ENGINE/AntiSpoof.dart';
@@ -54,6 +56,8 @@ class SignInState extends State<SignIn> {
 
   Image? DetectedFaceImage;
 
+  Uint8List? faceDisplay;
+
   @override
   void initState() {
     super.initState();
@@ -65,9 +69,9 @@ class SignInState extends State<SignIn> {
   }
 
   Future<void> getLastLocation() async {
-    lat = await SpGetLastLat() ?? 0;
-    long = await SpGetLastlong() ?? 0;
-    alamat = await SpGetLastAlamat() ?? "-";
+    lat = await SpGetLastLat();
+    long = await SpGetLastlong();
+    alamat = await SpGetLastAlamat();
 
     setState(() {
       lat;
@@ -119,35 +123,40 @@ class SignInState extends State<SignIn> {
           _faceDetectorService.faces[0].headEulerAngleY! < -10) {
         print("=== POSISI MUKA TIDAK BAGUS=== ");
       } else {
+        // setState(() {
+        //   setDisplayFace(image);
+        // });
+
         //SET FACE
 
         print("POSISI MUKA BAGUS");
-        final results = await antiSpoof.MODIFIEDisFaceSpoofedWithModel(
+        final results = await antiSpoof.isFaceSpoofedWithModel(
             image, _faceDetectorService.faces[0]);
+
+        // setDisplayFace(image);
 
         if (results != null) {
           // Mengakses processedImage dan probabilities dari list
-          final FASoutputs = Future.value(results);
-
           // final outputs = await FASoutputs;
 
-          if (results[0] == 0.0) {
-            print("SPOFF = ASLI | " + results[0].toString());
+          if (results >= 0.09) {
+            print("SPOFF = ASLI | " + results.toString());
             isSpoofing = false;
 
             notSpoofCounter++;
 
             if (notSpoofCounter >= 4) {
-              notSpoofCounter = 0;
+              isSpoofing = false;
               await _mlService.setCurrentPrediction(
                   image, _faceDetectorService.faces[0]);
 
               RECONIZE_FACE(image);
+              // notSpoofCounter = 0;
             } else {
               isSpoofing = true;
             }
           } else {
-            print("SPOFF = PALSU | " + results[0].toString());
+            print("SPOFF = PALSU | " + results.toString());
 
             notSpoofCounter = 0;
             isSpoofing = true;
@@ -178,6 +187,7 @@ class SignInState extends State<SignIn> {
   }
 
   RECONIZE_FACE(CameraImage image) async {
+    notSpoofCounter = 0;
     if (enable_recognize_process) {
       if (_faceDetectorService.faceDetected) {
         User? user = await _mlService.predict();
@@ -215,7 +225,7 @@ class SignInState extends State<SignIn> {
               ));
 
           // _reload();
-
+          notSpoofCounter = 0;
           resumeCameraAndMLKit();
           enable_recognize_process = true;
         }
@@ -298,15 +308,25 @@ class SignInState extends State<SignIn> {
             Column(children: [
               Column(
                 children: [
-                  DigitalClock(
-                      textScaleFactor: 2,
-                      showSeconds: true,
-                      isLive: true,
-                      decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.rectangle,
-                          borderRadius: BorderRadius.all(Radius.circular(15))),
-                      datetime: DateTime.now()),
+                  ClipRRect(
+                    borderRadius: BorderRadius.all(Radius.circular(15)),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                      child: Container(
+                        padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.5),
+                          borderRadius: BorderRadius.all(Radius.circular(15)),
+                        ),
+                        child: DigitalClock(
+                          textScaleFactor: 2,
+                          showSeconds: true,
+                          isLive: true,
+                          datetime: DateTime.now(),
+                        ),
+                      ),
+                    ),
+                  ),
                   // Text(_latitude + "," + _longitude),
                   // Text(alamat)
                 ],
@@ -322,7 +342,15 @@ class SignInState extends State<SignIn> {
                 textAlign: TextAlign.center,
                 maxLines: 2,
               ),
-            )
+            ),
+            // Memindahkan tampilan wajah yang telah discan ke sudut kiri atas
+            // Positioned(
+            //   left: 0,
+            //   top: 0,
+            //   child: faceDisplay != null
+            //       ? Image.memory(faceDisplay!)
+            //       : Container(),
+            // ),
           ]),
         ],
       ),
@@ -347,4 +375,9 @@ class SignInState extends State<SignIn> {
     _cameraService.cameraController?.resumePreview();
     _frameFaces();
   }
+
+  // setDisplayFace(CameraImage image) {
+  //   faceDisplay = convertImagelibToUint8List(
+  //       antiSpoof.cropFace(image, _faceDetectorService.faces[0]));
+  // }
 }

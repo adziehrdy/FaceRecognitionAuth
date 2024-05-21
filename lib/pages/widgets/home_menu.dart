@@ -18,28 +18,30 @@ class HomeMenu extends StatelessWidget {
               BorderRadius.circular(13), // Adjust the border radius as needed
         ),
         child: InkWell(
-            onTap: _handleButtonPress,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset(
-                  icon,
-                  width: 40,
-                  height: 40,
+          onTap: _handleButtonPress,
+          child: Container(
+              child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                icon,
+                width: 40,
+                height: 40,
+              ),
+              SizedBox(
+                height: 30,
+              ),
+              Text(
+                text,
+                style: TextStyle(
+                  fontWeight: FontWeight.w400,
+                  fontSize: 12,
+                  color: Colors.black,
                 ),
-                SizedBox(
-                  height: 30,
-                ),
-                Text(
-                  text,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontSize: 12,
-                    color: Colors.black,
-                  ),
-                )
-              ],
-            )));
+              )
+            ],
+          )),
+        ));
   }
 
   void _handleButtonPress() {

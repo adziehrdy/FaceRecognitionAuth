@@ -22,7 +22,7 @@ import 'package:face_net_authentication/repo/user_repos.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
+// import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image/image.dart' as img;
 import 'package:image/image.dart' as imglib;
@@ -192,7 +192,7 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url,
 
     if (connectivityResult == ConnectivityResult.none) {
       // Tidak ada koneksi internet, tampilkan pesan dan hentikan pemanggilan API
-      EasyLoading.dismiss();
+      // EasyLoading.dismiss();
       showToast("Cek koneksi Internet");
       // throw Exception("Tidak ada koneksi internet");
     }
@@ -246,9 +246,9 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url,
         data: data != null ? json.encode(data) : "",
       );
     }
-    EasyLoading.dismiss();
+    // EasyLoading.dismiss();
   } catch (error) {
-    EasyLoading.dismiss();
+    // EasyLoading.dismiss();
     print(error.toString());
     if (error is DioException) {
       if (error.response!.statusCode == 400 ||
@@ -262,7 +262,7 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url,
 
     rethrow; // Re-throw the error after handling it
   }
-  EasyLoading.dismiss();
+  // EasyLoading.dismiss();
   throw Exception("Invalid API method");
 }
 
@@ -450,6 +450,11 @@ class LoadingDialog {
 
 String formatDate(DateTime dateTime) {
   DateFormat formatter = DateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+  return formatter.format(dateTime);
+}
+
+String formatDateTime(DateTime dateTime) {
+  DateFormat formatter = DateFormat("yyyy-MM-dd HH:mm:ss");
   return formatter.format(dateTime);
 }
 
@@ -1056,6 +1061,23 @@ bool reliefChecker(String? startDate, String? endDate) {
   }
 }
 
+void showLoadingMessageDialog(BuildContext context, String message) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 20),
+            Text(message),
+          ],
+        ),
+      );
+    },
+  );
+}
 
 
 
