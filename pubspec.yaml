@@ -123,6 +123,8 @@ flutter:
     - assets/logo.png
     - assets/images/
     - assets/lottie/
+    - assets/FaceDeSpoofing.tflite
+    - assets/FaceAntiSpoofing.tflite
   #   - images/a_dot_ham.jpeg
 
 

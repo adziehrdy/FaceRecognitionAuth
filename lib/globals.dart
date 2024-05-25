@@ -1079,6 +1079,25 @@ void showLoadingMessageDialog(BuildContext context, String message) {
   );
 }
 
+Future<List<User>> getAllEmployeeAndRelief() async {
+  List<User> users = [];
+
+  DatabaseHelperEmployee _dbHelper = DatabaseHelperEmployee.instance;
+  users = await _dbHelper.queryAllUsersForMLKit();
+
+  //FOR RELIEF
+  DatabaseHelperEmployeeRelief _dbHelperRelief =
+      DatabaseHelperEmployeeRelief.instance;
+  List<User> userRelief = await _dbHelperRelief.queryAllUsersForMLKit();
+  for (User user in userRelief) {
+    if (reliefChecker(user.relief_start_date, user.relief_end_date)) {
+      users.add(user);
+    }
+  }
+
+  return users;
+}
+
 
 
   

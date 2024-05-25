@@ -14,13 +14,15 @@ class AttendanceSingle extends StatefulWidget {
       {Key? key,
       required this.data,
       required this.onDelete,
-      required this.onUpdate})
+      required this.onUpdate,
+      required this.isLocked}) // Added isLocked as per instructions
       : super(key: key);
 
   final Attendance data;
   // final VoidCallback onDelete;
   final OnDeleteCallback onDelete;
-  final OnUpdate onUpdate; // Gunakan tipe OnDeleteCallback
+  final OnUpdate onUpdate;
+  final bool isLocked; // Added isLocked as per instructions
 
   @override
   _AttendanceSingleState createState() => _AttendanceSingleState();
@@ -112,7 +114,6 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
               height: 3,
             ),
             Row(
-              // mainAxisAlignment: MainAxisAlignment.spa,
               children: [
                 single_absensi_masuk(
                     DateFormat('HH:mm').format(widget.data.checkInActual!),
@@ -140,12 +141,6 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                             Colors.deepOrange.shade500,
                             widget.data.checkOutStatus ?? "")
                         : single_absensi_belum_keluar()
-
-                    //     single_absensi_keluar(
-                    // "-",
-                    // "-",
-                    // "-",
-                    //     "ABSEN KELUAR", Colors.deepOrange.shade500, "BELUM ABSEN KELUAR")
                   ],
                 ),
               ],
@@ -170,10 +165,7 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5),
                     gradient: LinearGradient(
-                      colors: [
-                        bg_color,
-                        Colors.green
-                      ], // Ubah warna gradasi sesuai kebutuhan
+                      colors: [bg_color, Colors.green],
                       begin: Alignment.bottomRight,
                       end: Alignment.centerLeft,
                     ),
@@ -313,9 +305,28 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                                             return dialog_approval_absensi(
                                                                 onSelected:
                                                                     (value) async {
-                                                              PinInputDialog.show(
-                                                                  context,
-                                                                  (p0) async {
+                                                              if (widget
+                                                                  .isLocked) {
+                                                                PinInputDialog.show(
+                                                                    context,
+                                                                    (p0) async {
+                                                                  await _dataBaseHelper.approveAbsensi(
+                                                                      widget
+                                                                          .data
+                                                                          .attendanceId!,
+                                                                      await getActiveSuperIntendentID(),
+                                                                      value[1],
+                                                                      true,
+                                                                      value[0]);
+                                                                  setState(() {
+                                                                    setState(
+                                                                        () {
+                                                                      widget
+                                                                          .onUpdate();
+                                                                    });
+                                                                  });
+                                                                });
+                                                              } else {
                                                                 await _dataBaseHelper
                                                                     .approveAbsensi(
                                                                         widget
@@ -333,7 +344,7 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                                                         .onUpdate();
                                                                   });
                                                                 });
-                                                              });
+                                                              }
                                                             });
                                                           },
                                                         );
@@ -570,9 +581,28 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                                           return dialog_approval_absensi(
                                                               onSelected:
                                                                   (value) async {
-                                                            PinInputDialog.show(
-                                                                context,
-                                                                (p0) async {
+                                                            if (widget
+                                                                .isLocked) {
+                                                              PinInputDialog.show(
+                                                                  context,
+                                                                  (p0) async {
+                                                                await _dataBaseHelper
+                                                                    .approveAbsensi(
+                                                                        widget
+                                                                            .data
+                                                                            .attendanceId!,
+                                                                        await getActiveSuperIntendentID(),
+                                                                        value[
+                                                                            1],
+                                                                        false,
+                                                                        value[
+                                                                            0]);
+                                                                setState(() {
+                                                                  widget
+                                                                      .onUpdate();
+                                                                });
+                                                              });
+                                                            } else {
                                                               await _dataBaseHelper
                                                                   .approveAbsensi(
                                                                       widget
@@ -586,7 +616,7 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                                                 widget
                                                                     .onUpdate();
                                                               });
-                                                            });
+                                                            }
                                                           });
                                                         },
                                                       );
@@ -706,7 +736,19 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                 builder: (BuildContext context) {
                                   return dialog_approval_absensi(
                                       onSelected: (value) async {
-                                    PinInputDialog.show(context, (p0) async {
+                                    if (widget.isLocked) {
+                                      PinInputDialog.show(context, (p0) async {
+                                        await _dataBaseHelper.approveAbsensi(
+                                            widget.data.attendanceId!,
+                                            await getActiveSuperIntendentID(),
+                                            value[1],
+                                            false,
+                                            value[0]);
+                                        setState(() {
+                                          widget.onUpdate();
+                                        });
+                                      });
+                                    } else {
                                       await _dataBaseHelper.approveAbsensi(
                                           widget.data.attendanceId!,
                                           await getActiveSuperIntendentID(),
@@ -716,7 +758,7 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                       setState(() {
                                         widget.onUpdate();
                                       });
-                                    });
+                                    }
                                   });
                                 },
                               );

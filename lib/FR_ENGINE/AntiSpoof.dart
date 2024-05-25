@@ -27,9 +27,7 @@ class AdziehrdyAntiSpoof {
     SharedPreferences pref = await SharedPreferences.getInstance();
     landscape_mode = pref.getBool("LANDSCAPE_MODE") ?? false;
     final sessionOptions = OrtSessionOptions();
-    // const assetFileName = 'assets/AntiSpoofing_print-replay_128.onnx';
-
-    const assetFileName = 'assets/2.7_80x80_MiniFASNetV2.onnx';
+    const assetFileName = 'assets/AntiSpoofing_print-replay_128.onnx';
 
     final rawAssetFile = await rootBundle.load(assetFileName);
     final bytes = rawAssetFile.buffer.asUint8List();
@@ -48,9 +46,7 @@ class AdziehrdyAntiSpoof {
       final processedData = await _preProcess(cameraImage, face);
       final input = processedData;
 
-      // final shape = [1, 3, 128, 128];
-      // final shape = [1, 80, 80, 3];
-      final shape = [1, 3, 80, 80];
+      final shape = [1, 3, 128, 128];
       final inputOrt =
           OrtValueTensor.createTensorWithDataList(await input, shape);
       final inputName = session.inputNames[0];
@@ -59,8 +55,6 @@ class AdziehrdyAntiSpoof {
       final runOptions = OrtRunOptions();
 
       final outputs = session.run(runOptions, inputs);
-
-      print("OUTPUT =" + (outputs[0]?.value).toString());
 
       final FAStensor = outputs[0]?.value;
 
@@ -81,9 +75,6 @@ class AdziehrdyAntiSpoof {
         // return prob > spoofThreshold ? 1.0 : 0.0;
       }).toList();
 
-      double averageProbability =
-          FASTensorList.reduce((sum, current) => sum + current) /
-              probabilities.length;
       return probabilities[0];
 
       // return probabilities;
@@ -96,7 +87,7 @@ class AdziehrdyAntiSpoof {
   Future<Float32List> _preProcess(CameraImage image, Face faceDetected) async {
     imglib.Image croppedImage = cropFace(image, faceDetected);
 
-    Float32List imageAsList = imageToByteListFloat32(croppedImage, 80);
+    Float32List imageAsList = imageToByteListFloat32(croppedImage, 128);
 
     for (int i = 0; i < imageAsList.length; i++) {
       imageAsList[i] = imageAsList[i];
@@ -109,11 +100,7 @@ class AdziehrdyAntiSpoof {
     List<double> expScores =
         scores.map((score) => exp(score - maxScore)).toList();
     double sumExpScores = expScores.reduce((a, b) => a + b);
-    List<double> softmaxScores =
-        expScores.map((score) => (score / sumExpScores) * 255).toList();
-
-    // Adjusting the softmax scores to be within a more reasonable range
-    return softmaxScores;
+    return expScores.map((score) => score / sumExpScores).toList();
   }
 
   imglib.Image cropFace(CameraImage image, Face faceDetected) {
@@ -125,15 +112,15 @@ class AdziehrdyAntiSpoof {
     double w;
 
     if (landscape_mode) {
-      x = faceDetected.boundingBox.left - 10.0;
-      y = faceDetected.boundingBox.top - 10.0;
-      h = faceDetected.boundingBox.width + 10.0;
-      w = faceDetected.boundingBox.height + 10.0;
+      x = faceDetected.boundingBox.left - 5.0;
+      y = faceDetected.boundingBox.top - 5.0;
+      h = faceDetected.boundingBox.width + 5.0;
+      w = faceDetected.boundingBox.height + 5.0;
     } else {
-      x = faceDetected.boundingBox.left - 10.0;
-      y = faceDetected.boundingBox.top - 10.0;
-      w = faceDetected.boundingBox.width + 10.0;
-      h = faceDetected.boundingBox.height + 10.0;
+      x = faceDetected.boundingBox.left - 5.0;
+      y = faceDetected.boundingBox.top - 5.0;
+      w = faceDetected.boundingBox.width + 5.0;
+      h = faceDetected.boundingBox.height + 5.0;
     }
 
     return imglib.copyCrop(

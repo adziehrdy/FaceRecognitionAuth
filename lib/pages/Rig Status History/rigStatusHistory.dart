@@ -1,6 +1,7 @@
 import 'package:face_net_authentication/db/database_helper_rig_status_history.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/pages/widgets/dialog_change_rig_status.dart';
+import 'package:face_net_authentication/repo/rig_status_repo.dart';
 import 'package:flutter/material.dart';
 // import 'package:order_tracker_zen/order_tracker_zen.dart';
 import 'package:timeline_tile/timeline_tile.dart';
@@ -17,6 +18,8 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
       DatabaseHelperRigStatusHistory.instance;
   List<RigStatusHistoryModel> listStatus = [];
 
+  RigStatusRepo repo = RigStatusRepo();
+
   @override
   void initState() {
     // TODO: implement initState
@@ -25,7 +28,11 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
   }
 
   Future<void> initData() async {
-    listStatus = await dbHelper.queryAllStatus();
+    await dbSync();
+
+    listStatus = await repo.getRigStatusHistory();
+
+    // listStatus = await dbHelper.queryAllStatus();
 
     setState(() {
       listStatus;
@@ -38,6 +45,13 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
         backgroundColor: Colors.grey.shade200,
         appBar: AppBar(
           title: Text("Rig Status History"),
+          actions: [
+            ElevatedButton(
+                onPressed: () {
+                  dbHelper.deleteAll();
+                },
+                child: Text("delete all"))
+          ],
         ),
         body: Container(
           child: ListView.builder(
@@ -103,7 +117,7 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    data.status,
+                    data.status + " | " + (data.api_flag ?? "-"),
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 18,
@@ -156,7 +170,8 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
                                           requester: data.requester,
                                           status: selectedStatus.statusBranch ??
                                               "-",
-                                          date: data.date);
+                                          date: data.date,
+                                          api_flag: "U");
 
                                   await dbHelper.update(dataPreUpdate);
                                   setState(() {
@@ -174,5 +189,25 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
             ),
           )),
     );
+  }
+
+  dbSync() async {
+    List<RigStatusHistoryModel> dataInsert = await dbHelper.queryForInsert();
+
+    for (RigStatusHistoryModel singleData in dataInsert) {
+      try {
+        bool result = await repo.insertRigStatusHistory(singleData);
+        if (!result) {
+          showToast("Kesalahan Saat insert " +
+              singleData.status +
+              " tanggal " +
+              singleData.date);
+          break;
+        }
+      } catch (e) {
+        showToast(e.toString());
+        break;
+      }
+    }
   }
 }

@@ -13,6 +13,7 @@ import 'package:face_net_authentication/pages/widgets/camera_header.dart';
 import 'package:face_net_authentication/pages/widgets/single_picture.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/face_detector_service.dart';
+import 'package:face_net_authentication/services/ml_antiSpoof.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +36,8 @@ class SignInState extends State<SignIn> {
   late AdziehrdyAntiSpoof antiSpoof;
 
   bool isSpoofing = false;
+
+  FaceAntiSpoofing antiSpoofing = FaceAntiSpoofing();
 
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -123,49 +126,25 @@ class SignInState extends State<SignIn> {
           _faceDetectorService.faces[0].headEulerAngleY! < -10) {
         print("=== POSISI MUKA TIDAK BAGUS=== ");
       } else {
+        imglib.Image faceImage =
+            _mlService.cropFace(image, _faceDetectorService.faces[0]);
+
+        double asScore = await antiSpoofing.antiSpoofing(faceImage);
+        print("ML_ANTISPOOF = " + asScore.toString());
         // setState(() {
         //   setDisplayFace(image);
         // });
 
         //SET FACE
 
-        print("POSISI MUKA BAGUS");
-        final results = await antiSpoof.isFaceSpoofedWithModel(
+        // _SPOOF_CHECKER(image);
+
+        await _mlService.setCurrentPrediction(
             image, _faceDetectorService.faces[0]);
 
-        // setDisplayFace(image);
+        RECONIZE_FACE(image);
 
-        if (results != null) {
-          // Mengakses processedImage dan probabilities dari list
-          // final outputs = await FASoutputs;
-
-          if (results >= 0.09) {
-            print("SPOFF = ASLI | " + results.toString());
-            isSpoofing = false;
-
-            notSpoofCounter++;
-
-            if (notSpoofCounter >= 4) {
-              isSpoofing = false;
-              await _mlService.setCurrentPrediction(
-                  image, _faceDetectorService.faces[0]);
-
-              RECONIZE_FACE(image);
-              // notSpoofCounter = 0;
-            } else {
-              isSpoofing = true;
-            }
-          } else {
-            print("SPOFF = PALSU | " + results.toString());
-
-            notSpoofCounter = 0;
-            isSpoofing = true;
-          }
-        } else {
-          // Menangani kasus ketika hasilnya null (misalnya, terjadi kesalahan)
-          print(
-              'Error: No results returned from MODIFIEDisFaceSpoofedWithModel');
-        }
+        print("POSISI MUKA BAGUS");
       }
 // RECONIZE_FACE();
 
@@ -191,44 +170,7 @@ class SignInState extends State<SignIn> {
     if (enable_recognize_process) {
       if (_faceDetectorService.faceDetected) {
         User? user = await _mlService.predict();
-        if (user != null) {
-          enable_recognize_process = false;
-          //  await _cameraService.takePicture();
-          getDateTimeNow();
-          pauseCameraAndMLKit();
-          imglib.Image faceImage =
-              _mlService.cropFace(image, _faceDetectorService.faces[0]);
-
-          //  //TESTING ABSENSI
-
-          //  textJamAbsensi = "2024-02-11 07:30:00";
-          //  jamAbsensi = DateTime.parse(textJamAbsensi!);
-
-          //  //TESTING ABSENSI
-
-          await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => FrDetectedPage(
-                  // employee_name: user.employee_name!,
-                  textJamAbsensi: textJamAbsensi!,
-                  jamAbsensi: jamAbsensi!,
-                  alamat: alamat,
-                  lat: lat.toString(),
-                  long: long.toString(),
-                  // company_id: user.company_id!,
-                  // employee_id: user.employee_id!,
-                  type_absensi: widget.MODE,
-                  faceImage: convertImagelibToUint8List(faceImage),
-                  user: user,
-                ),
-              ));
-
-          // _reload();
-          notSpoofCounter = 0;
-          resumeCameraAndMLKit();
-          enable_recognize_process = true;
-        }
+        if (user != null) {}
         // namaReconized = user?.employee_name ?? "UNRECONIZE";
 
         // var bottomSheetController = scaffoldKey.currentState!
@@ -247,6 +189,70 @@ class SignInState extends State<SignIn> {
     _start();
   }
 
+  _SUCCESS(User user, CameraImage image) async {
+    enable_recognize_process = false;
+    getDateTimeNow();
+    pauseCameraAndMLKit();
+    imglib.Image faceImage =
+        _mlService.cropFace(image, _faceDetectorService.faces[0]);
+    await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FrDetectedPage(
+            // employee_name: user.employee_name!,
+            textJamAbsensi: textJamAbsensi!,
+            jamAbsensi: jamAbsensi!,
+            alamat: alamat,
+            lat: lat.toString(),
+            long: long.toString(),
+            // company_id: user.company_id!,
+            // employee_id: user.employee_id!,
+            type_absensi: widget.MODE,
+            faceImage: convertImagelibToUint8List(faceImage),
+            user: user,
+          ),
+        ));
+
+    resumeCameraAndMLKit();
+    enable_recognize_process = true;
+  }
+
+  Future<bool> _SPOOF_CHECKER(CameraImage image) async {
+    final results = await antiSpoof.isFaceSpoofedWithModel(
+        image, _faceDetectorService.faces[0]);
+
+    // setDisplayFace(image);
+
+    if (results != null) {
+      // Mengakses processedImage dan probabilities dari list
+      // final outputs = await FASoutputs;
+
+      if (results < 1.0) {
+        print("SPOFF = ASLI | " + results.toString());
+        isSpoofing = false;
+
+        notSpoofCounter++;
+
+        if (notSpoofCounter >= 2) {
+          return true;
+        } else {
+          isSpoofing = true;
+          return false;
+        }
+      } else {
+        print("SPOFF = PALSU | " + results.toString());
+
+        notSpoofCounter = 0;
+        isSpoofing = true;
+        return false;
+      }
+    } else {
+      // Menangani kasus ketika hasilnya null (misalnya, terjadi kesalahan)
+      print('Error: No results returned from MODIFIEDisFaceSpoofedWithModel');
+      return false;
+    }
+  }
+
   // Future<void> onTap() async {
   //   //  await takePicture();
 
@@ -258,15 +264,14 @@ class SignInState extends State<SignIn> {
   //       context,
   //       MaterialPageRoute(
   //         builder: (context) => FrDetectedPage(
-  //           employee_name: "adzie hadi",
+  //           user: ,
   //           textJamAbsensi: textJamAbsensi!,
   //           jamAbsensi: jamAbsensi!,
   //           alamat: alamat,
   //           lat: lat.toString(),
   //           long: long.toString(),
-  //           company_id: "PDC",
-  //           employee_id: "110796",
-  //           type_absensi: widget.MODE,faceImage: _cameraService.imagePath!,
+  //           type_absensi: widget.MODE,
+  //          faceImage: convertImagelibToUint8List(faceImage),
   //         ),
   //       ));
   //   resumeCameraAndMLKit();

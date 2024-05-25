@@ -14,7 +14,10 @@ class HistoryAbsensi extends StatefulWidget {
 
 class _HistoryAbsensiState extends State<HistoryAbsensi> {
   List<Attendance> _attendanceList = [];
-  bool isLoked = true;
+  bool _isLocked = true;
+
+  // Getter untuk mendapatkan nilai variabel isLocked
+  bool get isLocked => _isLocked;
 
   @override
   void initState() {
@@ -86,6 +89,26 @@ class _HistoryAbsensiState extends State<HistoryAbsensi> {
         actions: <Widget>[
           Row(
             children: [
+              IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _isLocked = !_isLocked;
+                    });
+                    if (_isLocked) {
+                      showToast("Pin Akses Terkunci");
+                    } else {
+                      showToast("Pin Akses Terbuka");
+                    }
+                  },
+                  icon: _isLocked
+                      ? Icon(
+                          Icons.lock,
+                          color: Colors.red,
+                        )
+                      : Icon(
+                          Icons.lock_open,
+                          color: Colors.green,
+                        )),
               // isLoked ? Icon(Icons.lock,color: Colors.grey,): Icon(Icons.lock_open,color: Colors.blue,),
               // SizedBox(width: 15),
               ElevatedButton(
@@ -140,6 +163,8 @@ class _HistoryAbsensiState extends State<HistoryAbsensi> {
                           _loadData();
                         });
                       },
+                      isLocked:
+                          isLocked, // Menggunakan getter untuk mengakses isLocked
                     ),
                   ],
                 );

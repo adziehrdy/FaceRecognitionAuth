@@ -26,6 +26,8 @@ class _UserBannerState extends State<UserBanner> {
   String activeSuperAttendace = "-";
   RigStatusShift? status_rig;
 
+  bool isCatering = false;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -164,7 +166,33 @@ class _UserBannerState extends State<UserBanner> {
                                 )),
                           ],
                         ),
-                      )
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      // Column(
+                      //   children: [
+                      //     Text(
+                      //       "Catering",
+                      //       style: TextStyle(color: Colors.white),
+                      //     ),
+                      //     Switch(
+                      //       inactiveThumbColor: Colors.white,
+                      //       inactiveTrackColor: Colors.redAccent,
+                      //       value: isCatering,
+                      //       onChanged: (value) {
+                      //         setState(() {
+                      //           isCatering = !isCatering;
+                      //           if (isCatering) {
+                      //             showToast("Catering Aktif");
+                      //           } else {
+                      //             showToast("Catering Tidak Aktif");
+                      //           }
+                      //         });
+                      //       },
+                      //     )
+                      //   ],
+                      // )
                     ],
                   ),
                   Row(
@@ -241,6 +269,7 @@ class _UserBannerState extends State<UserBanner> {
 
   Future<void> saveRigStatus(RigStatusShift statusRig) async {
     await SpSetSelectedStatusRig(jsonEncode(statusRig));
+
     setState(() {
       status_rig = statusRig;
     });
@@ -249,30 +278,31 @@ class _UserBannerState extends State<UserBanner> {
         DatabaseHelperRigStatusHistory.instance;
 
     List<RigStatusHistoryModel> historyStatus = await dbHelper.queryAllStatus();
+    String today = formatDateForFilter(DateTime.now());
 
-    DateTime today = DateTime.now();
-
-    if (historyStatus[0].date.contains(formatDateOnly(today))) {
+    if (historyStatus.length != 0 && historyStatus[0].date.contains(today)) {
       RigStatusHistoryModel dataPreUpdate = RigStatusHistoryModel(
           id: historyStatus[0].id,
           branchId: historyStatus[0].branchId,
           branchStatusId: statusRig.statusBranchId ?? "-",
           requester: historyStatus[0].requester,
           status: statusRig.statusBranch ?? "-",
-          date: historyStatus[0].date);
+          date: historyStatus[0].date,
+          api_flag: "U");
 
-      dbHelper.insert(dataPreUpdate);
+      await dbHelper.update(dataPreUpdate);
     } else {
       String branch_id = await getBranchID();
       String requester = await getActiveSuperIntendentID();
       DateTime date = DateTime.now();
 
-      dbHelper.insert(RigStatusHistoryModel(
+      await dbHelper.insert(RigStatusHistoryModel(
           branchId: branch_id,
           requester: requester,
           status: statusRig.statusBranch ?? "-",
           branchStatusId: statusRig.statusBranchId ?? "-",
-          date: formatDateTime(date)));
+          date: formatDateTime(date),
+          api_flag: "I"));
     }
 
     await showDialog(
