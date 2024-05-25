@@ -1,11 +1,14 @@
-import 'dart:convert';
-
 import 'package:face_net_authentication/models/model_rig_shift.dart';
+import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 
 class dialog_change_rig_status extends StatefulWidget {
+  final Function(RigStatusShift)? onStatusSelected;
+
+  dialog_change_rig_status({this.onStatusSelected});
+
   @override
   _dialog_change_rig_statusState createState() =>
       _dialog_change_rig_statusState();
@@ -19,18 +22,17 @@ class _dialog_change_rig_statusState extends State<dialog_change_rig_status> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     initStatusRig();
   }
 
   Future<void> initStatusRig() async {
     rig_statuses = await SpGetALLStatusRig();
+
     setState(() {
-    rig_statuses;
-    print(rig_statuses);
+      rig_statuses;
+      print(rig_statuses);
     });
-   
   }
 
   @override
@@ -62,8 +64,7 @@ class _dialog_change_rig_statusState extends State<dialog_change_rig_status> {
             ),
           ],
         ),
-        child: 
-        Column(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Text(
@@ -88,20 +89,23 @@ class _dialog_change_rig_statusState extends State<dialog_change_rig_status> {
               itemBuilder: (context, index) {
                 return Row(
                   children: [
-                    Expanded(child: ElevatedButton(
-                      onPressed: () async {
-                        // Set the selected status when a button is pressed
-                        await SpSetSelectedStatusRig(jsonEncode(rig_statuses[index])); // CARA SAVE STRING DARI OBJEK
-                        Navigator.pop(context);
-                        // You can add additional logic or callback here
-                        // For example, you can call a function to handle the selected status
-                      },
-                      child: Text(rig_statuses[index].statusBranch ?? "-"),
-                    ),),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          // Set the selected status when a button is pressed
+
+                          if (widget.onStatusSelected != null) {
+                            widget.onStatusSelected!(rig_statuses[index]);
+                          }
+                          Navigator.pop(context);
+                        },
+                        child: Text(rig_statuses[index].statusBranch ?? "-"),
+                      ),
+                    ),
                     // Container(
                     //   width: 20,
                     //   child: IconButton(onPressed: (){
-                      
+
                     //   }, icon: Icon(Icons.info_outline)),
                     // )
                   ],
@@ -113,8 +117,4 @@ class _dialog_change_rig_statusState extends State<dialog_change_rig_status> {
       ),
     );
   }
-
-  // Callback function to handle the selected status
 }
-
-// List<String> status_list = ["IDLE", "OPERATION", "MAINTENANCE", "MOVING"];

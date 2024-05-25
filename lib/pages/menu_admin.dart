@@ -1,3 +1,4 @@
+import 'package:face_net_authentication/pages/Catering/catering_page.dart';
 import 'package:face_net_authentication/pages/Rig%20Status%20History/rigStatusHistory.dart';
 import 'package:face_net_authentication/pages/history_absensi_mainPage.dart';
 import 'package:face_net_authentication/pages/sign-in.dart';
@@ -18,7 +19,7 @@ class MenuAdmin extends StatefulWidget {
 
 class _MenuAdminState extends State<MenuAdmin> {
   int? waitingApproval = 0;
-  int itemPerRow = 3;
+  int itemPerRow = 4;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,7 +107,7 @@ class _MenuAdminState extends State<MenuAdmin> {
               waitingApproval!,
               callback: (p0) {
                 Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => rigStatusHistory()));
+                    builder: (context) => RigStatusHistory()));
                 // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
               },
             ),
@@ -116,8 +117,8 @@ class _MenuAdminState extends State<MenuAdmin> {
               "assets/images/food.png",
               waitingApproval!,
               callback: (p0) {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => rigStatusHistory()));
+                Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => CateringPage()));
                 // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
               },
             ),

@@ -37,7 +37,7 @@ class _HomeWigetState extends State<HomeWiget> {
   }
 
   Future<void> update_loc_text() async {
-    await GET_LOCATION(context);
+    // await GET_LOCATION(context);
     lat = await SpGetLastLat();
     log = await SpGetLastlong();
     alamat = await SpGetLastAlamat();
