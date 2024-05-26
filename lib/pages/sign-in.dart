@@ -37,8 +37,6 @@ class SignInState extends State<SignIn> {
 
   bool isSpoofing = false;
 
-  FaceAntiSpoofing antiSpoofing = FaceAntiSpoofing();
-
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   double lat = 0;
@@ -126,11 +124,6 @@ class SignInState extends State<SignIn> {
           _faceDetectorService.faces[0].headEulerAngleY! < -10) {
         print("=== POSISI MUKA TIDAK BAGUS=== ");
       } else {
-        imglib.Image faceImage =
-            _mlService.cropFace(image, _faceDetectorService.faces[0]);
-
-        double asScore = await antiSpoofing.antiSpoofing(faceImage);
-        print("ML_ANTISPOOF = " + asScore.toString());
         // setState(() {
         //   setDisplayFace(image);
         // });
@@ -166,11 +159,21 @@ class SignInState extends State<SignIn> {
   }
 
   RECONIZE_FACE(CameraImage image) async {
+    imglib.Image faceImage =
+        _mlService.cropFace(image, _faceDetectorService.faces[0]);
     notSpoofCounter = 0;
     if (enable_recognize_process) {
       if (_faceDetectorService.faceDetected) {
         User? user = await _mlService.predict();
-        if (user != null) {}
+        if (user != null) {
+          bool asScore = FaceAntiSpoofing.antiSpoofing(faceImage);
+          print("ML_ANTISPOOF = " + asScore.toString());
+          if (!asScore) {
+            _SUCCESS(user, image);
+          } else {
+            showToast("SPOOF!");
+          }
+        }
         // namaReconized = user?.employee_name ?? "UNRECONIZE";
 
         // var bottomSheetController = scaffoldKey.currentState!

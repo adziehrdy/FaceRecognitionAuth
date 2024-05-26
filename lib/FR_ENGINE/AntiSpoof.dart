@@ -8,7 +8,6 @@ import 'package:image/image.dart' as imglib;
 import 'package:onnxruntime/onnxruntime.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
-
 import '../services/image_converter.dart';
 
 class AdziehrdyAntiSpoof {
@@ -168,6 +167,7 @@ extension Precision on double {
     return double.parse(this.toStringAsFixed(2));
   }
 }
+
 
 
 // import 'dart:io';

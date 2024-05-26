@@ -10,6 +10,7 @@ import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/services/image_converter.dart';
+import 'package:face_net_authentication/services/ml_antiSpoof.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -55,6 +56,8 @@ class MLService {
 
       this._interpreter = await Interpreter.fromAsset('mobilefacenet.tflite',
           options: interpreterOptions);
+
+      FaceAntiSpoofing.loadSpoofModel();
     } catch (e) {
       print('Failed to load model.');
       print(e);
