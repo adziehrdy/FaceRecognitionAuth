@@ -49,8 +49,7 @@ class RigStatusRepo {
 
   Future updateRigStatusHistory(RigStatusHistoryModel data) async {
     try {
-      Response res = await callApi(
-          ApiMethods.POST, '/api/rig-status/update/' + (data.id.toString()),
+      Response res = await callApi(ApiMethods.POST, '/api/rig-status/update',
           data: data.toMap());
       log(json.encode(res.data));
       return json.encode(res.data);

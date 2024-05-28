@@ -450,14 +450,14 @@ class SignUpState extends State<SignUp> {
                   CustomPaint(
                     child: Center(
                       child: Container(
-                        padding: EdgeInsets.all(100),
+                        padding: EdgeInsets.all(150),
                         child: Image.asset("assets/images/face.png"),
                       ),
                     ),
                     painter: FacePainter(
                         face: faceDetected,
                         imageSize: imageSize!,
-                        isSpoofing: false),
+                        painterMode: ""),
                   ),
                 ],
               ),
@@ -497,7 +497,7 @@ class SignUpState extends State<SignUp> {
                     painter: FacePainter(
                         face: faceDetected,
                         imageSize: imageSize!,
-                        isSpoofing: false),
+                        painterMode: ""),
                   ),
                 ],
               ),

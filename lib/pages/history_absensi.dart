@@ -91,13 +91,22 @@ class _HistoryAbsensiState extends State<HistoryAbsensi> {
             children: [
               IconButton(
                   onPressed: () {
-                    setState(() {
-                      _isLocked = !_isLocked;
-                    });
-                    if (_isLocked) {
-                      showToast("Pin Akses Terkunci");
+                    setState(() {});
+                    if (!_isLocked) {
+                      setState(() {
+                        _isLocked = !_isLocked;
+                        showToast("Pin Akses Terkunci");
+                      });
                     } else {
-                      showToast("Pin Akses Terbuka");
+                      PinInputDialog.show(
+                        context,
+                        (p0) {
+                          setState(() {
+                            _isLocked = !_isLocked;
+                            showToast("Pin Akses Terbuka");
+                          });
+                        },
+                      );
                     }
                   },
                   icon: _isLocked

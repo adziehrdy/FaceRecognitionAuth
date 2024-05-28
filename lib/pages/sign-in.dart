@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:typed_data';
-import 'dart:ui';
 
 import 'package:camera/camera.dart';
-import 'package:face_net_authentication/FR_ENGINE/AntiSpoof.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/models/user.dart';
+import 'package:face_net_authentication/pages/Spoofpage.dart';
 import 'package:face_net_authentication/pages/fr_detected_page.dart';
 import 'package:face_net_authentication/pages/widgets/camera_detection_preview.dart';
 import 'package:face_net_authentication/pages/widgets/camera_header.dart';
@@ -33,22 +31,20 @@ class SignInState extends State<SignIn> {
   CameraService _cameraService = locator<CameraService>();
   FaceDetectorService _faceDetectorService = locator<FaceDetectorService>();
   MLService _mlService = locator<MLService>();
-  late AdziehrdyAntiSpoof antiSpoof;
 
-  bool isSpoofing = false;
+  late imglib.Image faceImage;
 
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   double lat = 0;
   double long = 0;
   String alamat = "-";
-  int notSpoofCounter = 0;
 
   bool _isPictureTaken = false;
   bool _isInitializing = false;
   bool enable_recognize_process = true;
-
-  CameraImage? faceImage;
+  int SpoofCounter = 0;
+  int BlurrCounter = 0;
 
   String namaReconized = "UNRECONIZE";
 
@@ -57,22 +53,22 @@ class SignInState extends State<SignIn> {
 
   Image? DetectedFaceImage;
 
-  Uint8List? faceDisplay;
+  String painterMode = "";
+  double spoofScore = 0;
+  int blurScore = 0;
 
   @override
   void initState() {
     super.initState();
-
     getLastLocation();
-    antiSpoof = AdziehrdyAntiSpoof();
 
     _start();
   }
 
   Future<void> getLastLocation() async {
-    lat = await SpGetLastLat();
-    long = await SpGetLastlong();
-    alamat = await SpGetLastAlamat();
+    lat = await SpGetLastLat() ?? 0;
+    long = await SpGetLastlong() ?? 0;
+    alamat = await SpGetLastAlamat() ?? "-";
 
     setState(() {
       lat;
@@ -90,11 +86,9 @@ class SignInState extends State<SignIn> {
   }
 
   Future _start() async {
-    setState(() => _isInitializing = true);
     await _cameraService.initialize();
-    await _mlService.initialize();
-    setState(() => _isInitializing = false);
-    _frameFaces();
+    await _frameFaces();
+    FaceAntiSpoofing.loadSpoofModel();
   }
 
   _frameFaces() async {
@@ -108,8 +102,8 @@ class SignInState extends State<SignIn> {
 
         processing = false;
       });
-    } catch (e) {
-      print('An error occurred: $e');
+    } on CameraException catch (e) {
+      print('CameraException: ${e.description}');
     }
   }
 
@@ -118,26 +112,31 @@ class SignInState extends State<SignIn> {
     await _faceDetectorService.detectFacesFromImage(image!);
 
     if (_faceDetectorService.faceDetected) {
+      faceImage = _mlService.cropFace(image, _faceDetectorService.faces[0]);
 //---------
 
       if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
           _faceDetectorService.faces[0].headEulerAngleY! < -10) {
         print("=== POSISI MUKA TIDAK BAGUS=== ");
       } else {
-        // setState(() {
-        //   setDisplayFace(image);
-        // });
+        faceImage = _mlService.cropFace(image, _faceDetectorService.faces[0]);
 
-        //SET FACE
+        int laplaceScore = await FaceAntiSpoofing.laplacian(faceImage);
+        print("BLURR SCORE " + laplaceScore.toString());
 
-        // _SPOOF_CHECKER(image);
+        blurScore = laplaceScore;
 
-        await _mlService.setCurrentPrediction(
-            image, _faceDetectorService.faces[0]);
-
-        RECONIZE_FACE(image);
-
-        print("POSISI MUKA BAGUS");
+        if (laplaceScore > 600) {
+          RECONIZE_FACE(image);
+        } else {
+          painterMode = "BLUR";
+          BlurrCounter = BlurrCounter + 1;
+          print("BLURR COUNTER " + BlurrCounter.toString());
+          if (BlurrCounter >= 8) {
+            showToast("Foto Wajah Blur, Mohon Mengatur Posisi Wajah Yang Baik");
+            BlurrCounter = 0;
+          }
+        }
       }
 // RECONIZE_FACE();
 
@@ -159,21 +158,73 @@ class SignInState extends State<SignIn> {
   }
 
   RECONIZE_FACE(CameraImage image) async {
-    imglib.Image faceImage =
-        _mlService.cropFace(image, _faceDetectorService.faces[0]);
-    notSpoofCounter = 0;
     if (enable_recognize_process) {
+      _mlService.setCurrentPrediction(image, _faceDetectorService.faces[0]);
       if (_faceDetectorService.faceDetected) {
         User? user = await _mlService.predict();
         if (user != null) {
-          bool asScore = FaceAntiSpoofing.antiSpoofing(faceImage);
-          print("ML_ANTISPOOF = " + asScore.toString());
-          if (!asScore) {
-            _SUCCESS(user, image);
+          bool isSpoof = false;
+          isSpoof = await FaceAntiSpoofing.antiSpoofing(faceImage);
+
+          if (!isSpoof) {
+            painterMode = "GOOD";
+            enable_recognize_process = false;
+            //  await _cameraService.takePicture();
+            getDateTimeNow();
+            // pauseCameraAndMLKit();
+
+            //  //TESTING ABSENSI
+
+            //  textJamAbsensi = "2024-02-11 07:30:00";
+            //  jamAbsensi = DateTime.parse(textJamAbsensi!);
+
+            //  //TESTING ABSENSI
+
+            enable_recognize_process = false;
+            await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FrDetectedPage(
+                    // employee_name: user.employee_name!,
+                    textJamAbsensi: textJamAbsensi!,
+                    jamAbsensi: jamAbsensi!,
+                    alamat: alamat,
+                    lat: lat.toString(),
+                    long: long.toString(),
+                    // company_id: user.company_id!,
+                    // employee_id: user.employee_id!,
+                    type_absensi: widget.MODE,
+                    faceImage: convertImagelibToUint8List(faceImage),
+                    user: user,
+                  ),
+                ));
+
+            SpoofCounter = 0;
+            BlurrCounter = 0;
+
+            // _reload();
+
+            resumeCameraAndMLKit();
+            enable_recognize_process = true;
           } else {
-            showToast("SPOOF!");
+            SpoofCounter = SpoofCounter + 1;
+
+            if (SpoofCounter >= 6) {
+              enable_recognize_process = false;
+              await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Spoofpage(),
+                  ));
+
+              enable_recognize_process = true;
+              SpoofCounter = 0;
+
+              painterMode = "SPOOF";
+            }
           }
         }
+
         // namaReconized = user?.employee_name ?? "UNRECONIZE";
 
         // var bottomSheetController = scaffoldKey.currentState!
@@ -192,70 +243,6 @@ class SignInState extends State<SignIn> {
     _start();
   }
 
-  _SUCCESS(User user, CameraImage image) async {
-    enable_recognize_process = false;
-    getDateTimeNow();
-    pauseCameraAndMLKit();
-    imglib.Image faceImage =
-        _mlService.cropFace(image, _faceDetectorService.faces[0]);
-    await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => FrDetectedPage(
-            // employee_name: user.employee_name!,
-            textJamAbsensi: textJamAbsensi!,
-            jamAbsensi: jamAbsensi!,
-            alamat: alamat,
-            lat: lat.toString(),
-            long: long.toString(),
-            // company_id: user.company_id!,
-            // employee_id: user.employee_id!,
-            type_absensi: widget.MODE,
-            faceImage: convertImagelibToUint8List(faceImage),
-            user: user,
-          ),
-        ));
-
-    resumeCameraAndMLKit();
-    enable_recognize_process = true;
-  }
-
-  Future<bool> _SPOOF_CHECKER(CameraImage image) async {
-    final results = await antiSpoof.isFaceSpoofedWithModel(
-        image, _faceDetectorService.faces[0]);
-
-    // setDisplayFace(image);
-
-    if (results != null) {
-      // Mengakses processedImage dan probabilities dari list
-      // final outputs = await FASoutputs;
-
-      if (results < 1.0) {
-        print("SPOFF = ASLI | " + results.toString());
-        isSpoofing = false;
-
-        notSpoofCounter++;
-
-        if (notSpoofCounter >= 2) {
-          return true;
-        } else {
-          isSpoofing = true;
-          return false;
-        }
-      } else {
-        print("SPOFF = PALSU | " + results.toString());
-
-        notSpoofCounter = 0;
-        isSpoofing = true;
-        return false;
-      }
-    } else {
-      // Menangani kasus ketika hasilnya null (misalnya, terjadi kesalahan)
-      print('Error: No results returned from MODIFIEDisFaceSpoofedWithModel');
-      return false;
-    }
-  }
-
   // Future<void> onTap() async {
   //   //  await takePicture();
 
@@ -267,14 +254,15 @@ class SignInState extends State<SignIn> {
   //       context,
   //       MaterialPageRoute(
   //         builder: (context) => FrDetectedPage(
-  //           user: ,
+  //           employee_name: "adzie hadi",
   //           textJamAbsensi: textJamAbsensi!,
   //           jamAbsensi: jamAbsensi!,
   //           alamat: alamat,
   //           lat: lat.toString(),
   //           long: long.toString(),
-  //           type_absensi: widget.MODE,
-  //          faceImage: convertImagelibToUint8List(faceImage),
+  //           company_id: "PDC",
+  //           employee_id: "110796",
+  //           type_absensi: widget.MODE,faceImage: _cameraService.imagePath!,
   //         ),
   //       ));
   //   resumeCameraAndMLKit();
@@ -295,7 +283,7 @@ class SignInState extends State<SignIn> {
     if (_isPictureTaken)
       return SinglePicture(imagePath: _cameraService.imagePath!);
     return CameraDetectionPreview(
-      isSpoofing: isSpoofing,
+      painterMode: painterMode,
     );
   }
 
@@ -316,25 +304,15 @@ class SignInState extends State<SignIn> {
             Column(children: [
               Column(
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(15)),
-                    child: BackdropFilter(
-                      filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
-                      child: Container(
-                        padding: EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.5),
-                          borderRadius: BorderRadius.all(Radius.circular(15)),
-                        ),
-                        child: DigitalClock(
-                          textScaleFactor: 2,
-                          showSeconds: true,
-                          isLive: true,
-                          datetime: DateTime.now(),
-                        ),
-                      ),
-                    ),
-                  ),
+                  DigitalClock(
+                      textScaleFactor: 2,
+                      showSeconds: true,
+                      isLive: true,
+                      decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.all(Radius.circular(15))),
+                      datetime: DateTime.now()),
                   // Text(_latitude + "," + _longitude),
                   // Text(alamat)
                 ],
@@ -342,6 +320,8 @@ class SignInState extends State<SignIn> {
             ]),
             SizedBox(height: 5),
             Text(lat.toString() + " , " + long.toString()),
+            Text("SPOOF SCORE = " + blurScore.toString()),
+            // Text("BLUR SCORE = " + bl),
             SizedBox(height: 5),
             Padding(
               padding: const EdgeInsets.all(15),
@@ -350,15 +330,7 @@ class SignInState extends State<SignIn> {
                 textAlign: TextAlign.center,
                 maxLines: 2,
               ),
-            ),
-            // Memindahkan tampilan wajah yang telah discan ke sudut kiri atas
-            // Positioned(
-            //   left: 0,
-            //   top: 0,
-            //   child: faceDisplay != null
-            //       ? Image.memory(faceDisplay!)
-            //       : Container(),
-            // ),
+            )
           ]),
         ],
       ),
@@ -366,6 +338,49 @@ class SignInState extends State<SignIn> {
       floatingActionButton: fab,
     );
   }
+
+  // signInSheet({@required User? user}) => user == null
+  //     ? Container(
+  //         width: MediaQuery.of(context).size.width,
+  //         padding: EdgeInsets.all(20),
+  //         child: Text(
+  //           'User not found 😞',
+  //           style: TextStyle(fontSize: 20),
+  //         ),
+  //       )
+  //     : SignInSheet(user: user);
+
+  //        void startRecognitionLoop() {
+  //   if (!_isRecognizing) {
+  //     _isRecognizing = true;
+  //     _continuousRecognitionLoop();
+  //   }
+  // }
+
+  //   void _continuousRecognitionLoop() async {
+  //   while (_isRecognizing) {
+  //     try {
+  //       bool faceDetected = await widget.onPressed();
+  //       if (faceDetected) {
+  //         if (widget.isLogin) {
+  //           var user = await _predictUser();
+  //           if (user != null) {
+  //             this.predictedUser = user;
+  //             // Automatically perform sign-in logic
+  //             _signIn(context);
+  //           }
+  //         }
+  //         // ... Show bottom sheet ...
+  //       }
+  //     } catch (e) {
+  //       print(e);
+  //     }
+  //   }
+  // }
+
+  //  void stopRecognitionLoop() {
+  //   _isRecognizing = false;
+  // }
 
   getDateTimeNow() {
     setState(() {
@@ -381,11 +396,6 @@ class SignInState extends State<SignIn> {
 
   void resumeCameraAndMLKit() async {
     _cameraService.cameraController?.resumePreview();
-    _frameFaces();
+    // _frameFaces();
   }
-
-  // setDisplayFace(CameraImage image) {
-  //   faceDisplay = convertImagelibToUint8List(
-  //       antiSpoof.cropFace(image, _faceDetectorService.faces[0]));
-  // }
 }

@@ -3,34 +3,30 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
-import 'package:face_net_authentication/FR_ENGINE/AntiSpoof.dart';
 import 'package:face_net_authentication/constants/constants.dart';
-import 'package:face_net_authentication/db/databse_helper_employee_relief.dart';
-import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/services/image_converter.dart';
-import 'package:face_net_authentication/services/ml_antiSpoof.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
+import '../db/databse_helper_employee.dart';
+
 class MLService {
   Interpreter? _interpreter;
-  double threshold = 0.75;
+  double threshold = 0.6;
 
   List _predictedData = [];
   List get predictedData => _predictedData;
   List users = [];
   bool landscape_mode = false;
-  late AdziehrdyAntiSpoof antiSpoof;
-  Future<List<double>?> FASoutputs = Future.value([]);
 
   Future initialize() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
     // threshold = pref.getDouble("threshold") ?? CONSTANT_VAR.DEFAULT_TRESHOLD;
     threshold = CONSTANT_VAR.DEFAULT_TRESHOLD;
+
     landscape_mode = pref.getBool("LANDSCAPE_MODE") ?? false;
 
     late Delegate delegate;
@@ -56,18 +52,16 @@ class MLService {
 
       this._interpreter = await Interpreter.fromAsset('mobilefacenet.tflite',
           options: interpreterOptions);
-
-      FaceAntiSpoofing.loadSpoofModel();
     } catch (e) {
       print('Failed to load model.');
       print(e);
     }
   }
 
-  Future<void> setCurrentPrediction(CameraImage cameraImage, Face? face) async {
+  void setCurrentPrediction(CameraImage cameraImage, Face? face) {
     if (_interpreter == null) throw Exception('Interpreter is null');
     if (face == null) throw Exception('Face is null');
-    List input = await _preProcess(cameraImage, face);
+    List input = _preProcess(cameraImage, face);
 
     input = input.reshape([1, 112, 112, 3]);
     List output = List.generate(1, (index) => List.filled(192, 0));
@@ -82,47 +76,12 @@ class MLService {
     return _searchResult(this._predictedData);
   }
 
-  Future<List> _preProcess(CameraImage image, Face faceDetected) async {
+  List _preProcess(CameraImage image, Face faceDetected) {
     imglib.Image croppedImage = cropFace(image, faceDetected);
     imglib.Image img = imglib.copyResizeCropSquare(croppedImage, 112);
 
-    // final results =
-    //     await antiSpoof.MODIFIEDisFaceSpoofedWithModel(image, faceDetected);
-
-    // if (results != null) {
-    //   // Mengakses processedImage dan probabilities dari list
-    //   FASoutputs = Future.value(results[1] as List<double>);
-
-    //   final outputs = await FASoutputs;
-
-    //   if (outputs != null) {
-    //     // print(
-    //     //   "SPOFF DATA | 0 = " +
-    //     //       outputs[0].toString() +
-    //     //       " | 1 = " +
-    //     //       outputs[1].toString() +
-    //     //       " | 2 = " +
-    //     //       outputs[2].toString(),
-    //     // );
-    //   }
-
-    // print("SPOFF" + (outputs?[0].toString() ?? "NOT"));
-    //   if (outputs != null && outputs.isNotEmpty && outputs[0] < 0.2) {
-    //     print("SPOFF = PALSU | " + outputs[0].toString());
-    //     return [];
-    //   } else {
-    //     print("SPOFF = ASLI | " + outputs![0].toString());
-    //     Float32List imageAsList = imageToByteListFloat32(img);
-    //     return imageAsList;
-    //   }
-    // } else {
-    //   // Menangani kasus ketika hasilnya null (misalnya, terjadi kesalahan)
-    //   print('Error: No results returned from MODIFIEDisFaceSpoofedWithModel');
-    //   return [];
-
     Float32List imageAsList = imageToByteListFloat32(img);
     return imageAsList;
-    // }
   }
 
   imglib.Image cropFace(CameraImage image, Face faceDetected) {
@@ -177,7 +136,7 @@ class MLService {
   }
 
   Future<User?> _searchResult(List predictedData) async {
-    if (users.isEmpty) {
+    if (users.isEmpty || users == null) {
       users = await getAlluser();
     }
 
@@ -200,6 +159,7 @@ class MLService {
           minDist = currDist;
           print("FR- FINAL DISTANCE" + currDist.toString());
           predictedResult = u;
+          break;
         } else {
           print("FR - SCANNED DISTANCE" + currDist.toString());
         }
@@ -209,18 +169,9 @@ class MLService {
   }
 
   getAlluser() async {
-    DatabaseHelperEmployee _dbHelper = DatabaseHelperEmployee.instance;
-    users = await _dbHelper.queryAllUsersForMLKit();
+    DatabaseHelperEmployee _dbHelper = await DatabaseHelperEmployee.instance;
 
-    //FOR RELIEF
-    DatabaseHelperEmployeeRelief _dbHelperRelief =
-        DatabaseHelperEmployeeRelief.instance;
-    List<User> userRelief = await _dbHelperRelief.queryAllUsersForMLKit();
-    for (User user in userRelief) {
-      if (reliefChecker(user.relief_start_date, user.relief_end_date)) {
-        users.add(user);
-      }
-    }
+    users = await _dbHelper.queryAllUsersForMLKit();
 
     //ADZIEHRDY
     // users = await _dbHelper.queryAllUsers();

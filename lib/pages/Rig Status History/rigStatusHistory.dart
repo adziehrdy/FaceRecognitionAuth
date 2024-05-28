@@ -192,22 +192,22 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
   }
 
   dbSync() async {
-    List<RigStatusHistoryModel> dataInsert = await dbHelper.queryForInsert();
+    // List<RigStatusHistoryModel> dataInsert = await dbHelper.queryForInsert();
 
-    for (RigStatusHistoryModel singleData in dataInsert) {
-      try {
-        bool result = await repo.insertRigStatusHistory(singleData);
-        if (!result) {
-          showToast("Kesalahan Saat insert " +
-              singleData.status +
-              " tanggal " +
-              singleData.date);
-          break;
-        }
-      } catch (e) {
-        showToast(e.toString());
-        break;
-      }
-    }
+    // for (RigStatusHistoryModel singleData in dataInsert) {
+    //   try {
+    //     bool result = await repo.insertRigStatusHistory(singleData);
+    //     if (!result) {
+    //       showToast("Kesalahan Saat insert " +
+    //           singleData.status +
+    //           " tanggal " +
+    //           singleData.date);
+    //       break;
+    //     }
+    //   } catch (e) {
+    //     showToast(e.toString());
+    //     break;
+    //   }
+    // }
   }
 }

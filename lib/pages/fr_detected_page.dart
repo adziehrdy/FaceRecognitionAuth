@@ -11,6 +11,7 @@ import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:progress_state_button/progress_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -99,7 +100,6 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
 
   void initState() {
     super.initState();
-
     //CHECK IS DK OR NOT
     if (DKStatusChecker(widget.user.dk_start_date, widget.user.dk_end_date)) {
       Tipe_absensi = "DINAS KHUSUS";
@@ -184,22 +184,47 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
               //   height: 200,
               //   fit: BoxFit.fill,
               // ),
-
-              ClipOval(
-                child: Image.memory(
-                  widget.faceImage,
-                  width: 200,
-                  height: 200,
-                  fit: BoxFit.fill,
+              Container(
+                height: 250,
+                width: 250,
+                child: Stack(
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: ClipRect(
+                        child: Transform.scale(
+                          scale: 1.5, // Adjust the scale factor to zoom in
+                          child: LottieBuilder.asset(
+                            "assets/lottie/face_circle.json",
+                            height: 250,
+                            width: 250,
+                            repeat: false,
+                            frameRate: FrameRate(30),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.center,
+                      child: ClipOval(
+                        child: Image.memory(
+                          widget.faceImage,
+                          width: 180,
+                          height: 180,
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-
               SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
                   widget.user.employee_name!.toUpperCase(),
-                  style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
@@ -220,14 +245,14 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
               if (showJam)
                 Column(
                   children: [
-                    Text(
-                      'Kordinat',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                    Text(
-                      widget.lat + "," + widget.long,
-                      style: TextStyle(fontSize: 12),
-                    ),
+                    // Text(
+                    //   'Kordinat',
+                    //   style: TextStyle(fontSize: 12),
+                    // ),
+                    // Text(
+                    //   widget.lat + "," + widget.long,
+                    //   style: TextStyle(fontSize: 12),
+                    // ),
                     SizedBox(height: 5),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -259,14 +284,14 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
 
               SizedBox(height: 5),
               Container(
-                padding: EdgeInsets.all(15),
+                padding: EdgeInsets.fromLTRB(30, 15, 30, 15),
                 decoration: BoxDecoration(
                     color: Colors.blue,
                     borderRadius: BorderRadius.all(Radius.circular(50))),
                 child: Text(
                   status,
                   style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 25,
                       color: Colors.white,
                       fontWeight: FontWeight.bold),
                 ),
@@ -526,6 +551,7 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
   }
 
   insertToLocalDB(Attendance dataAbsen) async {
+    await successSound();
     DatabaseHelperAbsensi databaseHelperAbsensi =
         DatabaseHelperAbsensi.instance;
     String statusDb = await databaseHelperAbsensi.insertAttendance(dataAbsen,

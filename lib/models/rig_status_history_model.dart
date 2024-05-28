@@ -1,8 +1,8 @@
 class RigStatusHistoryModel {
-  final int? id;
+  final String? id;
   final String branchId;
   final String branchStatusId;
-  final String requester;
+  final String? requester;
   final String? approver; // approver can be nullable
   final String status;
   final String date;

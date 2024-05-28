@@ -111,7 +111,7 @@ $api_flag TEXT
   Future<int> update(RigStatusHistoryModel status) async {
     try {
       Database db = await instance.database;
-      int id = status.id!;
+      String id = status.id!;
       return await db.update(table, status.toMap(),
           where: '$columnId = ?', whereArgs: [id]);
     } catch (e) {

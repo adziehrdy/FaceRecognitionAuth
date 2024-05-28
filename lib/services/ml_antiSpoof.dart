@@ -1,7 +1,9 @@
 import 'dart:core';
+import 'dart:io';
 import 'dart:typed_data';
-import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
+import 'package:face_net_authentication/globals.dart';
 import 'package:image/image.dart' as imglib;
+import 'package:tflite_flutter/tflite_flutter.dart';
 //import 'package:quiver/collection.dart';
 
 class FaceAntiSpoofing {
@@ -11,11 +13,11 @@ class FaceAntiSpoofing {
   static const INPUT_IMAGE_SIZE =
       256; // The width and height of the placeholder image that needs feed data
   static const THRESHOLD =
-      0.01; // Set a threshold value, greater than this value is considered an attack
+      0.031; // Set a threshold value, greater than this value is considered an attack
   static const ROUTE_INDEX = 6; // Route index observed during training
   static const LAPLACE_THRESHOLD = 50; // Laplace sampling threshold
   static const LAPLACIAN_THRESHOLD = 500; // Picture clarity judgment threshold
-  static late tfl.Interpreter interpreter;
+  static late Interpreter interpreter;
 
   /*
    * Live detection
@@ -27,28 +29,45 @@ class FaceAntiSpoofing {
     }
 
     // Judge the clarity of the picture before live detection
-    var laplace1 = laplacian(bitmapCrop1);
+    // var laplace1 = laplacian(bitmapCrop1);
 
-    print("ML_ANTISPOOF_LAPLACIAN " + laplace1.toString());
+    // print("ML_ANTISPOOF_LAPLACIAN " + laplace1.toString());
 
     bool result = false;
-    if (laplace1 < LAPLACIAN_THRESHOLD) {
+    // if (laplace1 < LAPLACIAN_THRESHOLD) {
+    //   result = true;
+    // } else {
+    // var start = DateTime.now().microsecondsSinceEpoch;
+
+    // Live detection
+    double score1 = _antiSpoofing(bitmapCrop1);
+    print("ML_ANTISPOOF_SCORE " + score1.toStringAsFixed(4));
+
+    // var end = DateTime.now().microsecondsSinceEpoch;
+
+    // if (score1.toString().contains("0.00")) {
+    //   result = true;
+    //   print("isSpoofing = " + result.toString());
+    // } else {
+    //   result = false;
+    //   print("isSpoofing = " + result.toString());
+    // }
+
+    if (score1 < THRESHOLD
+        // ||
+        // score1.toString().contains("0.00")
+        // &&
+        // score1 < 0.15
+        ) {
       result = true;
+      print("isSpoofing = " + result.toString());
+      showToast("SPOOF =" + score1.toStringAsFixed(4));
     } else {
-      // var start = DateTime.now().microsecondsSinceEpoch;
-
-      // Live detection
-      var score1 = _antiSpoofing(bitmapCrop1);
-      print("ML_ANTISPOOF_SCORE " + score1.toString());
-
-      // var end = DateTime.now().microsecondsSinceEpoch;
-
-      if (score1 > THRESHOLD) {
-        result = true;
-      } else {
-        result = false;
-      }
+      result = false;
+      print("isSpoofing = " + result.toString());
+      showToast("NOT SPOOF =" + score1.toStringAsFixed(4));
     }
+    // }
 
     // Judge the clarity of the second picture before live detection
     // var laplace2 = laplacian(bitmapCrop2);
@@ -71,13 +90,36 @@ class FaceAntiSpoofing {
   }
 
   static Future loadSpoofModel() async {
+    late Delegate delegate;
     try {
-      interpreter = await tfl.Interpreter.fromAsset(MODEL_FILE);
+      if (Platform.isAndroid) {
+        delegate = GpuDelegateV2(
+          options: GpuDelegateOptionsV2(
+            isPrecisionLossAllowed: true,
+            inferencePreference: TfLiteGpuInferenceUsage.fastSingleAnswer,
+            inferencePriority1: TfLiteGpuInferencePriority.minLatency,
+            inferencePriority2: TfLiteGpuInferencePriority.auto,
+            inferencePriority3: TfLiteGpuInferencePriority.auto,
+          ),
+        );
+      } else if (Platform.isIOS) {
+        delegate = GpuDelegate(
+          options: GpuDelegateOptions(
+              allowPrecisionLoss: true,
+              waitType: TFLGpuDelegateWaitType.active),
+        );
+      }
+      var interpreterOptions = InterpreterOptions()..addDelegate(delegate);
 
-      print('**********\n Loaded successfully model $MODEL_FILE \n*********\n');
+      interpreter =
+          await Interpreter.fromAsset(MODEL_FILE, options: interpreterOptions);
     } catch (e) {
-      print('Failed to load model.');
-      print(e);
+      try {
+        interpreter = await Interpreter.fromAsset(MODEL_FILE);
+      } catch (e) {
+        print('Failed to load model.');
+        print(e);
+      }
     }
   }
 
@@ -163,10 +205,6 @@ class FaceAntiSpoofing {
       score += absVar * leafNodeMask[0][i];
     }
     return score;
-  }
-
-  static dynamic leafScore2(var clssPred) {
-    return clssPred[0][ROUTE_INDEX];
   }
 
   /*

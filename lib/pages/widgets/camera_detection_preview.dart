@@ -6,7 +6,7 @@ import 'package:face_net_authentication/services/face_detector_service.dart';
 import 'package:flutter/material.dart';
 
 class CameraDetectionPreview extends StatelessWidget {
-  CameraDetectionPreview({Key? key, required this.isSpoofing})
+  CameraDetectionPreview({Key? key, required this.painterMode})
       : super(key: key);
 
   final CameraService _cameraService = locator<CameraService>();
@@ -14,7 +14,7 @@ class CameraDetectionPreview extends StatelessWidget {
       locator<FaceDetectorService>();
 
   bool is_landscape = false;
-  bool isSpoofing;
+  String painterMode;
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +52,7 @@ class CameraDetectionPreview extends StatelessWidget {
                       painter: FacePainter(
                           face: _faceDetectorService.faces[0],
                           imageSize: _cameraService.getImageSize(),
-                          isSpoofing: isSpoofing),
+                          painterMode: painterMode),
                     )
                 ],
               ),
@@ -86,7 +86,7 @@ class CameraDetectionPreview extends StatelessWidget {
                       painter: FacePainter(
                           face: _faceDetectorService.faces[0],
                           imageSize: _cameraService.getImageSize(),
-                          isSpoofing: isSpoofing),
+                          painterMode: painterMode),
                     )
                 ],
               ),

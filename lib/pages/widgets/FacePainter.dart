@@ -3,9 +3,9 @@ import 'package:google_ml_kit/google_ml_kit.dart';
 
 class FacePainter extends CustomPainter {
   FacePainter(
-      {required this.imageSize, required this.face, required this.isSpoofing});
+      {required this.imageSize, required this.face, required this.painterMode});
   final Size imageSize;
-  bool isSpoofing;
+  String painterMode;
   double? scaleX, scaleY;
   Face? face;
   @override
@@ -18,12 +18,17 @@ class FacePainter extends CustomPainter {
       paint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3.0
-        ..color = Colors.orange;
+        ..color = Colors.grey;
     } else {
-      if (isSpoofing) {
+      if (painterMode == "BLUR") {
         paint = Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 3.0
+          ..color = Colors.orange;
+      } else if (painterMode == "SPOOF") {
+        paint = Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5.0
           ..color = Colors.red;
       } else {
         paint = Paint()
@@ -70,5 +75,5 @@ RRect _scaleRect(
       rect.top.toDouble() * scaleY,
       widgetSize.width - rect.right.toDouble() * scaleX,
       rect.bottom.toDouble() * scaleY,
-      Radius.circular(10));
+      Radius.circular(100));
 }

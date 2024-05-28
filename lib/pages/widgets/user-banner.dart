@@ -170,29 +170,29 @@ class _UserBannerState extends State<UserBanner> {
                       SizedBox(
                         width: 10,
                       ),
-                      // Column(
-                      //   children: [
-                      //     Text(
-                      //       "Catering",
-                      //       style: TextStyle(color: Colors.white),
-                      //     ),
-                      //     Switch(
-                      //       inactiveThumbColor: Colors.white,
-                      //       inactiveTrackColor: Colors.redAccent,
-                      //       value: isCatering,
-                      //       onChanged: (value) {
-                      //         setState(() {
-                      //           isCatering = !isCatering;
-                      //           if (isCatering) {
-                      //             showToast("Catering Aktif");
-                      //           } else {
-                      //             showToast("Catering Tidak Aktif");
-                      //           }
-                      //         });
-                      //       },
-                      //     )
-                      //   ],
-                      // )
+                      Column(
+                        children: [
+                          Text(
+                            "Catering",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          Switch(
+                            inactiveThumbColor: Colors.white,
+                            inactiveTrackColor: Colors.redAccent,
+                            value: isCatering,
+                            onChanged: (value) {
+                              setState(() {
+                                isCatering = !isCatering;
+                                if (isCatering) {
+                                  showToast("Catering Aktif");
+                                } else {
+                                  showToast("Catering Tidak Aktif");
+                                }
+                              });
+                            },
+                          )
+                        ],
+                      )
                     ],
                   ),
                   Row(

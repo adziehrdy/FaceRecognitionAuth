@@ -5,6 +5,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:math' as mt;
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -1096,6 +1097,16 @@ Future<List<User>> getAllEmployeeAndRelief() async {
   }
 
   return users;
+}
+
+successSound() async {
+  try {
+    final player = AudioPlayer();
+    await player.setVolume(0.4);
+    await player.play(AssetSource("sound/success_sound.mp3"));
+  } catch (e) {
+    print(e.toString());
+  }
 }
 
 
