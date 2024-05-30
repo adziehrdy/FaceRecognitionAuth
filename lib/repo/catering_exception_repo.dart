@@ -50,16 +50,16 @@ class CateringExceptionRepo {
     }
   }
 
-  Future updateRigStatusHistory(catering_exception_model data) async {
-    try {
-      Response res = await callApi(ApiMethods.POST,
-          '/rig-catering-exception/update/' + (data.id.toString()),
-          data: data.toMap());
-      log(json.encode(res.data));
-      return json.encode(res.data);
-    } catch (e) {
-      print("ERROR UPDATE RIGSTATUS");
-      return false;
-    }
-  }
+  // Future updateRigStatusHistory(catering_exception_model data) async {
+  //   try {
+  //     Response res = await callApi(ApiMethods.POST,
+  //         '/rig-catering-exception/update/' + (data.id.toString()),
+  //         data: data.toMap());
+  //     log(json.encode(res.data));
+  //     return json.encode(res.data);
+  //   } catch (e) {
+  //     print("ERROR UPDATE RIGSTATUS");
+  //     return false;
+  //   }
+  // }
 }

@@ -39,10 +39,9 @@ class RigStatusRepo {
       Response res = await callApi(ApiMethods.POST, '/rig-status/create',
           data: data.toMap());
       log(json.encode(res.data));
-      return json.encode(res.data);
+      return true;
     } catch (e) {
       print("ERROR SUBMIT RIGSTATUS");
-
       return false;
     }
   }

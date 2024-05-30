@@ -1,51 +1,44 @@
-class catering_exception_model {
-  // final String id;
+class CateringHistoryModel {
+  final String? id;
   final String branchId;
-  final String employee_id;
-  final String employee_name;
-  final String requester;
+  final String? requester;
   final String? approver; // approver can be nullable
   final String status;
   final String date;
-  final String notes;
+  final String? api_flag;
   final String? shift;
 
-  catering_exception_model(
-      {
-      // required this.id,
+  CateringHistoryModel(
+      {this.id,
       required this.branchId,
-      required this.shift,
-      required this.employee_id,
-      required this.employee_name,
       required this.requester,
       this.approver,
       required this.status,
       required this.date,
-      required this.notes});
+      required this.api_flag,
+      required this.shift});
 
-  factory catering_exception_model.fromMap(Map<String, dynamic> map) {
-    return catering_exception_model(
+  factory CateringHistoryModel.fromMap(Map<String, dynamic> map) {
+    return CateringHistoryModel(
+        id: map['id'].toString(),
         branchId: map['branch_id'],
-        employee_id: map['employee_id'],
-        employee_name: map['employee_name'],
         requester: map['requester'],
         approver: map['approver'], // handle nullable
         status: map['status'],
         date: map['date'],
-        notes: map['notes'],
+        api_flag: map['api_flag'],
         shift: map['shift']);
   }
 
   Map<String, dynamic> toMap() {
     return {
+      'id': id,
       'branch_id': branchId,
-      'employee_id': employee_id,
-      'employee_name': employee_name,
       'requester': requester,
       'approver': approver, // handle nullable
       'status': status,
       'date': date,
-      'notes': notes,
+      'api_flag': api_flag,
       'shift': shift
     };
   }

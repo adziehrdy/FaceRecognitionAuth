@@ -6,28 +6,32 @@ class RigStatusHistoryModel {
   final String? approver; // approver can be nullable
   final String status;
   final String date;
+  final String? shift;
   final String? api_flag;
 
-  RigStatusHistoryModel(
-      {this.id,
-      required this.branchId,
-      required this.branchStatusId,
-      required this.requester,
-      this.approver,
-      required this.status,
-      required this.date,
-      required this.api_flag});
+  RigStatusHistoryModel({
+    this.id,
+    required this.branchId,
+    required this.branchStatusId,
+    required this.requester,
+    this.approver,
+    required this.status,
+    required this.date,
+    required this.api_flag,
+    required this.shift,
+  });
 
   factory RigStatusHistoryModel.fromMap(Map<String, dynamic> map) {
     return RigStatusHistoryModel(
-        id: map['id'],
+        id: map['id'].toString(),
         branchId: map['branch_id'],
         branchStatusId: map['branch_status_id'],
         requester: map['requester'],
         approver: map['approver'], // handle nullable
         status: map['status'],
         date: map['date'],
-        api_flag: map['api_flag']);
+        api_flag: map['api_flag'],
+        shift: map['shift']);
   }
 
   Map<String, dynamic> toMap() {
@@ -39,7 +43,8 @@ class RigStatusHistoryModel {
       'approver': approver, // handle nullable
       'status': status,
       'date': date,
-      'api_flag': api_flag
+      'api_flag': api_flag,
+      'shift': shift
     };
   }
 }

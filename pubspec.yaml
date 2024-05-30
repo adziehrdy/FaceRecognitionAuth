@@ -87,6 +87,7 @@ dependencies:
   order_tracker_zen: ^1.0.0+4
   timeline_tile: ^2.0.0
   audioplayers: ^6.0.0
+  pytorch_mobile: ^0.2.2
 
 dev_dependencies:
   flutter_test:

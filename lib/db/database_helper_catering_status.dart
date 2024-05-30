@@ -1,17 +1,18 @@
 import 'dart:io';
 
 import 'package:face_net_authentication/globals.dart';
+import 'package:face_net_authentication/models/catering_history_model.dart';
 import 'package:face_net_authentication/models/rig_status_history_model.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
-class DatabaseHelperRigStatusHistory {
-  static final _databaseName = "RigStatus.db";
+class DatabaseHelperCateringHistory {
+  static final _databaseName = "CateringHistory.db";
   static final _databaseVersion = 1;
 
-  static final table = 'rig_status';
+  static final table = 'catering_history';
   static final columnId = 'id';
   // static final columnUser = 'user';
   // static final columnPassword = 'password';
@@ -26,9 +27,9 @@ class DatabaseHelperRigStatusHistory {
   static final api_flag = "api_flag";
   static final shift = "shift";
 
-  DatabaseHelperRigStatusHistory._privateConstructor();
-  static final DatabaseHelperRigStatusHistory instance =
-      DatabaseHelperRigStatusHistory._privateConstructor();
+  DatabaseHelperCateringHistory._privateConstructor();
+  static final DatabaseHelperCateringHistory instance =
+      DatabaseHelperCateringHistory._privateConstructor();
 
   static late Database _database;
   Future<Database> get database async {
@@ -62,7 +63,7 @@ $shift TEXT
   // $columnUser TEXT NOT NULL,
   // $columnPassword TEXT NOT NULL,
   // $columnModelData TEXT NOT NULL
-  Future<int> insert(RigStatusHistoryModel status) async {
+  Future<int> insert(CateringHistoryModel status) async {
     try {
       Database db = await instance.database;
       print(status.toMap());
@@ -73,7 +74,7 @@ $shift TEXT
     }
   }
 
-  Future<void> insertAll(List<RigStatusHistoryModel> statusList) async {
+  Future<void> insertAll(List<CateringHistoryModel> statusList) async {
     try {
       Database db = await instance.database;
       Batch batch = db.batch();
@@ -86,33 +87,33 @@ $shift TEXT
     }
   }
 
-  Future<List<RigStatusHistoryModel>> queryAllStatus() async {
+  Future<List<CateringHistoryModel>> queryAllStatus() async {
     Database db = await instance.database;
     List<Map<String, dynamic>> rigStatus = await db.query(table);
     return rigStatus
-        .map((u) => RigStatusHistoryModel.fromMap(u))
+        .map((u) => CateringHistoryModel.fromMap(u))
         .toList()
         .reversed
         .toList();
   }
 
-  Future<List<RigStatusHistoryModel>> queryForInsert() async {
+  Future<List<CateringHistoryModel>> queryForInsert() async {
     Database db = await instance.database;
     List<Map<String, dynamic>> rigStatus =
         await db.query(table, where: '$api_flag = ?', whereArgs: ['I']);
     return rigStatus
-        .map((u) => RigStatusHistoryModel.fromMap(u))
+        .map((u) => CateringHistoryModel.fromMap(u))
         .toList()
         .reversed
         .toList();
   }
 
-  Future<List<RigStatusHistoryModel>> queryForUpdate() async {
+  Future<List<CateringHistoryModel>> queryForUpdate() async {
     Database db = await instance.database;
     List<Map<String, dynamic>> rigStatus =
         await db.query(table, where: '$api_flag = ?', whereArgs: ['U']);
     return rigStatus
-        .map((u) => RigStatusHistoryModel.fromMap(u))
+        .map((u) => CateringHistoryModel.fromMap(u))
         .toList()
         .reversed
         .toList();
@@ -123,7 +124,7 @@ $shift TEXT
     return await db.delete(table);
   }
 
-  Future<int> delete(RigStatusHistoryModel status) async {
+  Future<int> delete(CateringHistoryModel status) async {
     try {
       Database db = await instance.database;
       String id = status.id!;
@@ -134,7 +135,7 @@ $shift TEXT
     }
   }
 
-  Future<int> update(RigStatusHistoryModel status) async {
+  Future<int> update(CateringHistoryModel status) async {
     try {
       Database db = await instance.database;
       String id = status.id!;

@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:face_net_authentication/db/database_helper_catering_status.dart';
 import 'package:face_net_authentication/globals.dart';
+import 'package:face_net_authentication/models/catering_history_model.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:face_net_authentication/pages/setting_page.dart';
@@ -25,7 +27,6 @@ class _UserBannerState extends State<UserBanner> {
   LoginModel? userInfo;
   String activeSuperAttendace = "-";
   RigStatusShift? status_rig;
-
   bool isCatering = false;
 
   @override
@@ -39,6 +40,7 @@ class _UserBannerState extends State<UserBanner> {
   Future<void> _loadUserInfo() async {
     userInfo = await getUserLoginData();
     status_rig = await SpGetSelectedStatusRig();
+    isCatering = await getCateringToday();
 
     activeSuperAttendace = await getActiveSuperIntendentName();
 
@@ -156,6 +158,10 @@ class _UserBannerState extends State<UserBanner> {
                                             onStatusSelected: (selectedStatus) {
                                               setState(() {
                                                 saveRigStatus(selectedStatus);
+                                                setState(() {
+                                                  saveRigCateringStatus();
+                                                  isCatering = false;
+                                                });
                                               });
                                             },
                                           );
@@ -183,6 +189,7 @@ class _UserBannerState extends State<UserBanner> {
                             onChanged: (value) {
                               setState(() {
                                 isCatering = !isCatering;
+                                saveRigCateringStatus();
                                 if (isCatering) {
                                   showToast("Catering Aktif");
                                 } else {
@@ -269,6 +276,7 @@ class _UserBannerState extends State<UserBanner> {
 
   Future<void> saveRigStatus(RigStatusShift statusRig) async {
     await SpSetSelectedStatusRig(jsonEncode(statusRig));
+    String onShift = await getCurrentShiftRange();
 
     setState(() {
       status_rig = statusRig;
@@ -288,7 +296,8 @@ class _UserBannerState extends State<UserBanner> {
           requester: historyStatus[0].requester,
           status: statusRig.statusBranch ?? "-",
           date: historyStatus[0].date,
-          api_flag: "U");
+          api_flag: "U",
+          shift: onShift);
 
       await dbHelper.update(dataPreUpdate);
     } else {
@@ -302,7 +311,8 @@ class _UserBannerState extends State<UserBanner> {
           status: statusRig.statusBranch ?? "-",
           branchStatusId: statusRig.statusBranchId ?? "-",
           date: formatDateTime(date),
-          api_flag: "I"));
+          api_flag: "I",
+          shift: onShift));
     }
 
     await showDialog(
@@ -311,5 +321,67 @@ class _UserBannerState extends State<UserBanner> {
         return dialog_rig_info();
       },
     );
+  }
+
+  Future<void> saveRigCateringStatus() async {
+    // await SpSetSelectedStatusRig(jsonEncode(statusRig));
+
+    String onShift = await getCurrentShiftRange();
+
+    String flagStatus;
+    if (isCatering) {
+      flagStatus = "AKTIF";
+    } else {
+      flagStatus = "TIDAK AKTIF";
+    }
+
+    setState(() {
+      setCateringToady(isCatering);
+    });
+
+    DatabaseHelperCateringHistory dbHelper =
+        DatabaseHelperCateringHistory.instance;
+
+    List<CateringHistoryModel> ListcateringHistory =
+        await dbHelper.queryAllStatus();
+    String today = formatDateForFilter(DateTime.now());
+
+    if (ListcateringHistory.length != 0 &&
+        ListcateringHistory[0].date.contains(today)) {
+      CateringHistoryModel dataPreUpdate = CateringHistoryModel(
+          id: ListcateringHistory[0].id,
+          branchId: ListcateringHistory[0].branchId,
+          requester: ListcateringHistory[0].requester,
+          status: flagStatus,
+          date: ListcateringHistory[0].date,
+          api_flag: "U",
+          shift: onShift);
+
+      await dbHelper.update(dataPreUpdate);
+    } else {
+      String branch_id = await getBranchID();
+      String requester = await getActiveSuperIntendentID();
+      DateTime date = DateTime.now();
+
+      await dbHelper.insert(CateringHistoryModel(
+          branchId: branch_id,
+          requester: requester,
+          status: flagStatus,
+          date: formatDateTime(date),
+          api_flag: "I",
+          shift: onShift));
+    }
+  }
+
+  Future<String> getCurrentShiftRange() async {
+    String currentShift = "-";
+    TimeOfDay today = TimeOfDay.now();
+    for (ShiftRig shift in status_rig!.shift!) {
+      if (isTimeInRange(shift.checkin!, shift.checkout!, today)) {
+        currentShift = shift.id!;
+        break;
+      }
+    }
+    return currentShift;
   }
 }

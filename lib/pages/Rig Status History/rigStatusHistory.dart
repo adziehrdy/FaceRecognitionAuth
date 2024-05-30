@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 // import 'package:order_tracker_zen/order_tracker_zen.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 
+import '../../models/model_rig_shift.dart';
 import '../../models/rig_status_history_model.dart';
+import '../../services/shared_preference_helper.dart';
 
 class RigStatusHistory extends StatefulWidget {
   @override
@@ -20,19 +22,25 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
 
   RigStatusRepo repo = RigStatusRepo();
 
+  RigStatusShift? brachStatus;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+
     initData();
   }
 
   Future<void> initData() async {
+    brachStatus = await SpGetSelectedStatusRig();
+    await loadLocalData();
     await dbSync();
+    // listStatus = await repo.getRigStatusHistory();
+  }
 
-    listStatus = await repo.getRigStatusHistory();
-
-    // listStatus = await dbHelper.queryAllStatus();
+  Future<void> loadLocalData() async {
+    listStatus = await dbHelper.queryAllStatus();
 
     setState(() {
       listStatus;
@@ -160,6 +168,9 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
                             builder: (BuildContext context) {
                               return dialog_change_rig_status(
                                 onStatusSelected: (selectedStatus) async {
+                                  String selectedShift =
+                                      await _showDialogPilihShift(context);
+
                                   RigStatusHistoryModel dataPreUpdate =
                                       RigStatusHistoryModel(
                                           id: data.id,
@@ -171,6 +182,7 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
                                           status: selectedStatus.statusBranch ??
                                               "-",
                                           date: data.date,
+                                          shift: selectedShift,
                                           api_flag: "U");
 
                                   await dbHelper.update(dataPreUpdate);
@@ -192,22 +204,77 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
   }
 
   dbSync() async {
-    // List<RigStatusHistoryModel> dataInsert = await dbHelper.queryForInsert();
+    List<RigStatusHistoryModel> dataInsert = await dbHelper.queryForInsert();
 
-    // for (RigStatusHistoryModel singleData in dataInsert) {
-    //   try {
-    //     bool result = await repo.insertRigStatusHistory(singleData);
-    //     if (!result) {
-    //       showToast("Kesalahan Saat insert " +
-    //           singleData.status +
-    //           " tanggal " +
-    //           singleData.date);
-    //       break;
-    //     }
-    //   } catch (e) {
-    //     showToast(e.toString());
-    //     break;
-    //   }
-    // }
+    try {
+      if (dataInsert.isNotEmpty) {
+        for (RigStatusHistoryModel singleData in dataInsert) {
+          try {
+            bool result = await repo.insertRigStatusHistory(singleData);
+            if (!result) {
+              showToast("Kesalahan Saat insert " +
+                  singleData.status +
+                  " tanggal " +
+                  singleData.date);
+            } else {
+              await dbHelper.delete(singleData);
+            }
+          } catch (e) {
+            showToast(e.toString());
+            break;
+          }
+        }
+      }
+    } catch (e) {
+      // TODO
+      showToast(e.toString());
+    }
+    getStatusAndInsertToLocal();
+  }
+
+  getStatusAndInsertToLocal() async {
+    List<RigStatusHistoryModel> result = await repo.getRigStatusHistory();
+
+    if (result.isNotEmpty) {
+      await dbHelper.deleteAll();
+      await dbHelper.insertAll(result);
+      await loadLocalData();
+    }
+  }
+
+  _showDialogPilihShift(BuildContext context) async {
+    String selectedShift = "-";
+    await showDialog(
+      barrierDismissible: false, // add this line to disable dismiss
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Pilih Status'),
+          content: DropdownButtonFormField<String>(
+            decoration: InputDecoration(labelText: "Shift"),
+            items: brachStatus!.shift!.map((ShiftRig shift) {
+              return DropdownMenuItem<String>(
+                value: shift.id,
+                child: Text(shift.id ?? "-"),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                selectedShift = newValue ?? "-";
+              });
+            },
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Submit'),
+              onPressed: () {
+                // Handle submit button
+                Navigator.of(context).pop(selectedShift);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }

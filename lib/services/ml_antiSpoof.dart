@@ -13,7 +13,7 @@ class FaceAntiSpoofing {
   static const INPUT_IMAGE_SIZE =
       256; // The width and height of the placeholder image that needs feed data
   static const THRESHOLD =
-      0.031; // Set a threshold value, greater than this value is considered an attack
+      0.025; // Set a threshold value, greater than this value is considered an attack
   static const ROUTE_INDEX = 6; // Route index observed during training
   static const LAPLACE_THRESHOLD = 50; // Laplace sampling threshold
   static const LAPLACIAN_THRESHOLD = 500; // Picture clarity judgment threshold
@@ -53,7 +53,7 @@ class FaceAntiSpoofing {
     //   print("isSpoofing = " + result.toString());
     // }
 
-    if (score1 < THRESHOLD
+    if (score1 > THRESHOLD
         // ||
         // score1.toString().contains("0.00")
         // &&

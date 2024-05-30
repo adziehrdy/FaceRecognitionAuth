@@ -1,5 +1,4 @@
 import 'package:face_net_authentication/db/database_helper_catering_exception.dart';
-import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/models/catering_exception_model.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/repo/catering_exception_repo.dart';
@@ -7,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../globals.dart';
+import '../../models/model_rig_shift.dart';
+import '../../services/shared_preference_helper.dart';
 
 class CateringException extends StatefulWidget {
   const CateringException({Key? key}) : super(key: key);
@@ -25,6 +26,9 @@ class _CateringExceptionState extends State<CateringException> {
 
   TextEditingController _notesController = TextEditingController();
 
+  RigStatusShift? brachStatus;
+  String? selectedShift;
+
   @override
   void initState() {
     super.initState();
@@ -33,9 +37,10 @@ class _CateringExceptionState extends State<CateringException> {
   }
 
   initData() async {
-    listException = await repo.getAllCateringException();
     _employeeNamesForRequest = await getAllEmployeeAndRelief();
-    // listException = await dbException.queryAllStatus();
+    // listException = await repo.getAllCateringException();
+    listException = await dbException.queryAllStatus();
+    brachStatus = await SpGetSelectedStatusRig();
     setState(() {
       _employeeNamesForRequest;
       listException;
@@ -63,56 +68,61 @@ class _CateringExceptionState extends State<CateringException> {
               ))
         ],
       ),
-      body: ListView.builder(
-        itemCount: listException.length,
-        itemBuilder: (context, index) {
-          return Card(
-            elevation: 2,
-            child: Container(
-                padding: EdgeInsets.all(15),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.food_bank_outlined,
-                          size: 25,
-                        ),
-                        SizedBox(
-                          width: 20,
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              listException[index].employee_name.toUpperCase(),
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                  color: Colors.blue),
-                            ),
-                            Text(formatDateString(listException[index].date))
-                          ],
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        IconButton(onPressed: () {}, icon: Icon(Icons.edit)),
-                        IconButton(
-                            onPressed: () {},
-                            icon: Icon(
-                              Icons.delete_forever,
-                              color: Colors.orange,
-                            ))
-                      ],
-                    )
-                  ],
-                )),
-          );
-        },
+      body: Container(
+        padding: EdgeInsets.symmetric(horizontal: 10),
+        child: ListView.builder(
+          itemCount: listException.length,
+          itemBuilder: (context, index) {
+            return Card(
+              elevation: 2,
+              child: Container(
+                  padding: EdgeInsets.all(15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.food_bank_outlined,
+                            size: 25,
+                          ),
+                          SizedBox(
+                            width: 20,
+                          ),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                listException[index]
+                                    .employee_name
+                                    .toUpperCase(),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                    color: Colors.blue),
+                              ),
+                              Text(formatDateString(listException[index].date))
+                            ],
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          IconButton(onPressed: () {}, icon: Icon(Icons.edit)),
+                          IconButton(
+                              onPressed: () {},
+                              icon: Icon(
+                                Icons.delete_forever,
+                                color: Colors.orange,
+                              ))
+                        ],
+                      )
+                    ],
+                  )),
+            );
+          },
+        ),
       ),
     );
   }
@@ -142,6 +152,21 @@ class _CateringExceptionState extends State<CateringException> {
                   onChanged: (User? newValue) {
                     setState(() {
                       _selectedEmployee = newValue;
+                    });
+                  },
+                ),
+                SizedBox(height: 20),
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(labelText: "Shift"),
+                  items: brachStatus!.shift!.map((ShiftRig shift) {
+                    return DropdownMenuItem<String>(
+                      value: shift.id,
+                      child: Text(shift.id ?? "-"),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedShift = newValue ?? "-";
                     });
                   },
                 ),
@@ -187,7 +212,9 @@ class _CateringExceptionState extends State<CateringException> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (_selectedEmployee == null || _selectedDate == null) {
+                if (_selectedEmployee == null ||
+                    _selectedDate == null ||
+                    selectedShift == null) {
                   showToast("Nama Atau Tanggal Tidak Boleh Kosong");
                 } else {
                   // Save action jika karyawan dan tanggal sudah dipilih
@@ -217,7 +244,8 @@ class _CateringExceptionState extends State<CateringException> {
         requester: getSup,
         status: "ACTIVE",
         date: tanggal,
-        notes: notes);
+        notes: notes,
+        shift: selectedShift!);
     dbHelper.insert(data);
 
     repo.insertCatering(data);

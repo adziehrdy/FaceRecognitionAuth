@@ -26,6 +26,7 @@ class DatabaseHelperCateringException {
   static final status = "status";
   static final date = "date";
   static final notes = "notes";
+  static final shift = "shift";
 
   DatabaseHelperCateringException._privateConstructor();
   static final DatabaseHelperCateringException instance =
@@ -47,15 +48,16 @@ class DatabaseHelperCateringException {
   Future _onCreate(Database db, int version) async {
     await db.execute('''
           CREATE TABLE $table (
-            $columnId INTEGER PRIMARY KEY,
-$branch_id TEXT,
-$employee_id TEXT,
-$employee_name TEXT,
-$requester TEXT,
-$approver TEXT,
-$status TEXT,
-$date TEXT,
-$notes TEXT
+          $columnId INTEGER PRIMARY KEY,
+          $branch_id TEXT,
+          $employee_id TEXT,
+          $employee_name TEXT,
+          $requester TEXT,
+          $approver TEXT,
+          $status TEXT,
+          $date TEXT,
+          $notes TEXT,
+          $shift TEXT
           )
           ''');
   }
@@ -89,15 +91,15 @@ $notes TEXT
     return await db.delete(table);
   }
 
-  Future<int> update(catering_exception_model status) async {
-    try {
-      Database db = await instance.database;
-      int id = status.id!;
-      return await db.update(table, status.toMap(),
-          where: '$columnId = ?', whereArgs: [id]);
-    } catch (e) {
-      showToast(e.toString());
-      return 0;
-    }
-  }
+  // Future<int> update(catering_exception_model status) async {
+  //   try {
+  //     Database db = await instance.database;
+  //     int id = status.id!;
+  //     return await db.update(table, status.toMap(),
+  //         where: '$columnId = ?', whereArgs: [id]);
+  //   } catch (e) {
+  //     showToast(e.toString());
+  //     return 0;
+  //   }
+  // }
 }

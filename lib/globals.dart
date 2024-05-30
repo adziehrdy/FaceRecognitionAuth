@@ -25,6 +25,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image/image.dart' as img;
 import 'package:image/image.dart' as imglib;
 import 'package:intl/intl.dart';
@@ -35,6 +36,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:trust_location/trust_location.dart';
 import 'package:unique_identifier/unique_identifier.dart';
+
+import 'services/image_converter.dart';
 
 String? endpointUrl;
 late String publicUrl;
@@ -1106,6 +1109,77 @@ successSound() async {
     await player.play(AssetSource("sound/success_sound.mp3"));
   } catch (e) {
     print(e.toString());
+  }
+}
+
+imglib.Image cropFaceANTISPOOF(CameraImage image, Face faceDetected) {
+  imglib.Image convertedImage = _convertCameraImage(image);
+
+  double x;
+  double y;
+  double h;
+  double w;
+
+  if (true) {
+    x = faceDetected.boundingBox.left - 150.0;
+    y = faceDetected.boundingBox.top - 150.0;
+    h = faceDetected.boundingBox.width + 150.0;
+    w = faceDetected.boundingBox.height + 150.0;
+  } else {
+    x = faceDetected.boundingBox.left - 10.0;
+    y = faceDetected.boundingBox.top - 10.0;
+    w = faceDetected.boundingBox.width + 10.0;
+    h = faceDetected.boundingBox.height + 10.0;
+  }
+
+  imglib.Image croppedImage = imglib.copyCrop(
+      convertedImage, x.round(), y.round(), w.round(), h.round());
+
+  // Resize the image to always 80x80
+  imglib.Image resizedImage =
+      imglib.copyResize(croppedImage, width: 800, height: 800);
+
+  return resizedImage;
+}
+
+imglib.Image _convertCameraImage(CameraImage image) {
+  var img = convertToImage(image);
+  var img1 = true ? imglib.copyRotate(img, 0) : imglib.copyRotate(img, -90);
+  return img1;
+}
+
+Future<bool> getCateringToday() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getBool("IS_CATERING_TODAY") ?? false;
+}
+
+setCateringToady(bool cateringStatus) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setBool("IS_CATERING_TODAY", cateringStatus);
+}
+
+bool isTimeInRange(String startTime, String endTime, TimeOfDay currentTime) {
+  try {
+    final now = DateTime.now();
+    final startDateTime =
+        DateTime.parse(now.toString().substring(0, 10) + ' ' + startTime);
+    final endDateTime =
+        DateTime.parse(now.toString().substring(0, 10) + ' ' + endTime);
+    final currentDateTime = DateTime(
+        now.year, now.month, now.day, currentTime.hour, currentTime.minute);
+
+    if (endDateTime.isBefore(startDateTime)) {
+      // Handle case where the range crosses midnight
+      final endDateTimeNextDay = endDateTime.add(Duration(days: 1));
+      return currentDateTime.isAfter(startDateTime) ||
+          currentDateTime.isBefore(endDateTimeNextDay);
+    }
+    return currentDateTime.isAfter(startDateTime) &&
+        currentDateTime.isBefore(endDateTime);
+  } catch (e) {
+    showToast("Error Saat Konversi Shift Ke DateTime");
+    showToast("Mohon Atur Shift di menu Rig Status History");
+    return false;
   }
 }
 

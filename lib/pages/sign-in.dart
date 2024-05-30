@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:camera/camera.dart';
+import 'package:face_net_authentication/FR_ENGINE/AntiSpoof.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/models/user.dart';
@@ -56,11 +57,13 @@ class SignInState extends State<SignIn> {
   String painterMode = "";
   double spoofScore = 0;
   int blurScore = 0;
+  AdziehrdyAntiSpoof adzieFAS = AdziehrdyAntiSpoof();
 
   @override
   void initState() {
     super.initState();
     getLastLocation();
+    adzieFAS.loadModelFromAssets();
 
     _start();
   }
@@ -89,6 +92,7 @@ class SignInState extends State<SignIn> {
     await _cameraService.initialize();
     await _frameFaces();
     FaceAntiSpoofing.loadSpoofModel();
+    // adzieFAS.loadModelFromAssets();
   }
 
   _frameFaces() async {
@@ -119,20 +123,21 @@ class SignInState extends State<SignIn> {
           _faceDetectorService.faces[0].headEulerAngleY! < -10) {
         print("=== POSISI MUKA TIDAK BAGUS=== ");
       } else {
-        faceImage = _mlService.cropFace(image, _faceDetectorService.faces[0]);
-
         int laplaceScore = await FaceAntiSpoofing.laplacian(faceImage);
         print("BLURR SCORE " + laplaceScore.toString());
 
         blurScore = laplaceScore;
 
-        if (laplaceScore > 600) {
+        if (laplaceScore > 700) {
           RECONIZE_FACE(image);
+
+          // print(await adzieFAS.isFaceSpoofedWithModel(
+          //     image, _faceDetectorService.faces[0], context));
         } else {
           painterMode = "BLUR";
           BlurrCounter = BlurrCounter + 1;
           print("BLURR COUNTER " + BlurrCounter.toString());
-          if (BlurrCounter >= 8) {
+          if (BlurrCounter >= 50) {
             showToast("Foto Wajah Blur, Mohon Mengatur Posisi Wajah Yang Baik");
             BlurrCounter = 0;
           }
@@ -159,18 +164,24 @@ class SignInState extends State<SignIn> {
 
   RECONIZE_FACE(CameraImage image) async {
     if (enable_recognize_process) {
+      painterMode = "GOOD";
       _mlService.setCurrentPrediction(image, _faceDetectorService.faces[0]);
+
       if (_faceDetectorService.faceDetected) {
         User? user = await _mlService.predict();
         if (user != null) {
-          bool isSpoof = false;
-          isSpoof = await FaceAntiSpoofing.antiSpoofing(faceImage);
+          imglib.Image faceImageAS =
+              cropFaceANTISPOOF(image, _faceDetectorService.faces[0]);
 
-          if (!isSpoof) {
-            painterMode = "GOOD";
+          // bool? isSpoof = await FaceAntiSpoofing.antiSpoofing(faceImageAS);
+          bool? isSpoof = await adzieFAS.isFaceSpoofedWithModel(
+              image, _faceDetectorService.faces[0], context);
+
+          if (!isSpoof!) {
             enable_recognize_process = false;
             //  await _cameraService.takePicture();
             getDateTimeNow();
+
             // pauseCameraAndMLKit();
 
             //  //TESTING ABSENSI
@@ -209,7 +220,7 @@ class SignInState extends State<SignIn> {
           } else {
             SpoofCounter = SpoofCounter + 1;
 
-            if (SpoofCounter >= 6) {
+            if (SpoofCounter >= 9) {
               enable_recognize_process = false;
               await Navigator.push(
                   context,
@@ -320,7 +331,7 @@ class SignInState extends State<SignIn> {
             ]),
             SizedBox(height: 5),
             Text(lat.toString() + " , " + long.toString()),
-            Text("SPOOF SCORE = " + blurScore.toString()),
+            Text("NOT BLUR SCORE = " + blurScore.toString()),
             // Text("BLUR SCORE = " + bl),
             SizedBox(height: 5),
             Padding(

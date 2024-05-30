@@ -15,6 +15,7 @@ class _CateringPageState extends State<CateringPage> {
 
   static const List<Widget> _widgetOptions = <Widget>[
     CateringHistory(),
+    // CateringHistory(),
     CateringException(),
   ];
 
