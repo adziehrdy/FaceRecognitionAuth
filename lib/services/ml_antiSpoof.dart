@@ -1,508 +1,150 @@
-import 'dart:core';
-import 'dart:io';
-import 'dart:typed_data';
-import 'package:face_net_authentication/globals.dart';
-import 'package:image/image.dart' as imglib;
+import 'package:camera/camera.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:image/image.dart' as img;
 import 'package:tflite_flutter/tflite_flutter.dart';
-//import 'package:quiver/collection.dart';
 
-class FaceAntiSpoofing {
-  FaceAntiSpoofing._();
+import 'image_converter.dart';
 
-  static const String MODEL_FILE = "FaceAntiSpoofing.tflite";
-  static const INPUT_IMAGE_SIZE =
-      256; // The width and height of the placeholder image that needs feed data
-  static const THRESHOLD =
-      0.025; // Set a threshold value, greater than this value is considered an attack
-  static const ROUTE_INDEX = 6; // Route index observed during training
-  static const LAPLACE_THRESHOLD = 50; // Laplace sampling threshold
-  static const LAPLACIAN_THRESHOLD = 500; // Picture clarity judgment threshold
-  static late Interpreter interpreter;
+class FaceDeSpoofing {
+  static const String _modelFile = 'FaceDeSpoofing.tflite';
+  static const int inputImageSize = 256;
+  static const double threshold = 0.99;
+  static const bool landscape_mode = true;
 
-  /*
-   * Live detection
-   */
-  static bool antiSpoofing(imglib.Image bitmapCrop1) {
-    if (bitmapCrop1 == null) {
-      print("Please detect the face first");
+  late Interpreter interpreter;
+
+  FaceDeSpoofing() {
+    _loadModel();
+  }
+
+  void _loadModel() async {
+    interpreter = await Interpreter.fromAsset(_modelFile);
+  }
+
+  Future<bool> deSpoofing(img.Image bitmap) async {
+    img.Image resizedImage =
+        img.copyResize(bitmap, width: inputImageSize, height: inputImageSize);
+    List<List<List<double>>> imgNormalized = _normalizeImage(resizedImage);
+    List<List<List<List<double>>>> input = [imgNormalized];
+    List<List<List<List<double>>>> output = List.generate(
+        1,
+        (_) => List.generate(
+            32, (_) => List.generate(32, (_) => List.filled(1, 0.0))));
+
+    interpreter.run(input, output);
+
+    double sum1 = 0.0;
+    for (int i = 0; i < 32; i++) {
+      double sum2 = 0.0;
+      for (int j = 0; j < 32; j++) {
+        sum2 += output[0][i][j][0] * output[0][i][j][0];
+      }
+      sum1 += sum2 / 32;
+    }
+    double finalScore = sum1 / 32;
+
+    if (finalScore < 0.98) {
+      print("FAS SCORE =" + finalScore.toString() + " === SPOOF");
       return true;
-    }
-
-    // Judge the clarity of the picture before live detection
-    // var laplace1 = laplacian(bitmapCrop1);
-
-    // print("ML_ANTISPOOF_LAPLACIAN " + laplace1.toString());
-
-    bool result = false;
-    // if (laplace1 < LAPLACIAN_THRESHOLD) {
-    //   result = true;
-    // } else {
-    // var start = DateTime.now().microsecondsSinceEpoch;
-
-    // Live detection
-    double score1 = _antiSpoofing(bitmapCrop1);
-    print("ML_ANTISPOOF_SCORE " + score1.toStringAsFixed(4));
-
-    // var end = DateTime.now().microsecondsSinceEpoch;
-
-    // if (score1.toString().contains("0.00")) {
-    //   result = true;
-    //   print("isSpoofing = " + result.toString());
-    // } else {
-    //   result = false;
-    //   print("isSpoofing = " + result.toString());
-    // }
-
-    if (score1 > THRESHOLD
-        // ||
-        // score1.toString().contains("0.00")
-        // &&
-        // score1 < 0.15
-        ) {
-      result = true;
-      print("isSpoofing = " + result.toString());
-      showToast("SPOOF =" + score1.toStringAsFixed(4));
     } else {
-      result = false;
-      print("isSpoofing = " + result.toString());
-      showToast("NOT SPOOF =" + score1.toStringAsFixed(4));
-    }
-    // }
-
-    // Judge the clarity of the second picture before live detection
-    // var laplace2 = laplacian(bitmapCrop2);
-
-    // String text2 = "Sharpness detection result left：" + laplace2.toString();
-    // if (laplace2 < LAPLACIAN_THRESHOLD) {
-    //   text2 = text2 + "，" + "False";
-    // } else {
-    //   // Live detection
-    //   var score2 = _antiSpoofing(bitmapCrop2);
-    //   text2 = "Liveness test result right：" + score2.toString();
-    //   if (score2 > THRESHOLD) {
-    //     text2 = text2 + "，" + "True";
-    //   } else {
-    //     text2 = text2 + "，" + "False";
-    //   }
-    // }
-    // print(text2);
-    return result;
-  }
-
-  static Future loadSpoofModel() async {
-    late Delegate delegate;
-    try {
-      if (Platform.isAndroid) {
-        delegate = GpuDelegateV2(
-          options: GpuDelegateOptionsV2(
-            isPrecisionLossAllowed: true,
-            inferencePreference: TfLiteGpuInferenceUsage.fastSingleAnswer,
-            inferencePriority1: TfLiteGpuInferencePriority.minLatency,
-            inferencePriority2: TfLiteGpuInferencePriority.auto,
-            inferencePriority3: TfLiteGpuInferencePriority.auto,
-          ),
-        );
-      } else if (Platform.isIOS) {
-        delegate = GpuDelegate(
-          options: GpuDelegateOptions(
-              allowPrecisionLoss: true,
-              waitType: TFLGpuDelegateWaitType.active),
-        );
-      }
-      var interpreterOptions = InterpreterOptions()..addDelegate(delegate);
-
-      interpreter =
-          await Interpreter.fromAsset(MODEL_FILE, options: interpreterOptions);
-    } catch (e) {
-      try {
-        interpreter = await Interpreter.fromAsset(MODEL_FILE);
-      } catch (e) {
-        print('Failed to load model.');
-        print(e);
-      }
+      print("FAS SCORE =" + finalScore.toString() + " === REAL");
+      return false;
     }
   }
 
-  /*
-   * Live detection
-   * @param bitmap
-   * @return score
-   */
-  static double _antiSpoofing(imglib.Image bitmap) {
-    // Resize the face to a size of 256X256, because the shape of the placeholder that needs feed data below is (1, 256, 256, 3)
-    imglib.Image bitmapScale =
-        imglib.copyResizeCropSquare(bitmap, INPUT_IMAGE_SIZE);
+  List<List<List<double>>> _normalizeImage(img.Image bitmap) {
+    int h = bitmap.height;
+    int w = bitmap.width;
+    List<List<List<double>>> floatValues =
+        List.generate(h, (_) => List.generate(w, (_) => List.filled(6, 0.0)));
+    double imageStd = 256.0;
 
-    var img = normalizeImage(bitmapScale);
+    for (int i = 0; i < h; i++) {
+      for (int j = 0; j < w; j++) {
+        int val = bitmap.getPixel(j, i);
+        int r = img.getRed(val);
+        int g = img.getGreen(val);
+        int b = img.getBlue(val);
 
-    List<Object> input =
-        List.generate(1, (index) => List.filled(8, 0.0), growable: true);
+        List<double> hsv = _rgbToHsv(r, g, b);
 
-    input[0] = img.reshape([1, INPUT_IMAGE_SIZE, INPUT_IMAGE_SIZE, 3]);
+        double hue = hsv[0] / 360.0;
+        double s = hsv[1];
+        double v = hsv[2];
 
-    List clssPred = new List.generate(1, (index) => List.filled(8, 0.0));
-    List leafNodeMask = new List.generate(1, (index) => List.filled(8, 0.0));
+        double rNorm = r / imageStd;
+        double gNorm = g / imageStd;
+        double bNorm = b / imageStd;
 
-    Map<int, Object> outputs = new Map<int, Object>();
+        floatValues[i][j] = [hue, s, v, rNorm, gNorm, bNorm];
+      }
+    }
+    return floatValues;
+  }
 
-    outputs[interpreter.getOutputIndex("Identity")] = clssPred;
-    outputs[interpreter.getOutputIndex("Identity_1")] = leafNodeMask;
+  List<double> _rgbToHsv(int r, int g, int b) {
+    double rd = r / 255.0;
+    double gd = g / 255.0;
+    double bd = b / 255.0;
 
-    if (input.isNotEmpty &&
-        outputs.isNotEmpty &&
-        input.length > 0 &&
-        outputs.length > 0) {
-      interpreter.runForMultipleInputs(input, outputs);
+    double max = [rd, gd, bd].reduce((a, b) => a > b ? a : b);
+    double min = [rd, gd, bd].reduce((a, b) => a < b ? a : b);
 
-      print("FaceAntiSpoofing" +
-          "[" +
-          clssPred[0][0].toString() +
-          ", " +
-          clssPred[0][1].toString() +
-          ", " +
-          clssPred[0][2].toString() +
-          ", " +
-          clssPred[0][3].toString() +
-          ", " +
-          clssPred[0][4].toString() +
-          ", " +
-          clssPred[0][5].toString() +
-          ", " +
-          clssPred[0][6].toString() +
-          ", " +
-          clssPred[0][7].toString() +
-          "]\n");
-      print("FaceAntiSpoofing" +
-          "[" +
-          leafNodeMask[0][0].toString() +
-          ", " +
-          leafNodeMask[0][1].toString() +
-          ", " +
-          leafNodeMask[0][2].toString() +
-          ", " +
-          leafNodeMask[0][3].toString() +
-          ", " +
-          leafNodeMask[0][4].toString() +
-          ", " +
-          leafNodeMask[0][5].toString() +
-          ", " +
-          leafNodeMask[0][6].toString() +
-          ", " +
-          leafNodeMask[0][7].toString() +
-          "]\n");
+    double h, s, v = max;
 
-      return leafScore1(clssPred, leafNodeMask);
+    double d = max - min;
+    s = max == 0 ? 0 : d / max;
+
+    if (max == min) {
+      h = 0.0;
     } else {
-      print("ERROR in input/output values");
-      return -1;
-    }
-  }
-
-  static dynamic leafScore1(var clssPred, var leafNodeMask) {
-    var score = 0.0;
-    for (var i = 0; i < 8; i++) {
-      var absVar = (clssPred[0][i]).abs();
-      score += absVar * leafNodeMask[0][i];
-    }
-    return score;
-  }
-
-  /*
-   * Normalize the picture to [0, 1]
-   * @param bitmap
-   * @return
-   */
-  static Float32List normalizeImage(imglib.Image bitmap) {
-    var h = bitmap.height;
-    var w = bitmap.width;
-    var convertedBytes = Float32List(1 * h * w * 3);
-    var buffer = Float32List.view(convertedBytes.buffer);
-    var imageStd = 128;
-    var pixelIndex = 0;
-
-    for (var i = 0; i < h; i++) {
-      // Note that it is height first and then width
-      for (var j = 0; j < w; j++) {
-        var pixel = bitmap.getPixel(j, i);
-        buffer[pixelIndex++] = (imglib.getRed(pixel) - imageStd) / imageStd;
-        buffer[pixelIndex++] = (imglib.getGreen(pixel) - imageStd) / imageStd;
-        buffer[pixelIndex++] = (imglib.getBlue(pixel) - imageStd) / imageStd;
+      if (max == rd) {
+        h = (gd - bd) / d + (gd < bd ? 6 : 0);
+      } else if (max == gd) {
+        h = (bd - rd) / d + 2;
+      } else {
+        h = (rd - gd) / d + 4;
       }
+      h /= 6;
     }
-    return convertedBytes.buffer.asFloat32List();
+
+    return [h * 360.0, s, v];
   }
 
-  /*
-   * Laplacian algorithm to calculate clarity
-   * @param bitmap
-   * @return Fraction
-   */
-  static int laplacian(imglib.Image bitmap) {
-    // Resize the face to a size of 256X256, because the shape of the placeholder that needs feed data below is (1, 256, 256, 3)
-    imglib.Image bitmapScale =
-        imglib.copyResizeCropSquare(bitmap, INPUT_IMAGE_SIZE);
+  // img.Image cropFace(CameraImage image, Face faceDetected) {
+  //   img.Image convertedImage = _convertCameraImage(image);
 
-    var laplace = [
-      [0, 1, 0],
-      [1, -4, 1],
-      [0, 1, 0]
-    ];
-    int size = laplace.length;
-    var img = imglib.grayscale(bitmapScale);
-    int height = img.height;
-    int width = img.width;
+  //   double x;
+  //   double y;
+  //   double h;
+  //   double w;
 
-    int score = 0;
-    for (int x = 0; x < height - size + 1; x++) {
-      for (int y = 0; y < width - size + 1; y++) {
-        int result = 0;
-        // Convolution operation on size*size area
-        for (int i = 0; i < size; i++) {
-          for (int j = 0; j < size; j++) {
-            result += (img.getPixel(x + i, y + j) & 0xFF) * laplace[i][j];
-          }
-        }
-        if (result > LAPLACE_THRESHOLD) {
-          score++;
-        }
-      }
-    }
-    return score;
-  }
+  //   if (landscape_mode) {
+  //     x = faceDetected.boundingBox.left - 5.0;
+  //     y = faceDetected.boundingBox.top - 5.0;
+  //     w = faceDetected.boundingBox.width + 5.0;
+  //     h = faceDetected.boundingBox.height + 5.0;
+  //   } else {
+  //     x = faceDetected.boundingBox.left - 5.0;
+  //     y = faceDetected.boundingBox.top - 5.0;
+  //     w = faceDetected.boundingBox.width + 5.0;
+  //     h = faceDetected.boundingBox.height + 5.0;
+  //   }
+
+  //   img.Image croppedImage = img.copyCrop(
+  //       convertedImage, x.round(), y.round(), w.round(), h.round());
+
+  //   // Resize the image to always 80x80
+  //   // imglib.Image resizedImage =
+  //   //     imglib.copyResize(croppedImage, width: 80, height: 80);
+
+  //   return croppedImage;
+  // }
+
+  // img.Image _convertCameraImage(CameraImage image) {
+  //   var imgs = convertToImage(image);
+  //   var img1 =
+  //       landscape_mode ? img.copyRotate(imgs, 0) : img.copyRotate(imgs, -90);
+  //   return img1;
+  // }
 }
-
-// import 'dart:core';
-// import 'dart:typed_data';
-// import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
-// import 'package:image/image.dart' as imglib;
-// //import 'package:quiver/collection.dart';
-
-// class FaceAntiSpoofing {
-//   FaceAntiSpoofing._();
-
-//   static const String MODEL_FILE = "FaceAntiSpoofing.tflite";
-//   static const INPUT_IMAGE_SIZE =
-//       256; // The width and height of the placeholder image that needs feed data
-//   static const THRESHOLD =
-//       0.01; // Set a threshold value, greater than this value is considered an attack
-//   static const ROUTE_INDEX = 6; // Route index observed during training
-//   static const LAPLACE_THRESHOLD = 50; // Laplace sampling threshold
-//   static const LAPLACIAN_THRESHOLD = 500; // Picture clarity judgment threshold
-//   static late tfl.Interpreter interpreter;
-
-//   /*
-//    * Live detection
-//    */
-//   static String antiSpoofing(
-//       imglib.Image bitmapCrop1, imglib.Image bitmapCrop2) {
-//     if (bitmapCrop1 == null || bitmapCrop2 == null) {
-//       print("Please detect the face first");
-//       return "Nothing";
-//     }
-
-//     // Judge the clarity of the picture before live detection
-//     var laplace1 = laplacian(bitmapCrop1);
-
-//     String text = "Sharpness detection result left：" + laplace1.toString();
-//     if (laplace1 < LAPLACIAN_THRESHOLD) {
-//       text = text + "，" + "False";
-//     } else {
-//       var start = DateTime.now().microsecondsSinceEpoch;
-
-//       // Live detection
-//       var score1 = _antiSpoofing(bitmapCrop1);
-
-//       var end = DateTime.now().microsecondsSinceEpoch;
-
-//       text = "Sharpness detection result left：" + score1.toString();
-//       if (score1 > THRESHOLD) {
-//         text = text + "，" + "True";
-//       } else {
-//         text = text + "，" + "False";
-//       }
-//       text = text + ".Time consuming: " + (end - start).toString();
-//     }
-//     print(text);
-
-//     // Judge the clarity of the second picture before live detection
-//     var laplace2 = laplacian(bitmapCrop2);
-
-//     String text2 = "Sharpness detection result left：" + laplace2.toString();
-//     if (laplace2 < LAPLACIAN_THRESHOLD) {
-//       text2 = text2 + "，" + "False";
-//     } else {
-//       // Live detection
-//       var score2 = _antiSpoofing(bitmapCrop2);
-//       text2 = "Liveness test result right：" + score2.toString();
-//       if (score2 > THRESHOLD) {
-//         text2 = text2 + "，" + "True";
-//       } else {
-//         text2 = text2 + "，" + "False";
-//       }
-//     }
-//     print(text2);
-//     return text2;
-//   }
-
-//   static Future loadSpoofModel() async {
-//     try {
-//       interpreter = await tfl.Interpreter.fromAsset(MODEL_FILE);
-
-//       print('**********\n Loaded successfully model $MODEL_FILE \n*********\n');
-//     } catch (e) {
-//       print('Failed to load model.');
-//       print(e);
-//     }
-//   }
-
-//   /*
-//    * Live detection
-//    * @param bitmap
-//    * @return score
-//    */
-//   static double _antiSpoofing(imglib.Image bitmap) {
-//     // Resize the face to a size of 256X256, because the shape of the placeholder that needs feed data below is (1, 256, 256, 3)
-//     imglib.Image bitmapScale =
-//         imglib.copyResizeCropSquare(bitmap, INPUT_IMAGE_SIZE);
-
-//     var img = normalizeImage(bitmapScale);
-
-//     List<Object> input =
-//         List.generate(1, (index) => List.filled(8, 0.0), growable: true);
-
-//     input[0] = img.reshape([1, INPUT_IMAGE_SIZE, INPUT_IMAGE_SIZE, 3]);
-
-//     List clssPred = new List.generate(1, (index) => List.filled(8, 0.0));
-//     List leafNodeMask = new List.generate(1, (index) => List.filled(8, 0.0));
-
-//     Map<int, Object> outputs = new Map<int, Object>();
-
-//     outputs[interpreter.getOutputIndex("Identity")] = clssPred;
-//     outputs[interpreter.getOutputIndex("Identity_1")] = leafNodeMask;
-
-//     if (input.isNotEmpty &&
-//         outputs.isNotEmpty &&
-//         input.length > 0 &&
-//         outputs.length > 0) {
-//       interpreter.runForMultipleInputs(input, outputs);
-
-//       print("FaceAntiSpoofing" +
-//           "[" +
-//           clssPred[0][0].toString() +
-//           ", " +
-//           clssPred[0][1].toString() +
-//           ", " +
-//           clssPred[0][2].toString() +
-//           ", " +
-//           clssPred[0][3].toString() +
-//           ", " +
-//           clssPred[0][4].toString() +
-//           ", " +
-//           clssPred[0][5].toString() +
-//           ", " +
-//           clssPred[0][6].toString() +
-//           ", " +
-//           clssPred[0][7].toString() +
-//           "]\n");
-//       print("FaceAntiSpoofing" +
-//           "[" +
-//           leafNodeMask[0][0].toString() +
-//           ", " +
-//           leafNodeMask[0][1].toString() +
-//           ", " +
-//           leafNodeMask[0][2].toString() +
-//           ", " +
-//           leafNodeMask[0][3].toString() +
-//           ", " +
-//           leafNodeMask[0][4].toString() +
-//           ", " +
-//           leafNodeMask[0][5].toString() +
-//           ", " +
-//           leafNodeMask[0][6].toString() +
-//           ", " +
-//           leafNodeMask[0][7].toString() +
-//           "]\n");
-
-//       return leafScore1(clssPred, leafNodeMask);
-//     } else {
-//       print("ERROR in input/output values");
-//       return -1;
-//     }
-//   }
-
-//   static dynamic leafScore1(var clssPred, var leafNodeMask) {
-//     var score = 0.0;
-//     for (var i = 0; i < 8; i++) {
-//       var absVar = (clssPred[0][i]).abs();
-//       score += absVar * leafNodeMask[0][i];
-//     }
-//     return score;
-//   }
-
-//   static dynamic leafScore2(var clssPred) {
-//     return clssPred[0][ROUTE_INDEX];
-//   }
-
-//   /*
-//    * Normalize the picture to [0, 1]
-//    * @param bitmap
-//    * @return
-//    */
-//   static Float32List normalizeImage(imglib.Image bitmap) {
-//     var h = bitmap.height;
-//     var w = bitmap.width;
-//     var convertedBytes = Float32List(1 * h * w * 3);
-//     var buffer = Float32List.view(convertedBytes.buffer);
-//     var imageStd = 128;
-//     var pixelIndex = 0;
-
-//     for (var i = 0; i < h; i++) {
-//       // Note that it is height first and then width
-//       for (var j = 0; j < w; j++) {
-//         var pixel = bitmap.getPixel(j, i);
-//         buffer[pixelIndex++] = (imglib.getRed(pixel) - imageStd) / imageStd;
-//         buffer[pixelIndex++] = (imglib.getGreen(pixel) - imageStd) / imageStd;
-//         buffer[pixelIndex++] = (imglib.getBlue(pixel) - imageStd) / imageStd;
-//       }
-//     }
-//     return convertedBytes.buffer.asFloat32List();
-//   }
-
-//   /*
-//    * Laplacian algorithm to calculate clarity
-//    * @param bitmap
-//    * @return Fraction
-//    */
-//   static dynamic laplacian(imglib.Image bitmap) {
-//     // Resize the face to a size of 256X256, because the shape of the placeholder that needs feed data below is (1, 256, 256, 3)
-//     imglib.Image bitmapScale =
-//         imglib.copyResizeCropSquare(bitmap, INPUT_IMAGE_SIZE);
-
-//     var laplace = [
-//       [0, 1, 0],
-//       [1, -4, 1],
-//       [0, 1, 0]
-//     ];
-//     int size = laplace.length;
-//     var img = imglib.grayscale(bitmapScale);
-//     int height = img.height;
-//     int width = img.width;
-
-//     int score = 0;
-//     for (int x = 0; x < height - size + 1; x++) {
-//       for (int y = 0; y < width - size + 1; y++) {
-//         int result = 0;
-//         // Convolution operation on size*size area
-//         for (int i = 0; i < size; i++) {
-//           for (int j = 0; j < size; j++) {
-//             result += (img.getPixel(x + i, y + j) & 0xFF) * laplace[i][j];
-//           }
-//         }
-//         if (result > LAPLACE_THRESHOLD) {
-//           score++;
-//         }
-//       }
-//     }
-//     return score;
-//   }
-// }

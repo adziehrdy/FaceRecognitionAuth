@@ -102,7 +102,21 @@ class _CateringExceptionState extends State<CateringException> {
                                     fontSize: 18,
                                     color: Colors.blue),
                               ),
-                              Text(formatDateString(listException[index].date))
+                              Row(
+                                children: [
+                                  Text(formatDateString(
+                                      listException[index].date)),
+                                  SizedBox(
+                                    width: 10,
+                                  ),
+                                  Text("|"),
+                                  SizedBox(
+                                    width: 10,
+                                  ),
+                                  Text(formatDateString(
+                                      listException[index].shift ?? "-")),
+                                ],
+                              )
                             ],
                           ),
                         ],

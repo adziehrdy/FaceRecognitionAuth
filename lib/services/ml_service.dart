@@ -93,10 +93,10 @@ class MLService {
     double w;
 
     if (landscape_mode) {
-      x = faceDetected.boundingBox.left - 10.0;
-      y = faceDetected.boundingBox.top - 10.0;
-      h = faceDetected.boundingBox.width + 10.0;
-      w = faceDetected.boundingBox.height + 10.0;
+      x = faceDetected.boundingBox.left;
+      y = faceDetected.boundingBox.top;
+      h = faceDetected.boundingBox.width;
+      w = faceDetected.boundingBox.height;
     } else {
       x = faceDetected.boundingBox.left - 10.0;
       y = faceDetected.boundingBox.top - 10.0;

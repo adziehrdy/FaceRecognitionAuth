@@ -87,7 +87,7 @@ dependencies:
   order_tracker_zen: ^1.0.0+4
   timeline_tile: ^2.0.0
   audioplayers: ^6.0.0
-  pytorch_mobile: ^0.2.2
+  # pytorch_mobile: ^0.2.2
 
 dev_dependencies:
   flutter_test:
@@ -126,6 +126,8 @@ flutter:
     - assets/sound/
     - assets/FaceDeSpoofing.tflite
     - assets/FaceAntiSpoofing.tflite
+    - assets/2.7_80x80_MiniFASNetV2.pth
+    # - assets/best5-n.pt
   #   - images/a_dot_ham.jpeg
 
 

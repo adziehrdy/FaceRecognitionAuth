@@ -20,6 +20,8 @@ import 'package:image/image.dart' as imglib;
 import 'package:intl/intl.dart' as intl;
 import 'package:one_clock/one_clock.dart';
 
+import '../FR_ENGINE/pytouch_FAS.dart';
+
 class SignIn extends StatefulWidget {
   const SignIn({Key? key, required this.MODE}) : super(key: key);
 
@@ -40,6 +42,7 @@ class SignInState extends State<SignIn> {
   double lat = 0;
   double long = 0;
   String alamat = "-";
+  User? lastUserKnow;
 
   bool _isPictureTaken = false;
   bool _isInitializing = false;
@@ -54,16 +57,20 @@ class SignInState extends State<SignIn> {
 
   Image? DetectedFaceImage;
 
+  bool isSpoofBefore = false;
+  int realCounter = 0;
+
   String painterMode = "";
   double spoofScore = 0;
   int blurScore = 0;
-  AdziehrdyAntiSpoof adzieFAS = AdziehrdyAntiSpoof();
+  // Pytouch_FAS adzieFAS = Pytouch_FAS();
+  FaceDeSpoofing FAS = FaceDeSpoofing();
 
   @override
   void initState() {
     super.initState();
     getLastLocation();
-    adzieFAS.loadModelFromAssets();
+    // adzieFAS.loadModelFromAssets();
 
     _start();
   }
@@ -89,9 +96,10 @@ class SignInState extends State<SignIn> {
   }
 
   Future _start() async {
+    // FAS.loadModel();
     await _cameraService.initialize();
     await _frameFaces();
-    FaceAntiSpoofing.loadSpoofModel();
+
     // adzieFAS.loadModelFromAssets();
   }
 
@@ -123,16 +131,27 @@ class SignInState extends State<SignIn> {
           _faceDetectorService.faces[0].headEulerAngleY! < -10) {
         print("=== POSISI MUKA TIDAK BAGUS=== ");
       } else {
-        int laplaceScore = await FaceAntiSpoofing.laplacian(faceImage);
+        int laplaceScore = await laplacian(faceImage);
         print("BLURR SCORE " + laplaceScore.toString());
 
         blurScore = laplaceScore;
 
-        if (laplaceScore > 700) {
-          RECONIZE_FACE(image);
+        if (blurScore > 600) {
+          if (lastUserKnow == null) {
+            RECONIZE_FACE(image);
+          } else {
+            imglib.Image FAS_CROP =
+                cropFaceANTISPOOF(image, _faceDetectorService.faces[0]);
 
-          // print(await adzieFAS.isFaceSpoofedWithModel(
-          //     image, _faceDetectorService.faces[0], context));
+            bool isSpoof = await FAS.deSpoofing(FAS_CROP);
+            if (!isSpoof) {
+              _SUCCESS(lastUserKnow!);
+            } else {
+              lastUserKnow = null;
+            }
+          }
+
+          // FAS.deSpoofing(faceImage);
         } else {
           painterMode = "BLUR";
           BlurrCounter = BlurrCounter + 1;
@@ -164,60 +183,40 @@ class SignInState extends State<SignIn> {
 
   RECONIZE_FACE(CameraImage image) async {
     if (enable_recognize_process) {
-      painterMode = "GOOD";
       _mlService.setCurrentPrediction(image, _faceDetectorService.faces[0]);
-
       if (_faceDetectorService.faceDetected) {
         User? user = await _mlService.predict();
         if (user != null) {
-          imglib.Image faceImageAS =
+          // imglib.Image faceImageAS =
+          //     cropFaceANTISPOOF(image, _faceDetectorService.faces[0]);
+          imglib.Image FAS_CROP =
               cropFaceANTISPOOF(image, _faceDetectorService.faces[0]);
 
-          // bool? isSpoof = await FaceAntiSpoofing.antiSpoofing(faceImageAS);
-          bool? isSpoof = await adzieFAS.isFaceSpoofedWithModel(
-              image, _faceDetectorService.faces[0], context);
+          bool isSpoof = await FAS.deSpoofing(FAS_CROP);
 
-          if (!isSpoof!) {
-            enable_recognize_process = false;
-            //  await _cameraService.takePicture();
-            getDateTimeNow();
-
-            // pauseCameraAndMLKit();
-
-            //  //TESTING ABSENSI
-
-            //  textJamAbsensi = "2024-02-11 07:30:00";
-            //  jamAbsensi = DateTime.parse(textJamAbsensi!);
-
-            //  //TESTING ABSENSI
-
-            enable_recognize_process = false;
-            await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FrDetectedPage(
-                    // employee_name: user.employee_name!,
-                    textJamAbsensi: textJamAbsensi!,
-                    jamAbsensi: jamAbsensi!,
-                    alamat: alamat,
-                    lat: lat.toString(),
-                    long: long.toString(),
-                    // company_id: user.company_id!,
-                    // employee_id: user.employee_id!,
-                    type_absensi: widget.MODE,
-                    faceImage: convertImagelibToUint8List(faceImage),
-                    user: user,
-                  ),
-                ));
-
-            SpoofCounter = 0;
-            BlurrCounter = 0;
-
-            // _reload();
-
-            resumeCameraAndMLKit();
-            enable_recognize_process = true;
+          if (isSpoof && blurScore < 2000) {
+            lastUserKnow = null;
+            painterMode = "SPOOF";
+            realCounter = 0;
           } else {
+            painterMode = "GOOD";
+            if (SpoofCounter >= 3) {
+              SpoofCounter = 0;
+            }
+          }
+
+          // bool? isSpoof = await FaceAntiSpoofing.antiSpoofing(faceImageAS);
+          // bool? isSpoof = await adzieFAS.isFaceSpoofedWithModel(
+          //     image, _faceDetectorService.faces[0], context);
+
+          if (!isSpoof || blurScore > 2000) {
+            lastUserKnow = user;
+            realCounter = realCounter + 1;
+            if (realCounter >= 2) {
+              _SUCCESS(user);
+            }
+          } else {
+            realCounter = 0;
             SpoofCounter = SpoofCounter + 1;
 
             if (SpoofCounter >= 9) {
@@ -230,7 +229,7 @@ class SignInState extends State<SignIn> {
 
               enable_recognize_process = true;
               SpoofCounter = 0;
-
+              lastUserKnow = null;
               painterMode = "SPOOF";
             }
           }
@@ -241,7 +240,7 @@ class SignInState extends State<SignIn> {
         // var bottomSheetController = scaffoldKey.currentState!
         //     .showBottomSheet((context) => signInSheet(user: user));
         // bottomSheetController.closed.whenComplete(_reload);
-      }
+      } else {}
     }
   }
 
@@ -252,6 +251,50 @@ class SignInState extends State<SignIn> {
   _reload() {
     if (mounted) setState(() => _isPictureTaken = false);
     _start();
+  }
+
+  _SUCCESS(User user) async {
+    enable_recognize_process = false;
+    //  await _cameraService.takePicture();
+    getDateTimeNow();
+
+    // pauseCameraAndMLKit();
+
+    //  //TESTING ABSENSI
+
+    //  textJamAbsensi = "2024-02-11 07:30:00";
+    //  jamAbsensi = DateTime.parse(textJamAbsensi!);
+
+    //  //TESTING ABSENSI
+
+    enable_recognize_process = false;
+    lastUserKnow = null;
+    await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FrDetectedPage(
+            // employee_name: user.employee_name!,
+            textJamAbsensi: textJamAbsensi!,
+            jamAbsensi: jamAbsensi!,
+            alamat: alamat,
+            lat: lat.toString(),
+            long: long.toString(),
+            // company_id: user.company_id!,
+            // employee_id: user.employee_id!,
+            type_absensi: widget.MODE,
+            faceImage: convertImagelibToUint8List(faceImage),
+            user: user,
+          ),
+        ));
+
+    SpoofCounter = 0;
+    BlurrCounter = 0;
+    realCounter = 0;
+
+    // _reload();
+
+    resumeCameraAndMLKit();
+    enable_recognize_process = true;
   }
 
   // Future<void> onTap() async {
@@ -315,15 +358,27 @@ class SignInState extends State<SignIn> {
             Column(children: [
               Column(
                 children: [
-                  DigitalClock(
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.5),
+                      borderRadius: BorderRadius.all(Radius.circular(15)),
+                      backgroundBlendMode: BlendMode.softLight,
+                      boxShadow: [
+                        BoxShadow(
+                          blurRadius: 10,
+                          spreadRadius: 2,
+                          color: Colors.grey.withOpacity(0.5),
+                        ),
+                      ],
+                    ),
+                    child: DigitalClock(
                       textScaleFactor: 2,
                       showSeconds: true,
                       isLive: true,
-                      decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.rectangle,
-                          borderRadius: BorderRadius.all(Radius.circular(15))),
-                      datetime: DateTime.now()),
+                      datetime: DateTime.now(),
+                    ),
+                  ),
                   // Text(_latitude + "," + _longitude),
                   // Text(alamat)
                 ],

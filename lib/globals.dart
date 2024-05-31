@@ -1121,10 +1121,10 @@ imglib.Image cropFaceANTISPOOF(CameraImage image, Face faceDetected) {
   double w;
 
   if (true) {
-    x = faceDetected.boundingBox.left - 150.0;
-    y = faceDetected.boundingBox.top - 150.0;
-    h = faceDetected.boundingBox.width + 150.0;
-    w = faceDetected.boundingBox.height + 150.0;
+    x = faceDetected.boundingBox.left - 0.0;
+    y = faceDetected.boundingBox.top - 0.0;
+    h = faceDetected.boundingBox.width + 0.0;
+    w = faceDetected.boundingBox.height + 0.0;
   } else {
     x = faceDetected.boundingBox.left - 10.0;
     y = faceDetected.boundingBox.top - 10.0;
@@ -1137,7 +1137,7 @@ imglib.Image cropFaceANTISPOOF(CameraImage image, Face faceDetected) {
 
   // Resize the image to always 80x80
   imglib.Image resizedImage =
-      imglib.copyResize(croppedImage, width: 800, height: 800);
+      imglib.copyResize(croppedImage, width: 256, height: 256);
 
   return resizedImage;
 }
@@ -1182,6 +1182,40 @@ bool isTimeInRange(String startTime, String endTime, TimeOfDay currentTime) {
     return false;
   }
 }
+
+int laplacian(imglib.Image bitmap) {
+  // Resize the face to a size of 256X256, because the shape of the placeholder that needs feed data below is (1, 256, 256, 3)
+  imglib.Image bitmapScale = imglib.copyResizeCropSquare(bitmap, bitmap.height);
+
+  var laplace = [
+    [0, 1, 0],
+    [1, -4, 1],
+    [0, 1, 0]
+  ];
+  int size = laplace.length;
+  var img = imglib.grayscale(bitmapScale);
+  int height = img.height;
+  int width = img.width;
+
+  int score = 0;
+  for (int x = 0; x < height - size + 1; x++) {
+    for (int y = 0; y < width - size + 1; y++) {
+      int result = 0;
+      // Convolution operation on size*size area
+      for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+          result += (img.getPixel(x + i, y + j) & 0xFF) * laplace[i][j];
+        }
+      }
+      if (result > 50) {
+        score++;
+      }
+    }
+  }
+  return score;
+}
+
+
 
 
 
