@@ -141,6 +141,7 @@ class _UserBannerState extends State<UserBanner> {
                                     ),
                                   ),
                                   onTap: () async {
+<<<<<<< Updated upstream
                                     await showDialog(
                                       context: context,
                                       builder: (BuildContext context) {
@@ -150,6 +151,25 @@ class _UserBannerState extends State<UserBanner> {
                                     status_rig = await SpGetSelectedStatusRig();
                                     setState(() {
                                       status_rig;
+=======
+                                    PinInputDialog.show(context, (p0) async {
+                                      await showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return dialog_change_rig_status(
+                                            onStatusSelected: (selectedStatus) {
+                                              setState(() {
+                                                saveRigStatus(selectedStatus);
+                                                setState(() {
+                                                  isCatering = false;
+                                                  saveRigCateringStatus();
+                                                });
+                                              });
+                                            },
+                                          );
+                                        },
+                                      );
+>>>>>>> Stashed changes
                                     });
                                   },
                                 )),
@@ -229,4 +249,85 @@ class _UserBannerState extends State<UserBanner> {
         ),
       );
   }
+<<<<<<< Updated upstream
+=======
+
+  Future<void> saveRigStatus(RigStatusShift statusRig) async {
+    setState(() {
+      status_rig = statusRig;
+    });
+    await SpSetSelectedStatusRig(jsonEncode(statusRig));
+    String onShift = await getCurrentShiftRange();
+
+    DatabaseHelperRigStatusHistory dbHelper =
+        DatabaseHelperRigStatusHistory.instance;
+
+    List<RigStatusHistoryModel> historyStatus = await dbHelper.queryAllStatus();
+    String today = formatDateForFilter(DateTime.now());
+
+    if (historyStatus.length != 0 && historyStatus[0].date.contains(today)) {
+      await dbHelper.update(historyStatus[0], statusRig.statusBranchId ?? "-",
+          statusRig.statusBranch ?? "-", onShift);
+    } else {
+      String branch_id = await getBranchID();
+      String requester = await getActiveSuperIntendentID();
+      DateTime date = DateTime.now();
+
+      await dbHelper.insert(RigStatusHistoryModel(
+          branchId: branch_id,
+          requester: requester,
+          status: statusRig.statusBranch ?? "-",
+          branchStatusId: statusRig.statusBranchId ?? "-",
+          date: formatDateTime(date),
+          api_flag: "I",
+          shift: onShift));
+    }
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return dialog_rig_info();
+      },
+    );
+  }
+
+  Future<void> saveRigCateringStatus() async {
+    String onShift = await getCurrentShiftRange();
+
+    setState(() {
+      setCateringToady(isCatering);
+    });
+
+    DatabaseHelperCateringHistory dbHelper =
+        DatabaseHelperCateringHistory.instance;
+
+    List<CateringHistoryModel> ListcateringHistory =
+        await dbHelper.queryAllStatus();
+    String today = formatDateForFilter(DateTime.now());
+
+    if (ListcateringHistory.length != 0 &&
+        ListcateringHistory[0].date.contains(today)) {
+      dbHelper.update(ListcateringHistory[0], onShift, isCatering);
+    } else {
+      String branch_id = await getBranchID();
+      String requester = await getActiveSuperIntendentID();
+      DateTime date = DateTime.now();
+      String flagStatus = "-";
+
+      if (isCatering) {
+        flagStatus = "AKTIF";
+      } else {
+        flagStatus = "TIDAK AKTIF";
+      }
+
+      await dbHelper.insert(CateringHistoryModel(
+          branchId: branch_id,
+          requester: requester,
+          status: flagStatus,
+          date: formatDateTime(date),
+          api_flag: "I",
+          shift: onShift));
+    }
+  }
+>>>>>>> Stashed changes
 }

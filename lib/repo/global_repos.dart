@@ -170,9 +170,8 @@ class GlobalRepo {
         return true;
       } else {
         showToast("SHIFT RIG BELUM DITAMBAHKAN, MOHON HUBUNGI ADMIN");
-        
+
         logout(context);
-       
       }
     } else {
       showToast("Failed to retrieve data from MASTER_RIG_STATUS " +

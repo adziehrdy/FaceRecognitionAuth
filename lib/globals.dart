@@ -26,6 +26,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image/image.dart' as img;
 import 'package:image/image.dart' as imglib;
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 // import 'package:location/location.dart';
@@ -35,6 +36,13 @@ import 'package:sn_progress_dialog/progress_dialog.dart';
 import 'package:trust_location/trust_location.dart';
 import 'package:unique_identifier/unique_identifier.dart';
 
+<<<<<<< Updated upstream
+=======
+import 'models/model_rig_shift.dart';
+import 'services/image_converter.dart';
+import 'services/shared_preference_helper.dart';
+
+>>>>>>> Stashed changes
 String? endpointUrl;
 late String publicUrl;
 bool bypass_office_location_range = false;
@@ -78,7 +86,7 @@ getCurrentLocation() async {
   return position;
 }
 
-enum ApiMethods { GET, POST }
+enum ApiMethods { GET, POST, DELETE }
 
 Future<bool?> showAlert({
   required BuildContext context,
@@ -242,6 +250,14 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url,
       log("================ RESPONSE ==================");
       log(jsonSting);
       return await dio.post(
+        url,
+        data: data != null ? json.encode(data) : "",
+      );
+    } else if (method == ApiMethods.DELETE) {
+      String jsonSting = jsonEncode(data);
+      log("================ RESPONSE ==================");
+      log(jsonSting);
+      return await dio.delete(
         url,
         data: data != null ? json.encode(data) : "",
       );
@@ -1056,6 +1072,185 @@ bool reliefChecker(String? startDate, String? endDate) {
   }
 }
 
+<<<<<<< Updated upstream
+=======
+void showLoadingMessageDialog(BuildContext context, String message) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 20),
+            Text(message),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+Future<List<User>> getAllEmployeeAndRelief() async {
+  List<User> users = [];
+
+  DatabaseHelperEmployee _dbHelper = DatabaseHelperEmployee.instance;
+  users = await _dbHelper.queryAllUsersForMLKit();
+
+  //FOR RELIEF
+  DatabaseHelperEmployeeRelief _dbHelperRelief =
+      DatabaseHelperEmployeeRelief.instance;
+  List<User> userRelief = await _dbHelperRelief.queryAllUsersForMLKit();
+  for (User user in userRelief) {
+    if (reliefChecker(user.relief_start_date, user.relief_end_date)) {
+      users.add(user);
+    }
+  }
+
+  return users;
+}
+
+successSound() async {
+  try {
+    final player = AudioPlayer();
+    await player.setVolume(0.4);
+    await player.play(AssetSource("sound/success_sound.mp3"));
+  } catch (e) {
+    print(e.toString());
+  }
+}
+
+imglib.Image cropFaceANTISPOOF(CameraImage image, Face faceDetected) {
+  imglib.Image convertedImage = _convertCameraImage(image);
+
+  double x;
+  double y;
+  double h;
+  double w;
+
+  if (true) {
+    x = faceDetected.boundingBox.left - 0.0;
+    y = faceDetected.boundingBox.top - 0.0;
+    h = faceDetected.boundingBox.width + 0.0;
+    w = faceDetected.boundingBox.height + 0.0;
+  } else {
+    x = faceDetected.boundingBox.left - 10.0;
+    y = faceDetected.boundingBox.top - 10.0;
+    w = faceDetected.boundingBox.width + 10.0;
+    h = faceDetected.boundingBox.height + 10.0;
+  }
+
+  imglib.Image croppedImage = imglib.copyCrop(
+      convertedImage, x.round(), y.round(), w.round(), h.round());
+
+  // Resize the image to always 80x80
+  imglib.Image resizedImage =
+      imglib.copyResize(croppedImage, width: 256, height: 256);
+
+  return resizedImage;
+}
+
+imglib.Image _convertCameraImage(CameraImage image) {
+  var img = convertToImage(image);
+  var img1 = true ? imglib.copyRotate(img, 0) : imglib.copyRotate(img, -90);
+  return img1;
+}
+
+Future<bool> getCateringToday() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getBool("IS_CATERING_TODAY") ?? false;
+}
+
+setCateringToady(bool cateringStatus) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setBool("IS_CATERING_TODAY", cateringStatus);
+}
+
+bool isTimeInRange(String startTime, String endTime, TimeOfDay currentTime) {
+  try {
+    final now = DateTime.now();
+    final startDateTime =
+        DateTime.parse(now.toString().substring(0, 10) + ' ' + startTime);
+    final endDateTime =
+        DateTime.parse(now.toString().substring(0, 10) + ' ' + endTime);
+    final currentDateTime = DateTime(
+        now.year, now.month, now.day, currentTime.hour, currentTime.minute);
+
+    if (endDateTime.isBefore(startDateTime)) {
+      // Handle case where the range crosses midnight
+      final endDateTimeNextDay = endDateTime.add(Duration(days: 1));
+      return currentDateTime.isAfter(startDateTime) ||
+          currentDateTime.isBefore(endDateTimeNextDay);
+    }
+    return currentDateTime.isAfter(startDateTime) &&
+        currentDateTime.isBefore(endDateTime);
+  } catch (e) {
+    showToast("Error Saat Konversi Shift Ke DateTime");
+    showToast("Mohon Atur Shift di menu Rig Status History");
+    return false;
+  }
+}
+
+int laplacian(imglib.Image bitmap) {
+  // Resize the face to a size of 256X256, because the shape of the placeholder that needs feed data below is (1, 256, 256, 3)
+  imglib.Image bitmapScale = imglib.copyResizeCropSquare(bitmap, bitmap.height);
+
+  var laplace = [
+    [0, 1, 0],
+    [1, -4, 1],
+    [0, 1, 0]
+  ];
+  int size = laplace.length;
+  var img = imglib.grayscale(bitmapScale);
+  int height = img.height;
+  int width = img.width;
+
+  int score = 0;
+  for (int x = 0; x < height - size + 1; x++) {
+    for (int y = 0; y < width - size + 1; y++) {
+      int result = 0;
+      // Convolution operation on size*size area
+      for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+          result += (img.getPixel(x + i, y + j) & 0xFF) * laplace[i][j];
+        }
+      }
+      if (result > 50) {
+        score++;
+      }
+    }
+  }
+  return score;
+}
+
+bool isTodayChecker(DateTime dateToday, String dateCompare) {
+  if (dateCompare.contains(formatDateForFilter(dateToday))) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+Future<bool> onLineChecker() async {
+  return await InternetConnectionChecker().hasConnection;
+}
+
+Future<String> getCurrentShiftRange() async {
+  RigStatusShift? status_rig;
+  status_rig = await SpGetSelectedStatusRig();
+  String currentShift = "-";
+  TimeOfDay today = TimeOfDay.now();
+  for (ShiftRig shift in status_rig!.shift!) {
+    if (isTimeInRange(shift.checkin!, shift.checkout!, today)) {
+      currentShift = shift.id!;
+    }
+  }
+  return currentShift;
+}
+
+
+>>>>>>> Stashed changes
 
 
 
