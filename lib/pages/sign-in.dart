@@ -194,11 +194,12 @@ class SignInState extends State<SignIn> {
 
           bool isSpoof = await FAS.deSpoofing(FAS_CROP);
 
-          if (isSpoof && blurScore < 2000) {
+          if (isSpoof && blurScore < 2500) {
             lastUserKnow = null;
             painterMode = "SPOOF";
             realCounter = 0;
           } else {
+            lastUserKnow = user;
             painterMode = "GOOD";
             if (SpoofCounter >= 3) {
               SpoofCounter = 0;
@@ -219,7 +220,7 @@ class SignInState extends State<SignIn> {
             realCounter = 0;
             SpoofCounter = SpoofCounter + 1;
 
-            if (SpoofCounter >= 9) {
+            if (SpoofCounter >= 12) {
               enable_recognize_process = false;
               await Navigator.push(
                   context,
@@ -384,19 +385,19 @@ class SignInState extends State<SignIn> {
                 ],
               )
             ]),
-            SizedBox(height: 5),
-            Text(lat.toString() + " , " + long.toString()),
+            SizedBox(height: 10),
+            // Text(lat.toString() + " , " + long.toString()),
             Text("NOT BLUR SCORE = " + blurScore.toString()),
             // Text("BLUR SCORE = " + bl),
             SizedBox(height: 5),
-            Padding(
-              padding: const EdgeInsets.all(15),
-              child: Text(
-                alamat,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-              ),
-            )
+            // Padding(
+            //   padding: const EdgeInsets.all(15),
+            //   child: Text(
+            //     alamat,
+            //     textAlign: TextAlign.center,
+            //     maxLines: 2,
+            //   ),
+            // )
           ]),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:face_net_authentication/db/database_helper_rig_status_history.dart';
 import 'package:face_net_authentication/globals.dart';
+import 'package:face_net_authentication/pages/Catering/catering_history.dart';
 import 'package:face_net_authentication/pages/widgets/dialog_change_rig_status.dart';
 import 'package:face_net_authentication/repo/rig_status_repo.dart';
 import 'package:flutter/material.dart';
@@ -24,19 +25,38 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
 
   RigStatusShift? brachStatus;
 
+  DateTime today = DateTime.now();
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
 
     initData();
+    loadLocalData();
+    dbSync();
   }
 
+  String? selectedShift;
+
   Future<void> initData() async {
+    // brachStatus = await SpGetSelectedStatusRig();
     brachStatus = await SpGetSelectedStatusRig();
-    await loadLocalData();
-    await dbSync();
+    // await dbSync();
     // listStatus = await repo.getRigStatusHistory();
+    setState(() {
+      listStatus;
+    });
+    // await dbSync();
+
+    // await repo.insertRigStatusHistory(RigStatusHistoryModel(
+    //     branchId: "ICTDEV",
+    //     branchStatusId: "99",
+    //     requester: "001",
+    //     status: "TEST 2",
+    //     date: "2024-06-01 21:29:56",
+    //     api_flag: "",
+    //     shift: "PDC_MALAM"));
   }
 
   Future<void> loadLocalData() async {
@@ -54,11 +74,11 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
         appBar: AppBar(
           title: Text("Rig Status History"),
           actions: [
-            ElevatedButton(
-                onPressed: () {
-                  dbHelper.deleteAll();
-                },
-                child: Text("delete all"))
+            // ElevatedButton(
+            //     onPressed: () {
+            //       dbHelper.deleteAll();
+            //     },
+            //     child: Text("delete all"))
           ],
         ),
         body: Container(
@@ -124,17 +144,32 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    data.status + " | " + (data.api_flag ?? "-"),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        data.status,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      data.api_flag != null
+                          ? Icon(
+                              size: 20,
+                              Icons.cloud_off,
+                              color: Colors.orange,
+                            )
+                          : SizedBox()
+                    ],
                   ),
                   SizedBox(height: 6),
                   Text("Perubahan rig status ke " +
                       data.status.toLowerCase() +
-                      "."),
+                      " pada Shift " +
+                      (data.shift ?? "-")),
                   if (images != null)
                     Row(
                       children: images
@@ -161,40 +196,48 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
                   ),
                   Container(
                     alignment: Alignment.bottomRight,
-                    child: ElevatedButton(
-                        onPressed: () async {
-                          await showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return dialog_change_rig_status(
-                                onStatusSelected: (selectedStatus) async {
-                                  String selectedShift =
-                                      await _showDialogPilihShift(context);
+                    child: data.approver == null
+                        ? ElevatedButton(
+                            onPressed: () async {
+                              if (isTodayChecker(DateTime.now(), data.date)) {
+                                showToast(
+                                    "Untuk Mengedit Status Hari Ini Mohon Edit Di menu Utama");
+                              } else {
+                                RigStatusShift? statusSelected;
+                                await showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return dialog_change_rig_status(
+                                      onStatusSelected: (selectedStatus) async {
+                                        statusSelected = selectedStatus;
+                                      },
+                                    );
+                                  },
+                                );
 
-                                  RigStatusHistoryModel dataPreUpdate =
-                                      RigStatusHistoryModel(
-                                          id: data.id,
-                                          branchId: data.branchId,
-                                          branchStatusId:
-                                              selectedStatus.statusBranchId ??
-                                                  "-",
-                                          requester: data.requester,
-                                          status: selectedStatus.statusBranch ??
-                                              "-",
-                                          date: data.date,
-                                          shift: selectedShift,
-                                          api_flag: "U");
-
-                                  await dbHelper.update(dataPreUpdate);
-                                  setState(() {
-                                    initData();
-                                  });
-                                },
-                              );
+                                if (statusSelected != null) {
+                                  data.shift == "-"
+                                      ? brachStatus!.shift![0].id
+                                      : await _showDialogPilihShift(
+                                              context, data.shift ?? "") ??
+                                          null;
+                                  if (selectedShift != null) {
+                                    await dbHelper.update(
+                                        data,
+                                        statusSelected?.statusBranchId ?? "-",
+                                        statusSelected?.statusBranch ?? "-",
+                                        selectedShift!);
+                                    await loadLocalData();
+                                    await dbSync();
+                                  }
+                                }
+                              }
                             },
-                          );
-                        },
-                        child: Text("Edit")),
+                            child: Text("Edit"))
+                        : Text(
+                            "SUDAH DI APPROVE",
+                            style: TextStyle(color: Colors.blue),
+                          ),
                   )
                 ],
               ),
@@ -204,53 +247,36 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
   }
 
   dbSync() async {
-    List<RigStatusHistoryModel> dataInsert = await dbHelper.queryForInsert();
+    bool connection = await onLineChecker();
 
-    try {
-      if (dataInsert.isNotEmpty) {
-        for (RigStatusHistoryModel singleData in dataInsert) {
-          try {
-            bool result = await repo.insertRigStatusHistory(singleData);
-            if (!result) {
-              showToast("Kesalahan Saat insert " +
-                  singleData.status +
-                  " tanggal " +
-                  singleData.date);
-            } else {
-              await dbHelper.delete(singleData);
-            }
-          } catch (e) {
-            showToast(e.toString());
-            break;
+    if (connection) {
+      List<RigStatusHistoryModel> listUpdate =
+          await dbHelper.queryForUpdateOnline();
+      try {
+        for (RigStatusHistoryModel singleDelete in listUpdate) {
+          if (await repo.insertRigStatusHistory(singleDelete) != []) {
+            dbHelper.softDelete(singleDelete);
+          } else {
+            throw Exception();
           }
         }
-      }
-    } catch (e) {
-      // TODO
-      showToast(e.toString());
-    }
-    getStatusAndInsertToLocal();
-  }
 
-  getStatusAndInsertToLocal() async {
-    List<RigStatusHistoryModel> result = await repo.getRigStatusHistory();
+        dbHelper.insertAll(await repo.getRigStatusHistory());
 
-    if (result.isNotEmpty) {
-      await dbHelper.deleteAll();
-      await dbHelper.insertAll(result);
-      await loadLocalData();
+        loadLocalData();
+      } catch (e) {}
     }
   }
 
-  _showDialogPilihShift(BuildContext context) async {
-    String selectedShift = "-";
+  _showDialogPilihShift(BuildContext context, String lastShift) async {
+    selectedShift = null;
     await showDialog(
-      barrierDismissible: false, // add this line to disable dismiss
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text('Pilih Status'),
           content: DropdownButtonFormField<String>(
+            value: lastShift,
             decoration: InputDecoration(labelText: "Shift"),
             items: brachStatus!.shift!.map((ShiftRig shift) {
               return DropdownMenuItem<String>(
@@ -268,8 +294,7 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
             TextButton(
               child: Text('Submit'),
               onPressed: () {
-                // Handle submit button
-                Navigator.of(context).pop(selectedShift);
+                Navigator.pop(context);
               },
             ),
           ],

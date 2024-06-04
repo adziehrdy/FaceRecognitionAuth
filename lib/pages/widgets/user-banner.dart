@@ -159,8 +159,8 @@ class _UserBannerState extends State<UserBanner> {
                                               setState(() {
                                                 saveRigStatus(selectedStatus);
                                                 setState(() {
-                                                  saveRigCateringStatus();
                                                   isCatering = false;
+                                                  saveRigCateringStatus();
                                                 });
                                               });
                                             },
@@ -275,12 +275,11 @@ class _UserBannerState extends State<UserBanner> {
   }
 
   Future<void> saveRigStatus(RigStatusShift statusRig) async {
-    await SpSetSelectedStatusRig(jsonEncode(statusRig));
-    String onShift = await getCurrentShiftRange();
-
     setState(() {
       status_rig = statusRig;
     });
+    await SpSetSelectedStatusRig(jsonEncode(statusRig));
+    String onShift = await getCurrentShiftRange();
 
     DatabaseHelperRigStatusHistory dbHelper =
         DatabaseHelperRigStatusHistory.instance;
@@ -289,17 +288,8 @@ class _UserBannerState extends State<UserBanner> {
     String today = formatDateForFilter(DateTime.now());
 
     if (historyStatus.length != 0 && historyStatus[0].date.contains(today)) {
-      RigStatusHistoryModel dataPreUpdate = RigStatusHistoryModel(
-          id: historyStatus[0].id,
-          branchId: historyStatus[0].branchId,
-          branchStatusId: statusRig.statusBranchId ?? "-",
-          requester: historyStatus[0].requester,
-          status: statusRig.statusBranch ?? "-",
-          date: historyStatus[0].date,
-          api_flag: "U",
-          shift: onShift);
-
-      await dbHelper.update(dataPreUpdate);
+      await dbHelper.update(historyStatus[0], statusRig.statusBranchId ?? "-",
+          statusRig.statusBranch ?? "-", onShift);
     } else {
       String branch_id = await getBranchID();
       String requester = await getActiveSuperIntendentID();
@@ -324,16 +314,7 @@ class _UserBannerState extends State<UserBanner> {
   }
 
   Future<void> saveRigCateringStatus() async {
-    // await SpSetSelectedStatusRig(jsonEncode(statusRig));
-
     String onShift = await getCurrentShiftRange();
-
-    String flagStatus;
-    if (isCatering) {
-      flagStatus = "AKTIF";
-    } else {
-      flagStatus = "TIDAK AKTIF";
-    }
 
     setState(() {
       setCateringToady(isCatering);
@@ -348,20 +329,18 @@ class _UserBannerState extends State<UserBanner> {
 
     if (ListcateringHistory.length != 0 &&
         ListcateringHistory[0].date.contains(today)) {
-      CateringHistoryModel dataPreUpdate = CateringHistoryModel(
-          id: ListcateringHistory[0].id,
-          branchId: ListcateringHistory[0].branchId,
-          requester: ListcateringHistory[0].requester,
-          status: flagStatus,
-          date: ListcateringHistory[0].date,
-          api_flag: "U",
-          shift: onShift);
-
-      await dbHelper.update(dataPreUpdate);
+      dbHelper.update(ListcateringHistory[0], onShift, isCatering);
     } else {
       String branch_id = await getBranchID();
       String requester = await getActiveSuperIntendentID();
       DateTime date = DateTime.now();
+      String flagStatus = "-";
+
+      if (isCatering) {
+        flagStatus = "AKTIF";
+      } else {
+        flagStatus = "TIDAK AKTIF";
+      }
 
       await dbHelper.insert(CateringHistoryModel(
           branchId: branch_id,
@@ -379,7 +358,6 @@ class _UserBannerState extends State<UserBanner> {
     for (ShiftRig shift in status_rig!.shift!) {
       if (isTimeInRange(shift.checkin!, shift.checkout!, today)) {
         currentShift = shift.id!;
-        break;
       }
     }
     return currentShift;

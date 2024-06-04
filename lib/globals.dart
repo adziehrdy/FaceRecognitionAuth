@@ -28,6 +28,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image/image.dart' as img;
 import 'package:image/image.dart' as imglib;
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 // import 'package:location/location.dart';
@@ -82,7 +83,7 @@ getCurrentLocation() async {
   return position;
 }
 
-enum ApiMethods { GET, POST }
+enum ApiMethods { GET, POST, DELETE }
 
 Future<bool?> showAlert({
   required BuildContext context,
@@ -246,6 +247,14 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url,
       log("================ RESPONSE ==================");
       log(jsonSting);
       return await dio.post(
+        url,
+        data: data != null ? json.encode(data) : "",
+      );
+    } else if (method == ApiMethods.DELETE) {
+      String jsonSting = jsonEncode(data);
+      log("================ RESPONSE ==================");
+      log(jsonSting);
+      return await dio.delete(
         url,
         data: data != null ? json.encode(data) : "",
       );
@@ -1132,8 +1141,10 @@ imglib.Image cropFaceANTISPOOF(CameraImage image, Face faceDetected) {
     h = faceDetected.boundingBox.height + 10.0;
   }
 
-  imglib.Image croppedImage = imglib.copyCrop(
-      convertedImage, x.round(), y.round(), w.round(), h.round());
+  imglib.Image croppedImage = imglib.flip(
+      imglib.copyCrop(
+          convertedImage, x.round(), y.round(), w.round(), h.round()),
+      imglib.Flip.horizontal);
 
   // Resize the image to always 80x80
   imglib.Image resizedImage =
@@ -1213,6 +1224,18 @@ int laplacian(imglib.Image bitmap) {
     }
   }
   return score;
+}
+
+bool isTodayChecker(DateTime dateToday, String dateCompare) {
+  if (dateCompare.contains(formatDateForFilter(dateToday))) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+Future<bool> onLineChecker() async {
+  return await InternetConnectionChecker().hasConnection;
 }
 
 

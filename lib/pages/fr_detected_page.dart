@@ -101,6 +101,7 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
   void initState() {
     super.initState();
     //CHECK IS DK OR NOT
+
     if (DKStatusChecker(widget.user.dk_start_date, widget.user.dk_end_date)) {
       Tipe_absensi = "DINAS KHUSUS";
     }
@@ -137,6 +138,8 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
         saveAbsenKeluar();
       }
     });
+
+    successSound();
   }
 
   Future<void> startTimer() async {

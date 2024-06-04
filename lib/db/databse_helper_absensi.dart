@@ -44,7 +44,6 @@ class DatabaseHelperAbsensi {
   static final String branch_status_id = "branch_status_id";
   static final String attendance_location_id = "attendance_location_id";
 
-
   DatabaseHelperAbsensi._privateConstructor();
 
   static Database? _database;
@@ -124,8 +123,8 @@ class DatabaseHelperAbsensi {
       if (!isOvernight) {
         //MASUK PAGI
         if (MODE == "MASUK") {
-          List<Attendance> allRecord =
-              await getAllAttendancesMasuk(attendance.employee_id!, shift_id,isOvernight);
+          List<Attendance> allRecord = await getAllAttendancesMasuk(
+              attendance.employee_id!, shift_id, isOvernight);
           if (allRecord.isEmpty) {
             await db.insert(tableName, attendance.toCreateMap(),
                 conflictAlgorithm: ConflictAlgorithm.replace);
@@ -153,8 +152,8 @@ class DatabaseHelperAbsensi {
           }
         } else {
           //KELUAR PAGI
-          List<Attendance> allRecord =
-              await getAllAttendancesKELUAR(attendance.employee_id!, shift_id,isOvernight);
+          List<Attendance> allRecord = await getAllAttendancesKELUAR(
+              attendance.employee_id!, shift_id, isOvernight);
           if (allRecord.isEmpty) {
             print("BELUM ABSEN MASUK");
 
@@ -188,8 +187,8 @@ class DatabaseHelperAbsensi {
         print("OVERNIGHT");
 
         if (MODE == "MASUK") {
-          List<Attendance> allRecord =
-              await getAllAttendancesMasuk(attendance.employee_id!, shift_id,isOvernight);
+          List<Attendance> allRecord = await getAllAttendancesMasuk(
+              attendance.employee_id!, shift_id, isOvernight);
           if (allRecord.isEmpty) {
             await db.insert(tableName, attendance.toCreateMap(),
                 conflictAlgorithm: ConflictAlgorithm.replace);
@@ -201,20 +200,21 @@ class DatabaseHelperAbsensi {
 
               // if ((tanggalAbsen != hariIni && data.checkIn == null) || (tanggalAbsen == kemarin && data.checkOut == null)) {
 
-                if (tanggalAbsen == hariIni) {
+              if (tanggalAbsen == hariIni) {
+                canAbsense = false;
+                break;
+              } else if (tanggalAbsen == kemarin) {
+                int perbadinganJam = calculateTimeDifference(
+                    data.checkInActual!.toIso8601String(),
+                    DateTime.now().toIso8601String());
+                if (perbadinganJam >= CONSTANT_VAR.LAMA_JAM_BEKERJA) {
+                  canAbsense = true;
+                  // break;
+                } else {
                   canAbsense = false;
-                  break;
-
-                }else if(tanggalAbsen == kemarin){
-                  int perbadinganJam = calculateTimeDifference(data.checkInActual!.toIso8601String(), DateTime.now().toIso8601String());
-                  if(perbadinganJam >= CONSTANT_VAR.LAMA_JAM_BEKERJA){
-                    canAbsense = true;
-                    // break;
-                  }else{
-                    canAbsense = false;
-                  }
-                // break;
                 }
+                // break;
+              }
 
               // if (tanggalAbsen != hariIni) {
               //   canAbsense = true;
@@ -225,10 +225,7 @@ class DatabaseHelperAbsensi {
               // }
             }
 
-            
-
             if (canAbsense) {
-              
               await db.insert(tableName, attendance.toCreateMap(),
                   conflictAlgorithm: ConflictAlgorithm.replace);
               print("SUSKSES ABSENSI");
@@ -239,8 +236,8 @@ class DatabaseHelperAbsensi {
           }
         } else {
           //KELUAR OVERNIGHT
-          List<Attendance> allRecord =
-              await getAllAttendancesKELUAR(attendance.employee_id!, shift_id,isOvernight);
+          List<Attendance> allRecord = await getAllAttendancesKELUAR(
+              attendance.employee_id!, shift_id, isOvernight);
           if (allRecord.isEmpty) {
             print("BELUM ABSEN MASUK");
 
@@ -341,29 +338,28 @@ class DatabaseHelperAbsensi {
   //   }
 
   Future<List<Attendance>> getAllAttendancesMasuk(
-      String employee_id, String shift, bool isOvernight ) async {
+      String employee_id, String shift, bool isOvernight) async {
     final db = await database;
     final List<Map<String, dynamic>> maps;
     String today = formatDateForFilter(DateTime.now());
-    String yesterday= formatDateForFilter(DateTime.now().subtract(Duration(days: 1)));
+    String yesterday =
+        formatDateForFilter(DateTime.now().subtract(Duration(days: 1)));
 
-
-    if(isOvernight == false){
+    if (isOvernight == false) {
       maps = await db.query(
-      tableName,
-      where: 'SUBSTR(check_in_actual, 1, 10) = ? AND employee_id = ? AND shift_id = ?',
-      whereArgs: [today,employee_id, shift],
-    );
-    }else{
-            maps = await db.query(
-      tableName,
-      where: 'check_in_actual NOT NULL AND employee_id = ? AND shift_id = ? AND (SUBSTR(check_in, 1, 10) = ? OR SUBSTR(check_in, 1, 10) = ?)',
-      whereArgs: [employee_id, shift, today,yesterday],
-    );
-
+        tableName,
+        where:
+            'SUBSTR(check_in_actual, 1, 10) = ? AND employee_id = ? AND shift_id = ?',
+        whereArgs: [today, employee_id, shift],
+      );
+    } else {
+      maps = await db.query(
+        tableName,
+        where:
+            'check_in_actual NOT NULL AND employee_id = ? AND shift_id = ? AND (SUBSTR(check_in, 1, 10) = ? OR SUBSTR(check_in, 1, 10) = ?)',
+        whereArgs: [employee_id, shift, today, yesterday],
+      );
     }
-    
-
 
     return List.generate(maps.length, (i) {
       return Attendance.fromMap(maps[i]);
@@ -371,25 +367,28 @@ class DatabaseHelperAbsensi {
   }
 
   Future<List<Attendance>> getAllAttendancesKELUAR(
-      String employee_id, String shift,bool isOvernight) async {
+      String employee_id, String shift, bool isOvernight) async {
     final db = await database;
     final List<Map<String, dynamic>> maps;
 
     String today = formatDateForFilter(DateTime.now());
-    String yesterday= formatDateForFilter(DateTime.now().subtract(Duration(days: 1)));
+    String yesterday =
+        formatDateForFilter(DateTime.now().subtract(Duration(days: 1)));
 
-    if(isOvernight == false){
-    maps = await db.query(
-      tableName,
-      where: 'SUBSTR(check_in_actual, 1, 10) = ? AND employee_id = ? AND shift_id = ?',
-      whereArgs: [today,employee_id, shift],
-    );
-    }else{
-       maps = await db.query(
-      tableName,
-      where: 'check_in_actual NOT NULL AND employee_id = ? AND shift_id = ? AND (SUBSTR(check_in, 1, 10) = ? OR SUBSTR(check_in, 1, 10) = ?) ORDER BY check_in DESC LIMIT 1',
-      whereArgs: [employee_id, shift,today,yesterday],
-    );
+    if (isOvernight == false) {
+      maps = await db.query(
+        tableName,
+        where:
+            'SUBSTR(check_in_actual, 1, 10) = ? AND employee_id = ? AND shift_id = ?',
+        whereArgs: [today, employee_id, shift],
+      );
+    } else {
+      maps = await db.query(
+        tableName,
+        where:
+            'check_in_actual NOT NULL AND employee_id = ? AND shift_id = ? AND (SUBSTR(check_in, 1, 10) = ? OR SUBSTR(check_in, 1, 10) = ?) ORDER BY check_in DESC LIMIT 1',
+        whereArgs: [employee_id, shift, today, yesterday],
+      );
     }
     return List.generate(maps.length, (i) {
       return Attendance.fromMap(maps[i]);
@@ -470,28 +469,28 @@ class DatabaseHelperAbsensi {
   }
 
   Future<List<Attendance>> getHistoryAbsensiTerUploadFilterDate(
-  DateTime selectedDate) async {
-  try {
-    final db = await database;
+      DateTime selectedDate) async {
+    try {
+      final db = await database;
 
-    // Ubah format tanggal ke dalam format yang sesuai untuk penyimpanan di SQLite
-    final formattedDate = selectedDate.toIso8601String().substring(0, 10);
+      // Ubah format tanggal ke dalam format yang sesuai untuk penyimpanan di SQLite
+      final formattedDate = selectedDate.toIso8601String().substring(0, 10);
 
-    final List<Map<String, dynamic>> maps = await db.rawQuery(
-        'SELECT * FROM $tableName WHERE $is_uploaded = 1 AND $columnAttendanceDate = ?',
-        [formattedDate]);
+      final List<Map<String, dynamic>> maps = await db.rawQuery(
+          'SELECT * FROM $tableName WHERE $is_uploaded = 1 AND $columnAttendanceDate = ?',
+          [formattedDate]);
 
-    return List.generate(maps.length, (i) {
-      return Attendance.fromMap(maps[i]);
-    });
-  } catch (e) {
-    log(e.toString());
-    return [];
+      return List.generate(maps.length, (i) {
+        return Attendance.fromMap(maps[i]);
+      });
+    } catch (e) {
+      log(e.toString());
+      return [];
+    }
   }
-}
 
   Future<void> approveAbsensi(int attendanceId, String id_approval,
-    String notes, bool isAbsenMasuk, String statusApproval) async {
+      String notes, bool isAbsenMasuk, String statusApproval) async {
     final db = await database;
     try {
       if (isAbsenMasuk) {

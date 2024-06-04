@@ -1,12 +1,13 @@
 import 'package:face_net_authentication/db/database_helper_catering_status.dart';
 import 'package:face_net_authentication/models/catering_history_model.dart';
+import 'package:face_net_authentication/pages/widgets/dialog_change_catering_status.dart';
+import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:timeline_tile/timeline_tile.dart';
 
-import '../../db/database_helper_rig_status_history.dart';
 import '../../globals.dart';
-import '../../models/rig_status_history_model.dart';
-import '../widgets/dialog_change_rig_status.dart';
+import '../../models/model_rig_shift.dart';
+import '../../repo/catering_history_repo.dart';
 
 class CateringHistory extends StatefulWidget {
   const CateringHistory({Key? key}) : super(key: key);
@@ -18,10 +19,15 @@ class CateringHistory extends StatefulWidget {
 DatabaseHelperCateringHistory dbHelper = DatabaseHelperCateringHistory.instance;
 List<CateringHistoryModel> listStatus = [];
 
+RigStatusShift? listShift;
+
+CateringHistoryRepo repo = CateringHistoryRepo();
+
 class _CateringHistoryState extends State<CateringHistory> {
   @override
   void initState() {
     // TODO: implement initState
+
     super.initState();
     initData();
   }
@@ -33,11 +39,11 @@ class _CateringHistoryState extends State<CateringHistory> {
         appBar: AppBar(
           title: Text("Catering History"),
           actions: [
-            ElevatedButton(
-                onPressed: () {
-                  dbHelper.deleteAll();
-                },
-                child: Text("delete all"))
+            // ElevatedButton(
+            //     onPressed: () {
+            //       dbHelper.deleteAll();
+            //     },
+            //     child: Text("delete all"))
           ],
         ),
         body: Container(
@@ -60,8 +66,9 @@ class _CateringHistoryState extends State<CateringHistory> {
   }
 
   Future<void> initData() async {
-    await loadLocalData();
-    // listStatus = await repo.getRigStatusHistory();
+    listShift = await SpGetSelectedStatusRig();
+    loadLocalData();
+    dbSync();
   }
 
   Widget _buildTimelineTile(BuildContext context,
@@ -116,12 +123,26 @@ class _CateringHistoryState extends State<CateringHistory> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "CATERING " + data.status + " | " + (data.api_flag ?? "-"),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        "CATERING " + data.status,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      data.api_flag != null
+                          ? Icon(
+                              size: 20,
+                              Icons.cloud_off,
+                              color: Colors.orange,
+                            )
+                          : SizedBox()
+                    ],
                   ),
                   SizedBox(height: 6),
                   Text("Perubahan Status Catering Ke " +
@@ -154,14 +175,44 @@ class _CateringHistoryState extends State<CateringHistory> {
                   ),
                   Container(
                     alignment: Alignment.bottomRight,
-                    child: ElevatedButton(
-                        onPressed: () async {
-                          // await showDialog(
-                          //   context: context,
-                          //   builder: (BuildContext context) {},
-                          // );
-                        },
-                        child: Text("Edit")),
+                    child: data.approver == null
+                        ? ElevatedButton(
+                            onPressed: () async {
+                              if (isTodayChecker(DateTime.now(), data.date)) {
+                                showToast(
+                                    "Untuk mengedit Status hari ini mohon mengganti di menu utama");
+                              } else {
+                                await showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    bool isActive = false;
+                                    if (data.status == "AKTIF") {
+                                      isActive = true;
+                                    } else {
+                                      isActive = false;
+                                    }
+
+                                    return dialog_change_catering_status(
+                                      onStatusSelected:
+                                          (shift, isActive) async {
+                                        await dbHelper.update(
+                                            data, shift, isActive);
+                                        loadLocalData();
+                                        dbSync();
+                                      },
+                                      Lastshift: data.shift ?? "-",
+                                      LastisActiveCatering: isActive,
+                                      ListShift: listShift,
+                                    );
+                                  },
+                                );
+                              }
+                            },
+                            child: Text("Edit"))
+                        : Text(
+                            "SUDAH DI APPROVE",
+                            style: TextStyle(color: Colors.blue),
+                          ),
                   )
                 ],
               ),
@@ -169,4 +220,69 @@ class _CateringHistoryState extends State<CateringHistory> {
           )),
     );
   }
+
+  dbSync() async {
+    bool connection = await onLineChecker();
+
+    if (connection) {
+      List<CateringHistoryModel> listUpdate =
+          await dbHelper.queryForUpdateOnline();
+      try {
+        for (CateringHistoryModel singleDelete in listUpdate) {
+          if (await repo.insertCateringHistory(singleDelete) != []) {
+            dbHelper.softDelete(singleDelete);
+          } else {
+            throw Exception();
+          }
+        }
+
+        dbHelper.insertAll(await repo.getCateringHistory());
+
+        loadLocalData();
+      } catch (e) {}
+    }
+  }
 }
+
+// bool switchValue = false;
+//                           List<String> listShift = [
+//                             "Shift 1",
+//                             "Shift 2",
+//                             "Shift 3"
+//                           ];
+//                           await showDialog(
+//                             context: context,
+//                             builder: (BuildContext context) {
+//                               return AlertDialog(
+//                                 title: Text("Edit"),
+//                                 content: StatefulBuilder(
+//                                   builder: (context, setState) {
+//                                     return Column(
+//                                       mainAxisSize: MainAxisSize.min,
+//                                       children: [
+//                                         SwitchListTile(
+//                                           title: Text("Switch"),
+//                                           value: switchValue,
+//                                           onChanged: (value) {
+//                                             setState(() {
+//                                               switchValue = value;
+//                                             });
+//                                           },
+//                                         ),
+//                                         ListView.builder(
+//                                           shrinkWrap: true,
+//                                           itemCount: listShift.length,
+//                                           itemBuilder: (context, index) {
+//                                             return ListTile(
+//                                               title: Text(listShift[index]),
+//                                             );
+//                                           },
+//                                         ),
+//                                       ],
+//                                     );
+//                                   },
+//                                 ),
+//                               );
+//                             },
+//                           );
+//                         },

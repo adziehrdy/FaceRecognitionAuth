@@ -74,6 +74,7 @@ $shift TEXT
   }
 
   Future<void> insertAll(List<RigStatusHistoryModel> statusList) async {
+    deleteAll();
     try {
       Database db = await instance.database;
       Batch batch = db.batch();
@@ -107,10 +108,10 @@ $shift TEXT
         .toList();
   }
 
-  Future<List<RigStatusHistoryModel>> queryForUpdate() async {
+  Future<List<RigStatusHistoryModel>> queryForUpdateOnline() async {
     Database db = await instance.database;
-    List<Map<String, dynamic>> rigStatus =
-        await db.query(table, where: '$api_flag = ?', whereArgs: ['U']);
+    List<Map<String, dynamic>> rigStatus = await db.query(table,
+        where: '$api_flag = ? OR $api_flag = ?', whereArgs: ['U', 'I']);
     return rigStatus
         .map((u) => RigStatusHistoryModel.fromMap(u))
         .toList()
@@ -134,11 +135,35 @@ $shift TEXT
     }
   }
 
-  Future<int> update(RigStatusHistoryModel status) async {
+  Future<int> softDelete(RigStatusHistoryModel status) async {
     try {
       Database db = await instance.database;
       String id = status.id!;
-      return await db.update(table, status.toMap(),
+      await db.update(table, {'api_flag': null},
+          where: '$columnId = ?', whereArgs: [id]);
+      return 1;
+    } catch (e) {
+      showToast(e.toString());
+      return 0;
+    }
+  }
+
+  Future<int> update(RigStatusHistoryModel status, String branchStatusId,
+      String rig_status, String onShift) async {
+    RigStatusHistoryModel dataPreUpdate = RigStatusHistoryModel(
+        id: status.id,
+        branchId: status.branchId,
+        branchStatusId: branchStatusId ?? "-",
+        requester: status.requester,
+        status: rig_status,
+        date: status.date,
+        shift: onShift,
+        api_flag: "U");
+
+    try {
+      Database db = await instance.database;
+      String id = status.id!;
+      return await db.update(table, dataPreUpdate.toMap(),
           where: '$columnId = ?', whereArgs: [id]);
     } catch (e) {
       showToast(e.toString());

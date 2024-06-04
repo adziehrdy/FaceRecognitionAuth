@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/catering_history_model.dart';
-import 'package:face_net_authentication/models/rig_status_history_model.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -75,6 +74,7 @@ $shift TEXT
   }
 
   Future<void> insertAll(List<CateringHistoryModel> statusList) async {
+    deleteAll();
     try {
       Database db = await instance.database;
       Batch batch = db.batch();
@@ -97,21 +97,10 @@ $shift TEXT
         .toList();
   }
 
-  Future<List<CateringHistoryModel>> queryForInsert() async {
+  Future<List<CateringHistoryModel>> queryForUpdateOnline() async {
     Database db = await instance.database;
-    List<Map<String, dynamic>> rigStatus =
-        await db.query(table, where: '$api_flag = ?', whereArgs: ['I']);
-    return rigStatus
-        .map((u) => CateringHistoryModel.fromMap(u))
-        .toList()
-        .reversed
-        .toList();
-  }
-
-  Future<List<CateringHistoryModel>> queryForUpdate() async {
-    Database db = await instance.database;
-    List<Map<String, dynamic>> rigStatus =
-        await db.query(table, where: '$api_flag = ?', whereArgs: ['U']);
+    List<Map<String, dynamic>> rigStatus = await db
+        .query(table, where: '$api_flag IN (?, ?)', whereArgs: ['U', 'I']);
     return rigStatus
         .map((u) => CateringHistoryModel.fromMap(u))
         .toList()
@@ -124,22 +113,40 @@ $shift TEXT
     return await db.delete(table);
   }
 
-  Future<int> delete(CateringHistoryModel status) async {
+  Future<int> softDelete(CateringHistoryModel status) async {
     try {
       Database db = await instance.database;
       String id = status.id!;
-      return await db.delete(table, where: '$columnId = ?', whereArgs: [id]);
+      await db.update(table, {'api_flag': null},
+          where: '$columnId = ?', whereArgs: [id]);
+      return 1;
     } catch (e) {
       showToast(e.toString());
       return 0;
     }
   }
 
-  Future<int> update(CateringHistoryModel status) async {
+  Future<int> update(
+      CateringHistoryModel status, String shift, bool isActive) async {
+    String updatedStatus = "-";
+    if (isActive) {
+      updatedStatus = "AKTIF";
+    } else {
+      updatedStatus = "TIDAK AKTIF";
+    }
+
+    CateringHistoryModel finalData = CateringHistoryModel(
+        id: status.id,
+        branchId: status.branchId,
+        requester: status.requester,
+        status: updatedStatus,
+        date: status.date,
+        api_flag: "U",
+        shift: shift);
     try {
       Database db = await instance.database;
       String id = status.id!;
-      return await db.update(table, status.toMap(),
+      return await db.update(table, finalData.toMap(),
           where: '$columnId = ?', whereArgs: [id]);
     } catch (e) {
       showToast(e.toString());

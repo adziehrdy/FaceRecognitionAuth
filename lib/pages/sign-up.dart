@@ -15,8 +15,11 @@ import 'package:face_net_authentication/pages/widgets/dialog_confirm_FR.dart';
 import 'package:face_net_authentication/repo/user_repos.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/face_detector_service.dart';
+import 'package:face_net_authentication/services/ml_antiSpoof.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image/image.dart' as imglib;
 import 'package:google_ml_kit/google_ml_kit.dart';
 
 class SignUp extends StatefulWidget {
@@ -36,11 +39,16 @@ class SignUpState extends State<SignUp> {
   Image? faceDetectedJPG;
   Size? imageSize;
   CameraImage? img;
+  bool _isShotVisible = false;
+
+  FaceDeSpoofing FAS = FaceDeSpoofing();
 
   bool _detectingFaces = false;
   bool pictureTaken = false;
 
   bool _initializing = false;
+
+  String painterMode = "BLUR";
 
   bool _saving = false;
   bool _bottomSheetVisible = false;
@@ -160,15 +168,49 @@ class SignUpState extends State<SignUp> {
               }
             }
 
-            setState(() {
-              if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
-                  _faceDetectorService.faces[0].headEulerAngleY! < -10) {
-                // Your logic for head angle if needed
-              } else {
+            if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
+                _faceDetectorService.faces[0].headEulerAngleY! < -10) {
+              painterMode = "";
+              setState(() {
                 faceDetected = _faceDetectorService.faces[0];
-                // faceDetectedJPG = faceDetected!.detectedFaceAsImage()
+                setState(() {
+                  _isShotVisible = false;
+                });
+              });
+              // Your logic for head angle if needed
+            } else {
+              setState(() {
+                faceDetected = _faceDetectorService.faces[0];
+              });
+
+              imglib.Image FAS_CROP =
+                  cropFaceANTISPOOF(image, _faceDetectorService.faces[0]);
+
+              int laplaceScore = await laplacian(FAS_CROP);
+              print("BLURR SCORE " + laplaceScore.toString());
+
+              if (laplaceScore > 1300) {
+                painterMode = "GOOD";
+                bool isSpoof = await FAS.deSpoofing(FAS_CROP);
+                if (!isSpoof) {
+                  painterMode = "GOOD";
+                  setState(() {
+                    _isShotVisible = true;
+                  });
+                } else {
+                  painterMode = "SPOOF";
+                  setState(() {
+                    _isShotVisible = false;
+                  });
+                }
+              } else {
+                painterMode = "BLUR";
+                setState(() {
+                  _isShotVisible = false;
+                });
               }
-            });
+              // faceDetectedJPG = faceDetected!.detectedFaceAsImage()
+            }
 
             if (_saving) {
               _mlService.setCurrentPrediction(image, faceDetected);
@@ -344,13 +386,49 @@ class SignUpState extends State<SignUp> {
           ],
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        floatingActionButton: !_bottomSheetVisible
-            ? AuthActionButton(
-                onPressed: onShot,
-                isLogin: false,
-                reload: _reload,
-              )
-            : Container());
+        floatingActionButton:
+            // !_bottomSheetVisible
+            //     ? AuthActionButton(
+            //         onPressed: () => _isShotVisible ? null : onShot(),
+            //         isLogin: false,
+            //         reload: _reload,
+            //       )
+            //     : Container());
+            InkWell(
+          onTap: () {
+            if (_isShotVisible) {
+              onShot();
+            } else {
+              showToast(
+                  "Mohon Untuk Posisikan Wajah Dan Cahaya Yang Bagus Hingga Box Berwarna Hijau");
+            }
+          },
+          child: Container(
+            padding: EdgeInsets.all(10),
+            child: Container(
+                color: _isShotVisible ? Colors.green : Colors.grey,
+                padding: EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Text("AMBIL FOTO"),
+                            SizedBox(
+                              width: 10,
+                            ),
+                            Icon(Icons.camera_sharp)
+                          ],
+                        )
+                      ],
+                    )
+                  ],
+                )),
+          ),
+        ));
   }
 
   Future enroll_face(context) async {
@@ -457,7 +535,7 @@ class SignUpState extends State<SignUp> {
                     painter: FacePainter(
                         face: faceDetected,
                         imageSize: imageSize!,
-                        painterMode: ""),
+                        painterMode: painterMode),
                   ),
                 ],
               ),

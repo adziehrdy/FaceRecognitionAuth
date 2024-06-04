@@ -119,9 +119,8 @@ class _HomePageState extends State<HomePage> {
       });
     } catch (e) {
       // An error occurred during initialization
-      setState(() {
-        _progressMessage = "Error Inisialisasi Face Recognition";
-      });
+
+      _progressMessage = "Error Inisialisasi Face Recognition";
     }
   }
 

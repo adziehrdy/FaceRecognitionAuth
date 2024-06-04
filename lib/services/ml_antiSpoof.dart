@@ -43,7 +43,7 @@ class FaceDeSpoofing {
     }
     double finalScore = sum1 / 32;
 
-    if (finalScore < 0.98) {
+    if (finalScore < 0.993 && finalScore > 0.76) {
       print("FAS SCORE =" + finalScore.toString() + " === SPOOF");
       return true;
     } else {

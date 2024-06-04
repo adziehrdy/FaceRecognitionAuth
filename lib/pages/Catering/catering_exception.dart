@@ -1,8 +1,11 @@
 import 'package:face_net_authentication/db/database_helper_catering_exception.dart';
 import 'package:face_net_authentication/models/catering_exception_model.dart';
+import 'package:face_net_authentication/models/catering_history_model.dart';
 import 'package:face_net_authentication/models/user.dart';
+import 'package:face_net_authentication/pages/Catering/catering_history.dart';
 import 'package:face_net_authentication/repo/catering_exception_repo.dart';
 import 'package:flutter/material.dart';
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:intl/intl.dart';
 
 import '../../globals.dart';
@@ -32,17 +35,33 @@ class _CateringExceptionState extends State<CateringException> {
   @override
   void initState() {
     super.initState();
-
     initData();
   }
 
   initData() async {
     _employeeNamesForRequest = await getAllEmployeeAndRelief();
-    // listException = await repo.getAllCateringException();
-    listException = await dbException.queryAllStatus();
+
+    // await repo.insertCatering(catering_exception_model(
+    //     branchId: "ICTDEV",
+    //     shift: "XX",
+    //     employee_id: "9999",
+    //     employee_name: "ADZIE",
+    //     requester: "029",
+    //     status: "TIDAK AKRIF",
+    //     date: "2024-05-24 00:00:00",
+    //     note: "TEST123"));
+    loadLocalData();
+    // listException = await dbException.queryAllStatus();
     brachStatus = await SpGetSelectedStatusRig();
+    // setState(() {
+    //   listException;
+    // });
+    dbSync();
+  }
+
+  loadLocalData() async {
+    listException = await dbException.queryAllStatus();
     setState(() {
-      _employeeNamesForRequest;
       listException;
     });
   }
@@ -95,8 +114,10 @@ class _CateringExceptionState extends State<CateringException> {
                             children: [
                               Text(
                                 listException[index]
-                                    .employee_name
-                                    .toUpperCase(),
+                                        .employee_name
+                                        .toUpperCase() +
+                                    " | " +
+                                    (listException[index].api_key ?? "-"),
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,
@@ -113,8 +134,7 @@ class _CateringExceptionState extends State<CateringException> {
                                   SizedBox(
                                     width: 10,
                                   ),
-                                  Text(formatDateString(
-                                      listException[index].shift ?? "-")),
+                                  Text(listException[index].shift ?? "-"),
                                 ],
                               )
                             ],
@@ -123,13 +143,43 @@ class _CateringExceptionState extends State<CateringException> {
                       ),
                       Row(
                         children: [
-                          IconButton(onPressed: () {}, icon: Icon(Icons.edit)),
                           IconButton(
-                              onPressed: () {},
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: Text("Konfirmasi"),
+                                      content: Text(
+                                          "Apakah Anda Yakin Ingin Menghapus Data ?"),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () async {
+                                            await dbException.softDelete(
+                                                listException[index]);
+                                            initData();
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text(
+                                            "Ya",
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text("Tidak"),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
                               icon: Icon(
                                 Icons.delete_forever,
                                 color: Colors.orange,
-                              ))
+                              )),
                         ],
                       )
                     ],
@@ -171,6 +221,7 @@ class _CateringExceptionState extends State<CateringException> {
                 ),
                 SizedBox(height: 20),
                 DropdownButtonFormField<String>(
+                  value: selectedShift,
                   decoration: InputDecoration(labelText: "Shift"),
                   items: brachStatus!.shift!.map((ShiftRig shift) {
                     return DropdownMenuItem<String>(
@@ -219,19 +270,31 @@ class _CateringExceptionState extends State<CateringException> {
           ),
           actions: [
             TextButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).pop();
               },
               child: Text("Batal"),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (_selectedEmployee == null ||
                     _selectedDate == null ||
                     selectedShift == null) {
                   showToast("Nama Atau Tanggal Tidak Boleh Kosong");
                 } else {
                   // Save action jika karyawan dan tanggal sudah dipilih
+                  String branchId = await getBranchID();
+                  String requester = await getActiveSuperIntendentID();
+
+                  await repo.insertCateringException(catering_exception_model(
+                      branchId: branchId,
+                      shift: selectedShift ?? "-",
+                      employee_id: _selectedEmployee?.employee_id ?? "-",
+                      employee_name: _selectedEmployee?.employee_name ?? "-",
+                      requester_id: requester,
+                      status: "AKTIF",
+                      date: formatDateForFilter(_selectedDate!) ?? "-",
+                      notes: _notesController.text));
                   insertDB(_selectedEmployee!, formatDateTime(_selectedDate!),
                       _notesController.text);
                   Navigator.of(context).pop();
@@ -255,17 +318,39 @@ class _CateringExceptionState extends State<CateringException> {
         branchId: branch_id,
         employee_id: user.employee_id ?? "-",
         employee_name: user.employee_name ?? "-",
-        requester: getSup,
+        requester_id: getSup,
         status: "ACTIVE",
         date: tanggal,
         notes: notes,
         shift: selectedShift!);
     dbHelper.insert(data);
 
-    repo.insertCatering(data);
+    // repo.insertCatering(data);
 
     showToast("Karyawan Berhasil Ditambahkan");
 
     initData();
+  }
+
+  dbSync() async {
+    bool connection = await onLineChecker();
+
+    if (connection) {
+      List<catering_exception_model> listDelete =
+          await dbException.getAllSoftDelete();
+      try {
+        for (catering_exception_model singleDelete in listDelete) {
+          if (await repo.delete(singleDelete) != []) {
+            dbException.delete(singleDelete);
+          } else {
+            throw Exception();
+          }
+        }
+
+        dbException.insertAll(await repo.getAllCateringException());
+
+        loadLocalData();
+      } catch (e) {}
+    }
   }
 }
