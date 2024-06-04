@@ -194,7 +194,7 @@ class SignInState extends State<SignIn> {
 
           bool isSpoof = await FAS.deSpoofing(FAS_CROP);
 
-          if (isSpoof && blurScore < 2500) {
+          if (isSpoof && (blurScore < 2000)) {
             lastUserKnow = null;
             painterMode = "SPOOF";
             realCounter = 0;

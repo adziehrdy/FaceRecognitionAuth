@@ -49,6 +49,7 @@ class SignUpState extends State<SignUp> {
   bool _initializing = false;
 
   String painterMode = "BLUR";
+  int realCounter = 0;
 
   bool _saving = false;
   bool _bottomSheetVisible = false;
@@ -173,6 +174,7 @@ class SignUpState extends State<SignUp> {
               painterMode = "";
               setState(() {
                 faceDetected = _faceDetectorService.faces[0];
+                realCounter = realCounter + 0;
                 setState(() {
                   _isShotVisible = false;
                 });
@@ -189,22 +191,35 @@ class SignUpState extends State<SignUp> {
               int laplaceScore = await laplacian(FAS_CROP);
               print("BLURR SCORE " + laplaceScore.toString());
 
-              if (laplaceScore > 1300) {
+              if (laplaceScore > 700) {
                 painterMode = "GOOD";
-                bool isSpoof = await FAS.deSpoofing(FAS_CROP);
-                if (!isSpoof) {
+                if (laplaceScore > 1500) {
                   painterMode = "GOOD";
                   setState(() {
                     _isShotVisible = true;
                   });
                 } else {
-                  painterMode = "SPOOF";
-                  setState(() {
-                    _isShotVisible = false;
-                  });
+                  bool isSpoof = await FAS.deSpoofing(FAS_CROP);
+                  if (!isSpoof) {
+                    realCounter = realCounter + 1;
+
+                    if (realCounter >= 2) {
+                      setState(() {
+                        painterMode = "GOOD";
+                        _isShotVisible = true;
+                      });
+                    }
+                  } else {
+                    painterMode = "SPOOF";
+                    realCounter = 0;
+                    setState(() {
+                      _isShotVisible = false;
+                    });
+                  }
                 }
               } else {
                 painterMode = "BLUR";
+                realCounter = 0;
                 setState(() {
                   _isShotVisible = false;
                 });
@@ -233,6 +248,10 @@ class SignUpState extends State<SignUp> {
           print('Error _faceDetectorService face => $e');
           _detectingFaces = false;
         }
+      } else {
+        setState(() {
+          _isShotVisible = false;
+        });
       }
     });
   }

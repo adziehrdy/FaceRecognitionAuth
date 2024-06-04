@@ -34,8 +34,15 @@ class _SpoofpageState extends State<Spoofpage> {
               height: 20,
             ),
             Text(
-              "SPOOF DETECTED!",
-              style: TextStyle(color: Colors.white, fontSize: 50),
+              "ANTI SPOOF MESSAGE",
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold),
+            ),
+            Text(
+              "Mohon Agar Merubah Posisi Muka dan Posisi Cahaya berberbeda, Untuk Pendeteksian Yang Lebih Baik",
+              style: TextStyle(color: Colors.white, fontSize: 16),
             ),
           ],
         )));

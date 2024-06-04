@@ -138,8 +138,6 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
         saveAbsenKeluar();
       }
     });
-
-    successSound();
   }
 
   Future<void> startTimer() async {
