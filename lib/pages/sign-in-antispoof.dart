@@ -22,15 +22,15 @@ import 'package:one_clock/one_clock.dart';
 
 import '../FR_ENGINE/pytouch_FAS.dart';
 
-class SignIn extends StatefulWidget {
-  const SignIn({Key? key, required this.MODE}) : super(key: key);
+class SignIn_AntiSpoof extends StatefulWidget {
+  const SignIn_AntiSpoof({Key? key, required this.MODE}) : super(key: key);
 
   final String MODE;
   @override
-  SignInState createState() => SignInState();
+  SignIn_AntiSpoofState createState() => SignIn_AntiSpoofState();
 }
 
-class SignInState extends State<SignIn> {
+class SignIn_AntiSpoofState extends State<SignIn_AntiSpoof> {
   CameraService _cameraService = locator<CameraService>();
   FaceDetectorService _faceDetectorService = locator<FaceDetectorService>();
   MLService _mlService = locator<MLService>();
@@ -139,8 +139,21 @@ class SignInState extends State<SignIn> {
 
         blurScore = laplaceScore;
 
-        if (blurScore > 300) {
-          RECONIZE_FACE(image);
+        if (blurScore > 600) {
+          if (lastUserKnow == null) {
+            RECONIZE_FACE(image);
+          } else {
+            imglib.Image FAS_CROP =
+                cropFaceANTISPOOF(image, _faceDetectorService.faces[0]);
+
+            bool isSpoof = await FAS.deSpoofing(FAS_CROP);
+            if (!isSpoof) {
+              _SUCCESS(lastUserKnow!);
+            } else {
+              lastUserKnow = null;
+            }
+          }
+
           // FAS.deSpoofing(faceImage);
         } else {
           painterMode = "BLUR";
@@ -177,8 +190,53 @@ class SignInState extends State<SignIn> {
       if (_faceDetectorService.faceDetected) {
         User? user = await _mlService.predict();
         if (user != null) {
-          painterMode = "GOOD";
-          _SUCCESS(user);
+          // imglib.Image faceImageAS =
+          //     cropFaceANTISPOOF(image, _faceDetectorService.faces[0]);
+          imglib.Image FAS_CROP =
+              cropFaceANTISPOOF(image, _faceDetectorService.faces[0]);
+
+          bool isSpoof = await FAS.deSpoofing(FAS_CROP);
+
+          if (isSpoof && (blurScore < 2500)) {
+            lastUserKnow = null;
+            painterMode = "SPOOF";
+            realCounter = 0;
+          } else {
+            lastUserKnow = user;
+            painterMode = "GOOD";
+            if (SpoofCounter >= 3) {
+              SpoofCounter = 0;
+            }
+          }
+
+          // bool? isSpoof = await FaceAntiSpoofing.antiSpoofing(faceImageAS);
+          // bool? isSpoof = await adzieFAS.isFaceSpoofedWithModel(
+          //     image, _faceDetectorService.faces[0], context);
+
+          if (!isSpoof || blurScore > 2000) {
+            lastUserKnow = user;
+            realCounter = realCounter + 1;
+            if (realCounter >= REAL_TRESHOLD) {
+              _SUCCESS(user);
+            }
+          } else {
+            realCounter = 0;
+            SpoofCounter = SpoofCounter + 1;
+
+            if (SpoofCounter >= 12) {
+              enable_recognize_process = false;
+              await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => Spoofpage(),
+                  ));
+
+              enable_recognize_process = true;
+              SpoofCounter = 0;
+              lastUserKnow = null;
+              painterMode = "SPOOF";
+            }
+          }
         }
 
         // namaReconized = user?.employee_name ?? "UNRECONIZE";

@@ -40,7 +40,7 @@ class _HomeWigetState extends State<HomeWiget> {
     // await GET_LOCATION(context);
     lat = await SpGetLastLat();
     log = await SpGetLastlong();
-    alamat = await SpGetLastAlamat();
+    alamat = await SpGetLastAlamat(context);
 
     kordinat =
         "Latitude: " + lat.toString() + " | Longitude :" + log.toString();

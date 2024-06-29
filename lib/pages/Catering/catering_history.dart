@@ -1,4 +1,5 @@
 import 'package:face_net_authentication/db/database_helper_catering_status.dart';
+import 'package:face_net_authentication/db/dbSync.dart';
 import 'package:face_net_authentication/models/catering_history_model.dart';
 import 'package:face_net_authentication/pages/widgets/dialog_change_catering_status.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
@@ -68,7 +69,7 @@ class _CateringHistoryState extends State<CateringHistory> {
   Future<void> initData() async {
     listShift = await SpGetSelectedStatusRig();
     loadLocalData();
-    dbSync();
+    Sync();
   }
 
   Widget _buildTimelineTile(BuildContext context,
@@ -198,7 +199,7 @@ class _CateringHistoryState extends State<CateringHistory> {
                                         await dbHelper.update(
                                             data, shift, isActive);
                                         loadLocalData();
-                                        dbSync();
+                                        Sync();
                                       },
                                       Lastshift: data.shift ?? "-",
                                       LastisActiveCatering: isActive,
@@ -221,25 +222,9 @@ class _CateringHistoryState extends State<CateringHistory> {
     );
   }
 
-  dbSync() async {
-    bool connection = await onLineChecker();
-
-    if (connection) {
-      List<CateringHistoryModel> listUpdate =
-          await dbHelper.queryForUpdateOnline();
-      try {
-        for (CateringHistoryModel singleDelete in listUpdate) {
-          if (await repo.insertCateringHistory(singleDelete) != []) {
-            dbHelper.softDelete(singleDelete);
-          } else {
-            throw Exception();
-          }
-        }
-
-        dbHelper.insertAll(await repo.getCateringHistory());
-
-        loadLocalData();
-      } catch (e) {}
+  Sync() async {
+    if (await dBsync().dBsyncCateringHistory()) {
+      loadLocalData();
     }
   }
 }

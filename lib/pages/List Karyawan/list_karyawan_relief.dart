@@ -163,10 +163,14 @@ class _ListKaryawanReliefState extends State<ListKaryawanRelief> {
     // selected = await refreshEmployeeRelief(context);
     user_list = await _dataBaseHelper.queryAllUsers();
     if (user_list.isEmpty) {
-      selected = await repo.refreshEmployeeRelief(context);
+      // selected = await repo.refreshEmployeeRelief(context);
+      // await refreshEmployee(context);
+      // loadUserData();
     }
     print(user_list);
-    setState(() {});
+    setState(() {
+      user_list;
+    });
   }
 
   void _onUserSelected(int index) {

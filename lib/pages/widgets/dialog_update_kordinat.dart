@@ -1,4 +1,5 @@
 import 'package:face_net_authentication/repo/global_repos.dart';
+import 'package:face_net_authentication/services/location_service_helper.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
@@ -23,24 +24,23 @@ class _uploadKordinatState extends State<uploadKordinat> {
     // TODO: implement initState
     super.initState();
 
-   SpGetLastAlamat().then((value) {
-   setState(() {
-       alamat = value;
-   });
-   
-   
-   });
+    GET_LOCATION(context);
 
-   SpGetLastLatlong().then((value){
-    setState(() {
-      latLong = value;
+    SpGetLastAlamat(context).then((value) {
+      setState(() {
+        alamat = value;
+      });
     });
-   });
 
+    SpGetLastLatlong().then((value) {
+      setState(() {
+        latLong = value;
+      });
+    });
+  }
 
-
-   
-
+  initLocation() async {
+    GET_LOCATION(context);
   }
 
   final defaultPinTheme = PinTheme(
@@ -69,82 +69,76 @@ class _uploadKordinatState extends State<uploadKordinat> {
   }
 
   contentBox(context) {
-    return 
-    SingleChildScrollView(child: Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        shape: BoxShape.rectangle,
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey,
-            offset: Offset(0, 10),
-            blurRadius: 100,
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-         SizedBox(height: 15),
-          Lottie.asset(
-            'assets/lottie/maps.json',
-            width: 250,
-            height: 200,
-            
-          ),
-          SizedBox(height: 0),
-         
-          Text(
-            "Update Lokasi Ke :".toUpperCase(),
-            style: TextStyle(
-                fontSize: 21, fontWeight: FontWeight.w600),
-          ),
-           Text(
-            
-            alamat,
-            maxLines: 2,
-            style: TextStyle(
-              
-                fontSize: 12, fontWeight: FontWeight.w600, color: Colors.blue),
-          ),
-          Text(
-            
-            latLong,
-            maxLines: 2,
-            style: TextStyle(
-              
-                fontSize: 12, fontWeight: FontWeight.w600, color: Colors.blue),
-          ),
-           SizedBox(height: 15),
-           ElevatedButton(onPressed: () async {
-
-            GlobalRepo repo = await GlobalRepo();
-           
-           repo.hitUpdateLokasi(latLong, alamat).then((value) {
-
-            if(value){
-               Navigator.of(context).pop();
-            }
-
-           });
-            
-             
-           }, child: Text("Kirim dan Update Lokasi")),
-          
-          Align(
-            alignment: Alignment.bottomRight,
-            child: TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Batal'),
+    return SingleChildScrollView(
+      child: Container(
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          shape: BoxShape.rectangle,
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey,
+              offset: Offset(0, 10),
+              blurRadius: 100,
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            SizedBox(height: 15),
+            Lottie.asset(
+              'assets/lottie/maps.json',
+              width: 250,
+              height: 200,
+            ),
+            SizedBox(height: 0),
+            Text(
+              "Update Lokasi Ke :".toUpperCase(),
+              style: TextStyle(fontSize: 21, fontWeight: FontWeight.w600),
+            ),
+            Text(
+              alamat,
+              maxLines: 2,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.blue),
+            ),
+            Text(
+              latLong,
+              maxLines: 2,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.blue),
+            ),
+            SizedBox(height: 15),
+            ElevatedButton(
+                onPressed: () async {
+                  GlobalRepo repo = await GlobalRepo();
+
+                  repo.hitUpdateLokasi(latLong, alamat).then((value) {
+                    if (value) {
+                      Navigator.of(context).pop();
+                    }
+                  });
+                },
+                child: Text("Kirim dan Update Lokasi")),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('Batal'),
+              ),
+            ),
+          ],
+        ),
       ),
-    ),);
+    );
   }
 }
 

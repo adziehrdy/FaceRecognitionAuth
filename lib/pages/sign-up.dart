@@ -15,11 +15,8 @@ import 'package:face_net_authentication/pages/widgets/dialog_confirm_FR.dart';
 import 'package:face_net_authentication/repo/user_repos.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/face_detector_service.dart';
-import 'package:face_net_authentication/services/ml_antiSpoof.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:image/image.dart' as imglib;
 import 'package:google_ml_kit/google_ml_kit.dart';
 
 class SignUp extends StatefulWidget {
@@ -39,17 +36,11 @@ class SignUpState extends State<SignUp> {
   Image? faceDetectedJPG;
   Size? imageSize;
   CameraImage? img;
-  bool _isShotVisible = false;
-
-  FaceDeSpoofing FAS = FaceDeSpoofing();
 
   bool _detectingFaces = false;
   bool pictureTaken = false;
 
   bool _initializing = false;
-
-  String painterMode = "BLUR";
-  int realCounter = 0;
 
   bool _saving = false;
   bool _bottomSheetVisible = false;
@@ -169,63 +160,15 @@ class SignUpState extends State<SignUp> {
               }
             }
 
-            if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
-                _faceDetectorService.faces[0].headEulerAngleY! < -10) {
-              painterMode = "";
-              setState(() {
-                faceDetected = _faceDetectorService.faces[0];
-                realCounter = realCounter + 0;
-                setState(() {
-                  _isShotVisible = false;
-                });
-              });
-              // Your logic for head angle if needed
-            } else {
-              setState(() {
-                faceDetected = _faceDetectorService.faces[0];
-              });
-
-              imglib.Image FAS_CROP =
-                  cropFaceANTISPOOF(image, _faceDetectorService.faces[0]);
-
-              int laplaceScore = await laplacian(FAS_CROP);
-              print("BLURR SCORE " + laplaceScore.toString());
-
-              if (laplaceScore > 700) {
-                painterMode = "GOOD";
-                if (laplaceScore > 1500) {
-                  painterMode = "GOOD";
-                  setState(() {
-                    _isShotVisible = true;
-                  });
-                } else {
-                  bool isSpoof = await FAS.deSpoofing(FAS_CROP);
-                  if (!isSpoof) {
-                    realCounter = realCounter + 1;
-
-                    if (realCounter >= 2) {
-                      setState(() {
-                        painterMode = "GOOD";
-                        _isShotVisible = true;
-                      });
-                    }
-                  } else {
-                    painterMode = "SPOOF";
-                    realCounter = 0;
-                    setState(() {
-                      _isShotVisible = false;
-                    });
-                  }
-                }
+            setState(() {
+              if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
+                  _faceDetectorService.faces[0].headEulerAngleY! < -10) {
+                // Your logic for head angle if needed
               } else {
-                painterMode = "BLUR";
-                realCounter = 0;
-                setState(() {
-                  _isShotVisible = false;
-                });
+                faceDetected = _faceDetectorService.faces[0];
+                // faceDetectedJPG = faceDetected!.detectedFaceAsImage()
               }
-              // faceDetectedJPG = faceDetected!.detectedFaceAsImage()
-            }
+            });
 
             if (_saving) {
               _mlService.setCurrentPrediction(image, faceDetected);
@@ -248,10 +191,6 @@ class SignUpState extends State<SignUp> {
           print('Error _faceDetectorService face => $e');
           _detectingFaces = false;
         }
-      } else {
-        setState(() {
-          _isShotVisible = false;
-        });
       }
     });
   }
@@ -405,49 +344,13 @@ class SignUpState extends State<SignUp> {
           ],
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        floatingActionButton:
-            // !_bottomSheetVisible
-            //     ? AuthActionButton(
-            //         onPressed: () => _isShotVisible ? null : onShot(),
-            //         isLogin: false,
-            //         reload: _reload,
-            //       )
-            //     : Container());
-            InkWell(
-          onTap: () {
-            if (_isShotVisible) {
-              onShot();
-            } else {
-              showToast(
-                  "Mohon Untuk Posisikan Wajah Dan Cahaya Yang Bagus Hingga Box Berwarna Hijau");
-            }
-          },
-          child: Container(
-            padding: EdgeInsets.all(10),
-            child: Container(
-                color: _isShotVisible ? Colors.green : Colors.grey,
-                padding: EdgeInsets.all(20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          children: [
-                            Text("AMBIL FOTO"),
-                            SizedBox(
-                              width: 10,
-                            ),
-                            Icon(Icons.camera_sharp)
-                          ],
-                        )
-                      ],
-                    )
-                  ],
-                )),
-          ),
-        ));
+        floatingActionButton: !_bottomSheetVisible
+            ? AuthActionButton(
+                onPressed: onShot,
+                isLogin: false,
+                reload: _reload,
+              )
+            : Container());
   }
 
   Future enroll_face(context) async {
@@ -554,7 +457,7 @@ class SignUpState extends State<SignUp> {
                     painter: FacePainter(
                         face: faceDetected,
                         imageSize: imageSize!,
-                        painterMode: painterMode),
+                        painterMode: ""),
                   ),
                 ],
               ),

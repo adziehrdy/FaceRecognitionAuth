@@ -1,4 +1,5 @@
 import 'package:face_net_authentication/db/database_helper_catering_exception.dart';
+import 'package:face_net_authentication/db/dbSync.dart';
 import 'package:face_net_authentication/models/catering_exception_model.dart';
 import 'package:face_net_authentication/models/catering_history_model.dart';
 import 'package:face_net_authentication/models/user.dart';
@@ -56,7 +57,9 @@ class _CateringExceptionState extends State<CateringException> {
     // setState(() {
     //   listException;
     // });
-    dbSync();
+    if (await dBsync().dbSyncCateringException()) {
+      loadLocalData();
+    }
   }
 
   loadLocalData() async {
@@ -196,77 +199,97 @@ class _CateringExceptionState extends State<CateringException> {
       context: context,
       builder: (BuildContext context) {
         User? _selectedEmployee = null;
-        DateTime? _selectedDate = null;
+        DateTime? _selectedDate = DateTime.now(); // Set default date to today
         return AlertDialog(
           title: Text("Tambah Karyawan"),
-          content: Container(
-            height: 350, // Adjusted height to accommodate notes field
-            width: 500,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<User>(
-                  decoration: InputDecoration(labelText: "Nama Karyawan"),
-                  items: _employeeNamesForRequest.map((User user) {
-                    return DropdownMenuItem<User>(
-                      value: user,
-                      child: Text(user.employee_name?.toUpperCase() ?? "-"),
-                    );
-                  }).toList(),
-                  onChanged: (User? newValue) {
-                    setState(() {
-                      _selectedEmployee = newValue;
-                    });
-                  },
+          content: StatefulBuilder(
+            builder: (BuildContext context, StateSetter setState) {
+              return Container(
+                height: 350, // Adjusted height to accommodate notes field
+                width: 500,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<User>(
+                      decoration: InputDecoration(labelText: "Nama Karyawan"),
+                      items: _employeeNamesForRequest.map((User user) {
+                        return DropdownMenuItem<User>(
+                          value: user,
+                          child: Text(user.employee_name?.toUpperCase() ?? "-"),
+                        );
+                      }).toList(),
+                      onChanged: (User? newValue) {
+                        setState(() {
+                          _selectedEmployee = newValue;
+                        });
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    DropdownButtonFormField<String>(
+                      value: selectedShift,
+                      decoration: InputDecoration(labelText: "Shift"),
+                      items: brachStatus!.shift!.map((ShiftRig shift) {
+                        return DropdownMenuItem<String>(
+                          value: shift.id,
+                          child: Text(shift.id ?? "-"),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedShift = newValue ?? "-";
+                        });
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    // Text("Tanggal"),
+                    // SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Text(
+                          "Tanggal",
+                          style: TextStyle(fontSize: 12),
+                        )
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          _selectedDate == null
+                              ? 'Pilih Tanggal'
+                              : formatDateString(DateFormat('yyyy-MM-dd')
+                                  .format(_selectedDate!)),
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(width: 10),
+                        TextButton(
+                          onPressed: () async {
+                            DateTime? pickedDate = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.now(),
+                              firstDate:
+                                  DateTime.now().subtract(Duration(days: 30)),
+                              lastDate: DateTime.now(),
+                            );
+                            if (pickedDate != null) {
+                              setState(() {
+                                _selectedDate = pickedDate;
+                              });
+                            }
+                          },
+                          child: Text('Pilih Tanggal'),
+                        ),
+                      ],
+                    ),
+
+                    TextFormField(
+                      controller: _notesController,
+                      decoration: InputDecoration(labelText: "Catatan"),
+                      maxLines: 2,
+                    ),
+                  ],
                 ),
-                SizedBox(height: 20),
-                DropdownButtonFormField<String>(
-                  value: selectedShift,
-                  decoration: InputDecoration(labelText: "Shift"),
-                  items: brachStatus!.shift!.map((ShiftRig shift) {
-                    return DropdownMenuItem<String>(
-                      value: shift.id,
-                      child: Text(shift.id ?? "-"),
-                    );
-                  }).toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedShift = newValue ?? "-";
-                    });
-                  },
-                ),
-                SizedBox(height: 20),
-                TextFormField(
-                  decoration: InputDecoration(labelText: "Tanggal"),
-                  readOnly: true,
-                  onTap: () async {
-                    DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime.now().subtract(Duration(days: 30)),
-                      lastDate: DateTime.now(),
-                    );
-                    if (pickedDate != null) {
-                      _selectedDate = pickedDate;
-                      setState(() {
-                        _selectedDate;
-                      });
-                    }
-                  },
-                  controller: TextEditingController(
-                    text: _selectedDate == null
-                        ? ''
-                        : DateFormat('yyyy-MM-dd').format(_selectedDate),
-                  ),
-                ),
-                SizedBox(height: 20),
-                TextFormField(
-                  controller: _notesController,
-                  decoration: InputDecoration(labelText: "Catatan"),
-                  maxLines: 2,
-                ),
-              ],
-            ),
+              );
+            },
           ),
           actions: [
             TextButton(
@@ -330,27 +353,5 @@ class _CateringExceptionState extends State<CateringException> {
     showToast("Karyawan Berhasil Ditambahkan");
 
     initData();
-  }
-
-  dbSync() async {
-    bool connection = await onLineChecker();
-
-    if (connection) {
-      List<catering_exception_model> listDelete =
-          await dbException.getAllSoftDelete();
-      try {
-        for (catering_exception_model singleDelete in listDelete) {
-          if (await repo.delete(singleDelete) != []) {
-            dbException.delete(singleDelete);
-          } else {
-            throw Exception();
-          }
-        }
-
-        dbException.insertAll(await repo.getAllCateringException());
-
-        loadLocalData();
-      } catch (e) {}
-    }
   }
 }

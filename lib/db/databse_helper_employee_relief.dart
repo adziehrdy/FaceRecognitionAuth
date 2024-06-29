@@ -247,7 +247,7 @@ $status_dk
       List<User> userFiltered = [];
       List<User> users_unfilter = users.map((u) => User.fromMap(u)).toList();
       for (User usr in users_unfilter) {
-        if (reliefChecker(usr.relief_start_date, relief_end_date)) {
+        if (reliefChecker(usr.relief_start_date, usr.relief_end_date)) {
           userFiltered.add(usr);
         }
       }

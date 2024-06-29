@@ -526,6 +526,7 @@ class _PersonViewState extends State<PersonView> {
                   "Beberapa Shift karyawan belum bisa di Update, Mohon coba kembali");
             } else {
               showToastShort("Semua Shift berhasil dirubah");
+              selectedPerson = [];
               Navigator.pop(context);
             }
 

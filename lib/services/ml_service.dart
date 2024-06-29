@@ -4,6 +4,8 @@ import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:face_net_authentication/constants/constants.dart';
+import 'package:face_net_authentication/db/databse_helper_employee_relief.dart';
+import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/services/image_converter.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
@@ -169,12 +171,16 @@ class MLService {
   }
 
   getAlluser() async {
-    DatabaseHelperEmployee _dbHelper = await DatabaseHelperEmployee.instance;
-
+    DatabaseHelperEmployee _dbHelper = DatabaseHelperEmployee.instance;
     users = await _dbHelper.queryAllUsersForMLKit();
 
-    //ADZIEHRDY
-    // users = await _dbHelper.queryAllUsers();
+    //FOR RELIEF
+    DatabaseHelperEmployeeRelief _dbHelperRelief =
+        DatabaseHelperEmployeeRelief.instance;
+    List<User> userRelief = await _dbHelperRelief.queryAllUsersForMLKit();
+    for (User user in userRelief) {
+      users.add(user);
+    }
   }
 
   double _euclideanDistance(List? e1, List? e2) {

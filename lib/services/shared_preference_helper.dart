@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/model_rig_shift.dart';
+import 'package:face_net_authentication/services/location_service_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<SharedPreferences> initSP() async {
@@ -89,7 +90,7 @@ Future<String> SpGetLastLatlong() async {
   return lat.toString() + " , " + long.toString();
 }
 
-Future<String> SpGetLastAlamat() async {
+Future<String> SpGetLastAlamat(context) async {
   SharedPreferences sp = await initSP();
 
   String? alamat = await sp.getString("LOC");
@@ -98,7 +99,7 @@ Future<String> SpGetLastAlamat() async {
     return alamat;
   } else {
     LoginModel data = await getUserLoginData();
-    return data.branch!.branchName!;
+    return data.branch!.branchName;
   }
 }
 

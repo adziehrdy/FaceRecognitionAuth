@@ -1,4 +1,5 @@
 import 'package:face_net_authentication/db/database_helper_rig_status_history.dart';
+import 'package:face_net_authentication/db/dbSync.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/pages/Catering/catering_history.dart';
 import 'package:face_net_authentication/pages/widgets/dialog_change_rig_status.dart';
@@ -34,7 +35,7 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
 
     initData();
     loadLocalData();
-    dbSync();
+    sync();
   }
 
   String? selectedShift;
@@ -228,7 +229,7 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
                                         statusSelected?.statusBranch ?? "-",
                                         selectedShift!);
                                     await loadLocalData();
-                                    await dbSync();
+                                    await sync();
                                   }
                                 }
                               }
@@ -246,25 +247,9 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
     );
   }
 
-  dbSync() async {
-    bool connection = await onLineChecker();
-
-    if (connection) {
-      List<RigStatusHistoryModel> listUpdate =
-          await dbHelper.queryForUpdateOnline();
-      try {
-        for (RigStatusHistoryModel singleDelete in listUpdate) {
-          if (await repo.insertRigStatusHistory(singleDelete) != []) {
-            dbHelper.softDelete(singleDelete);
-          } else {
-            throw Exception();
-          }
-        }
-
-        dbHelper.insertAll(await repo.getRigStatusHistory());
-
-        loadLocalData();
-      } catch (e) {}
+  sync() async {
+    if (await dBsync().dBsyncCateringHistory()) {
+      loadLocalData();
     }
   }
 

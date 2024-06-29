@@ -18,8 +18,12 @@ class AdziehrdyAntiSpoof {
   List get predictedData => _predictedData;
   double dist = 0;
   bool landscape_mode = true;
-  int model_size = 80;
+  int model_size = 128;
   var ctx;
+
+  AdziehrdyAntiSpoof() {
+    loadModelFromAssets();
+  }
 
   // = = = = = = = = = = = //
   //  ANTI SPOOFING (onnx) //
@@ -32,8 +36,8 @@ class AdziehrdyAntiSpoof {
     final sessionOptions = OrtSessionOptions();
     // const assetFileName = 'assets/AntiSpoofing_print-replay_128.onnx';
     // const assetFileName = 'assets/AntiSpoofing_print-replay_1.5_128.onnx';
-    const assetFileName = 'assets/2.7_80x80_MiniFASNetV2.onnx';
-    // const assetFileName = 'assets/AntiSpoofing_bin_1.5_128.onnx';
+    // const assetFileName = 'assets/2.7_80x80_MiniFASNetV2.onnx';
+    const assetFileName = 'assets/AntiSpoofing_bin_1.5_128.onnx';
 
     // AntiSpoofing_print-replay_1.5_128
     final rawAssetFile = await rootBundle.load(assetFileName);
@@ -43,16 +47,13 @@ class AdziehrdyAntiSpoof {
     return session;
   }
 
-  Future<bool?> isFaceSpoofedWithModel(
-      CameraImage cameraImage, Face? face, context) async {
+  Future<bool> deSpoofing(imglib.Image faceImage) async {
     ctx = context;
     try {
       final session = await loadModelFromAssets();
       ctx = context;
 
-      if (face == null) throw Exception('Face is null');
-
-      final processedData = await _preProcess(cameraImage, face);
+      final processedData = await _preProcess(faceImage);
       final input = processedData;
 
       final shape = [1, 3, model_size, model_size];
@@ -78,20 +79,16 @@ class AdziehrdyAntiSpoof {
 
       // print("ML_ANTISPOOF_SCORE = " + probabilities[0].toStringAsFixed(6));
 
-      if (probabilities[0] < 0.004) {
-        print("ML_ANTISPOOF_SCORE = " +
-            probabilities[0].toStringAsFixed(6) +
-            " SPOOF");
+      if (probabilities[0] < 0.005) {
+        print("FAS SCORE =" + probabilities[0].toStringAsFixed(6) + " SPOOF");
         return true;
       } else {
-        print("ML_ANTISPOOF_SCORE = " +
-            probabilities[0].toStringAsFixed(6) +
-            " REAL");
+        print("FAS SCORE =" + probabilities[0].toStringAsFixed(6) + " REAL");
         return false;
       }
     } catch (e) {
       print('An error occurred: $e');
-      return null;
+      return true;
     }
   }
 
@@ -114,54 +111,52 @@ class AdziehrdyAntiSpoof {
     return softmaxOutput;
   }
 
-  imglib.Image cropFace(CameraImage image, Face faceDetected) {
-    imglib.Image convertedImage = _convertCameraImage(image);
+  // imglib.Image cropFace(CameraImage image, Face faceDetected) {
+  //   imglib.Image convertedImage = _convertCameraImage(image);
 
-    double x;
-    double y;
-    double h;
-    double w;
+  //   double x;
+  //   double y;
+  //   double h;
+  //   double w;
 
-    if (landscape_mode) {
-      x = faceDetected.boundingBox.left - 100.0;
-      y = faceDetected.boundingBox.top - 200.0;
-      w = faceDetected.boundingBox.width + 200.0;
-      h = faceDetected.boundingBox.height + 300.0;
-    } else {
-      x = faceDetected.boundingBox.left - 10.0;
-      y = faceDetected.boundingBox.top - 10.0;
-      w = faceDetected.boundingBox.width * 0.75 + 10.0;
-      h = faceDetected.boundingBox.height * 0.75 + 10.0;
-    }
+  //   if (landscape_mode) {
+  //     x = faceDetected.boundingBox.left - 100.0;
+  //     y = faceDetected.boundingBox.top - 200.0;
+  //     w = faceDetected.boundingBox.width + 200.0;
+  //     h = faceDetected.boundingBox.height + 300.0;
+  //   } else {
+  //     x = faceDetected.boundingBox.left - 10.0;
+  //     y = faceDetected.boundingBox.top - 10.0;
+  //     w = faceDetected.boundingBox.width * 0.75 + 10.0;
+  //     h = faceDetected.boundingBox.height * 0.75 + 10.0;
+  //   }
 
-    imglib.Image croppedImage = imglib.copyCrop(
-        convertedImage, x.round(), y.round(), w.round(), h.round());
+  //   imglib.Image croppedImage = imglib.copyCrop(
+  //       convertedImage, x.round(), y.round(), w.round(), h.round());
 
-    // Resize the image to always 80x80
-    imglib.Image resizedImage =
-        imglib.copyResize(croppedImage, width: 80, height: 80);
+  //   // Resize the image to always 80x80
+  //   imglib.Image resizedImage =
+  //       imglib.copyResize(croppedImage, width: 80, height: 80);
 
-    return resizedImage;
-  }
+  //   return resizedImage;
+  // }
 
-  imglib.Image _convertCameraImage(CameraImage image) {
-    var img = convertToImage(image);
-    var img1 = landscape_mode
-        ? imglib.copyRotate(img, 0)
-        : imglib.copyRotate(img, -90);
-    return img1;
-  }
+  // imglib.Image _convertCameraImage(CameraImage image) {
+  //   var img = convertToImage(image);
+  //   var img1 = landscape_mode
+  //       ? imglib.copyRotate(img, 0)
+  //       : imglib.copyRotate(img, -90);
+  //   return img1;
+  // }
 
-  Future<Float32List> _preProcess(CameraImage image, Face faceDetected) async {
-    imglib.Image croppedImage = cropFace(image, faceDetected);
-
-    showDialog(
-      context: ctx,
-      builder: (context) => AlertDialog(
-        content:
-            Image.memory(Uint8List.fromList(imglib.encodePng(croppedImage))),
-      ),
-    );
+  Future<Float32List> _preProcess(imglib.Image croppedImage) async {
+    // showDialog(
+    //   context: ctx,
+    //   builder: (context) => AlertDialog(
+    //     content:
+    //         Image.memory(Uint8List.fromList(imglib.encodePng(croppedImage))),
+    //   ),
+    // );
 
     // Resize the image to the required dimensions
     imglib.Image resizedImage =

@@ -585,6 +585,7 @@ class _PersonViewReliefState extends State<PersonViewRelief> {
                   "Beberapa Shift karyawan belum bisa di Update, Mohon coba kembali");
             } else {
               showToastShort("Semua Shift berhasil dirubah");
+              selectedPerson = [];
               widget.onShiftUpdated;
               Navigator.pop(context);
             }

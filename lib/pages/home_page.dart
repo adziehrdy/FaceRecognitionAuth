@@ -1,4 +1,5 @@
 import 'package:face_net_authentication/constants/constants.dart';
+import 'package:face_net_authentication/db/dbSync.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/models/login_model.dart';
@@ -17,7 +18,9 @@ import 'package:face_net_authentication/pages/widgets/user-banner.dart';
 import 'package:face_net_authentication/repo/global_repos.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/face_detector_service.dart';
+import 'package:face_net_authentication/services/location_service_helper.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
+import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -42,12 +45,15 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    initFirebase();
+    // initFirebase();
 
     //GET MASTER DATA FOR REGIST FORM
     // GlobalRepo().getMasterRegister();
     GlobalRepo().hitApiGetMsterShift();
     GlobalRepo().hitAllMasterRigStatus(context);
+
+    // initLocation();
+    syncAllData();
 
     getPIN().then((value) {
       setState(() {
@@ -75,8 +81,15 @@ class _HomePageState extends State<HomePage> {
     }
 
     GlobalRepo().getLatestVersion(context);
+    initLocation();
 
     // GlobalRepo().hitAllMasterRigStatus(context);
+  }
+
+  initLocation() async {
+    if (await onLineChecker()) {
+      GET_LOCATION(context);
+    }
   }
 
   Future<void> initFirebase() async {
@@ -85,6 +98,10 @@ class _HomePageState extends State<HomePage> {
         (user.branch?.branchName ?? "-") +
             "|" +
             (user.branch?.branchId ?? "-"));
+  }
+
+  syncAllData() {
+    dBsync().syncAllDB();
   }
 
   // _initializeServices() async {

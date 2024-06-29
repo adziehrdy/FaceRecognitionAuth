@@ -156,10 +156,12 @@ class _ListKaryawanState extends State<ListKaryawan> {
   Future<void> loadUserData() async {
     user_list = await _dataBaseHelper.queryAllUsers();
     if (user_list.isEmpty) {
-      selected = await refreshEmployee(context);
+      // await refreshEmployee(context);
+      // loadUserData();
     }
-
-    setState(() {});
+    setState(() {
+      user_list;
+    });
   }
 
   void _onUserSelected(int index) {
