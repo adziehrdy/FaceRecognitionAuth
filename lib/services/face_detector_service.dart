@@ -78,9 +78,9 @@ class FaceDetectorService {
       FaceDetectorOptions(
           performanceMode: FaceDetectorMode.fast,
           minFaceSize: 0.9,
-          // enableLandmarks: true,
+          enableLandmarks: true,
           enableContours: true,
-          // enableTracking: true,
+          enableTracking: true,
           enableClassification: true),
     );
     final WriteBuffer allBytes = WriteBuffer();

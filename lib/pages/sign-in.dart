@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'dart:ffi';
+import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:face_net_authentication/FR_ENGINE/AntiSpoof.dart';
@@ -16,9 +19,12 @@ import 'package:face_net_authentication/services/ml_antiSpoof.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:intl/intl.dart' as intl;
 import 'package:one_clock/one_clock.dart';
+import 'package:onnxruntime/onnxruntime.dart';
+import 'package:image/image.dart' as img;
 
 import '../FR_ENGINE/pytouch_FAS.dart';
 
@@ -47,7 +53,7 @@ class SignInState extends State<SignIn> {
   bool _isPictureTaken = false;
   bool _isInitializing = false;
   bool enable_recognize_process = true;
-  int SpoofCounter = 0;
+  int SpoofCounter = 3;
   int BlurrCounter = 0;
 
   String namaReconized = "UNRECONIZE";
@@ -60,18 +66,21 @@ class SignInState extends State<SignIn> {
   bool isSpoofBefore = false;
   int realCounter = 0;
   int REAL_TRESHOLD = 2;
-
   String painterMode = "";
-  double spoofScore = 0;
+  double spoofScore = 0.1111;
   int blurScore = 0;
+  img.Image? anspImage;
   // Pytouch_FAS adzieFAS = Pytouch_FAS();
   FaceDeSpoofing FAS = FaceDeSpoofing();
   // AdziehrdyAntiSpoof FAS = AdziehrdyAntiSpoof();
+
+  late OrtSession antiSpoof;
 
   @override
   void initState() {
     super.initState();
     getLastLocation();
+    _loadModels();
     // adzieFAS.loadModelFromAssets();
 
     _start();
@@ -94,6 +103,7 @@ class SignInState extends State<SignIn> {
     _cameraService.dispose();
     _mlService.dispose();
     _faceDetectorService.dispose();
+    antiSpoof.release();
     super.dispose();
   }
 
@@ -129,19 +139,52 @@ class SignInState extends State<SignIn> {
       faceImage = _mlService.cropFace(image, _faceDetectorService.faces[0]);
 //---------
 
-      if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
-          _faceDetectorService.faces[0].headEulerAngleY! < -10) {
+      if (_faceDetectorService.faces[0].headEulerAngleY! > 5 ||
+          _faceDetectorService.faces[0].headEulerAngleY! < -5) {
         print("=== POSISI MUKA TIDAK BAGUS=== ");
         SpoofCounter = 0;
       } else {
+        // bool result = await _runAntiSpoof(faceImage, [
+        //   faceImage.xOffset,
+        //   faceImage.yOffset,
+        //   faceImage.width,
+        //   faceImage.height
+        // ]);
+
+        // if (result) {
+        //   painterMode = "GOOD";
+        // } else {
+        //   painterMode = "SPOOF";
+        // }
+
+        //=======================
+
         int laplaceScore = await laplacian(faceImage);
         print("BLURR SCORE " + laplaceScore.toString());
 
         blurScore = laplaceScore;
 
-        if (blurScore > 300) {
-          RECONIZE_FACE(image);
-          // FAS.deSpoofing(faceImage);
+        if (blurScore > 450) {
+          final leftEyeOpen =
+              _faceDetectorService.faces[0].leftEyeOpenProbability;
+          final rightEyeOpen =
+              _faceDetectorService.faces[0].rightEyeOpenProbability;
+
+          // if ((leftEyeOpen! < 0.90) &&
+          //     (rightEyeOpen! < 0.90 && rightEyeOpen > 0.20)) {
+          //   RECONIZE_FACE(image);
+          // } else {
+          img.Image anspImageRaw =
+              await cropFaceANTISPOOF(image, _faceDetectorService.faces[0]);
+          bool result = await _runAntiSpoof(anspImageRaw!);
+          // setState(() {
+          //   anspImage;
+          // });
+
+          if (result) {
+            RECONIZE_FACE(image);
+          }
+          // }
         } else {
           painterMode = "BLUR";
           BlurrCounter = BlurrCounter + 1;
@@ -232,7 +275,7 @@ class SignInState extends State<SignIn> {
           ),
         ));
 
-    SpoofCounter = 0;
+    SpoofCounter = 3;
     BlurrCounter = 0;
     realCounter = 0;
 
@@ -298,51 +341,111 @@ class SignInState extends State<SignIn> {
       body: Stack(
         children: [
           body,
-          Column(children: [
-            header,
-            Column(children: [
+          Column(
+            children: [
+              header,
               Column(
                 children: [
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.5),
-                      borderRadius: BorderRadius.all(Radius.circular(15)),
-                      backgroundBlendMode: BlendMode.softLight,
-                      boxShadow: [
-                        BoxShadow(
-                          blurRadius: 10,
-                          spreadRadius: 2,
-                          color: Colors.grey.withOpacity(0.5),
+                  Column(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.5),
+                          borderRadius: BorderRadius.all(Radius.circular(15)),
+                          backgroundBlendMode: BlendMode.softLight,
+                          boxShadow: [
+                            BoxShadow(
+                              blurRadius: 10,
+                              spreadRadius: 2,
+                              color: Colors.grey.withOpacity(0.5),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: DigitalClock(
-                      textScaleFactor: 2,
-                      showSeconds: true,
-                      isLive: true,
-                      datetime: DateTime.now(),
-                    ),
-                  ),
-                  // Text(_latitude + "," + _longitude),
-                  // Text(alamat)
+                        child: DigitalClock(
+                          textScaleFactor: 2,
+                          showSeconds: true,
+                          isLive: true,
+                          datetime: DateTime.now(),
+                        ),
+                      ),
+                      // Text(_latitude + "," + _longitude),
+                      // Text(alamat)
+                    ],
+                  )
                 ],
-              )
-            ]),
-            SizedBox(height: 10),
-            // Text(lat.toString() + " , " + long.toString()),
-            Text("NOT BLUR SCORE = " + blurScore.toString()),
-            // Text("BLUR SCORE = " + bl),
-            SizedBox(height: 5),
-            // Padding(
-            //   padding: const EdgeInsets.all(15),
-            //   child: Text(
-            //     alamat,
-            //     textAlign: TextAlign.center,
-            //     maxLines: 2,
-            //   ),
-            // )
-          ]),
+              ),
+              SizedBox(height: 10),
+              // Text(lat.toString() + " , " + long.toString()),
+              // Text(
+              //   "NOT BLUR SCORE = " + blurScore.toString(),
+              //   style: TextStyle(
+              //       color: Colors.orange,
+              //       fontWeight: FontWeight.bold,
+              //       backgroundColor: Colors.white),
+              // ),
+
+              // Text(
+              //   "NOT BLUR SCORE = " + blurScore.toString(),
+              //   style: TextStyle(
+              //       color: Colors.orange,
+              //       fontWeight: FontWeight.bold,
+              //       backgroundColor: Colors.white),
+              // ),
+              // Text("BLUR SCORE = " + bl),
+              SizedBox(height: 5),
+              // Padding(
+              //   padding: const EdgeInsets.all(15),
+              //   child: Text(
+              //     alamat,
+              //     textAlign: TextAlign.center,
+              //     maxLines: 2,
+              //   ),
+              // )
+            ],
+          ),
+          if (anspImage != null)
+            Positioned(
+              left: 10,
+              bottom: 10,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black, width: 2),
+                ),
+                child: Image.memory(convertImagelibToUint8List(anspImage!),
+                    fit: BoxFit.fill),
+              ),
+            ),
+          Positioned(
+              bottom: 0,
+              right: 0,
+              child: Container(
+                padding: EdgeInsets.all(10),
+                child: Column(
+                  children: [
+                    (blurScore < 450)
+                        ? Text(
+                            "WAJAH BLUR",
+                            style: TextStyle(
+                                color: Colors.orange,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                backgroundColor: Colors.white),
+                          )
+                        : SizedBox(),
+                    Text(
+                      "LIVENESS SCORE = " +
+                          spoofScore.toString().substring(0, 4),
+                      style: TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.bold,
+                          backgroundColor: Colors.white),
+                    ),
+                  ],
+                ),
+              ))
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -408,5 +511,123 @@ class SignInState extends State<SignIn> {
   void resumeCameraAndMLKit() async {
     _cameraService.cameraController?.resumePreview();
     // _frameFaces();
+  }
+
+  Future<void> _loadModels() async {
+    final rawAssetFileAS =
+        await rootBundle.load("assets/AntiSpoofing_print-replay_128.onnx");
+    final sessionOptionsAS = OrtSessionOptions();
+    final bytesAS = rawAssetFileAS.buffer.asUint8List();
+    antiSpoof = OrtSession.fromBuffer(bytesAS, sessionOptionsAS);
+
+    // antiSpoof = await onnx.OrtSession.fromBytes(
+    //   File('assets/AntiSpoofing_bin_1.5_128.onnx').readAsBytesSync(),
+    // );
+  }
+
+  double sigmoid(double x) {
+    return 1.0 / (1.0 + exp(-x));
+  }
+
+  Future<bool> _runAntiSpoof(imglib.Image rawImage) async {
+    int model_size = 128;
+    // Resize image
+    anspImage =
+        imglib.copyResize(rawImage, width: model_size, height: model_size);
+    final Float32List inputImage = _preprocessImage(anspImage!);
+
+    try {
+      // Buat input tensor
+      final input = OrtValueTensor.createTensorWithDataList(
+          inputImage, [1, 3, model_size, model_size]);
+      final runOptions = OrtRunOptions();
+      final inputs = {'input': input};
+
+      // Jalankan model
+      final output = antiSpoof.run(runOptions, inputs);
+
+      // Dapatkan hasil
+      List<List<double>> score = output[0]!.value as List<List<double>>;
+
+      // Terapkan sigmoid pada setiap elemen dalam array hasil
+      List<double> sigmoidScores = score[0].map((x) => sigmoid(x)).toList();
+
+      // Ambil nilai yang digunakan untuk penentuan label (misalnya nilai ke-3)
+
+      setState(() {
+        spoofScore = sigmoidScores[2];
+      });
+
+      // Cetak hasil setelah sigmoid diterapkan
+      print("ANTISPOOF SCORE (sigmoid) = " + spoofScore.toString());
+      // print("ANTISPOOF SCORE (sigmoid 0) = " + sigmoidScores[0].toString());
+
+      // Gunakan nilai sigmoid untuk menentukan hasil
+      if ((spoofScore >= 0.94 || spoofScore <= 0.75) && spoofScore < 0.99) {
+        if (realCounter >= 4) {
+          SpoofCounter = 3;
+          painterMode = "GOOD";
+          return true;
+        } else {
+          if (realCounter < 4) {
+            realCounter = realCounter + 1;
+          }
+          SpoofCounter = SpoofCounter - 1;
+          painterMode = "BLUR";
+
+          return false;
+        }
+      } else {
+        if (SpoofCounter <= 3) {
+          SpoofCounter = SpoofCounter + 1;
+        }
+        if (realCounter != 0) {
+          realCounter = realCounter - 1;
+        }
+        painterMode = "SPOOF";
+        return false;
+      }
+    } catch (e) {
+      print("Error: $e");
+      return false;
+    }
+  }
+
+  img.Image _increasedCrop(img.Image image, List<int> bbox,
+      {double bboxInc = 1.5}) {
+    final realH = image.height;
+    final realW = image.width;
+
+    final x = bbox[0];
+    final y = bbox[1];
+    final w = bbox[2] - x;
+    final h = bbox[3] - y;
+    final l = w > h ? w : h;
+
+    final xc = x + w / 2;
+    final yc = y + h / 2;
+
+    final x1 = (xc - l * bboxInc / 2).toInt();
+    final y1 = (yc - l * bboxInc / 2).toInt();
+    final x2 = (xc + l * bboxInc / 2).toInt();
+    final y2 = (yc + l * bboxInc / 2).toInt();
+
+    return img.copyCrop(image, x1, y1, x2 - x1, y2 - y1);
+  }
+
+  Float32List _preprocessImage(img.Image image) {
+    final Float32List imageData = Float32List(3 * image.width * image.height);
+    for (int y = 0; y < image.height; y++) {
+      for (int x = 0; x < image.width; x++) {
+        final pixel = image.getPixel(x, y);
+        final r = img.getRed(pixel) / 255.0;
+        final g = img.getGreen(pixel) / 255.0;
+        final b = img.getBlue(pixel) / 255.0;
+        imageData[(y * image.width + x) * 3] = r;
+        imageData[(y * image.width + x) * 3 + 1] = g;
+        imageData[(y * image.width + x) * 3 + 2] = b;
+      }
+    }
+    return imageData;
   }
 }

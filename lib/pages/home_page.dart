@@ -21,7 +21,7 @@ import 'package:face_net_authentication/services/face_detector_service.dart';
 import 'package:face_net_authentication/services/location_service_helper.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+// import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:lottie/lottie.dart';
@@ -81,7 +81,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     GlobalRepo().getLatestVersion(context);
-    initLocation();
+    // initLocation();
 
     // GlobalRepo().hitAllMasterRigStatus(context);
   }
@@ -92,13 +92,13 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> initFirebase() async {
-    LoginModel user = await getUserLoginData();
-    FirebaseCrashlytics.instance.setUserIdentifier(
-        (user.branch?.branchName ?? "-") +
-            "|" +
-            (user.branch?.branchId ?? "-"));
-  }
+  // Future<void> initFirebase() async {
+  //   LoginModel user = await getUserLoginData();
+  //   FirebaseCrashlytics.instance.setUserIdentifier(
+  //       (user.branch?.branchName ?? "-") +
+  //           "|" +
+  //           (user.branch?.branchId ?? "-"));
+  // }
 
   syncAllData() {
     dBsync().syncAllDB();
