@@ -4,7 +4,7 @@ import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
 
 class FaceAntiSpoofing2 {
-  static const String _modelFile = 'FaceAntiSpoofing.tflite';
+  static const String _modelFile = 'adziehrdy_FAS.tflite';
   static const int _inputImageSize = 256;
   static const double _threshold = 0.2;
   late Interpreter _interpreter;

@@ -164,7 +164,7 @@ class SignInState extends State<SignIn> {
 
         blurScore = laplaceScore;
 
-        if (blurScore > 450) {
+        if (blurScore > 0) {
           final leftEyeOpen =
               _faceDetectorService.faces[0].leftEyeOpenProbability;
           final rightEyeOpen =
@@ -182,7 +182,7 @@ class SignInState extends State<SignIn> {
           // });
 
           if (result) {
-            RECONIZE_FACE(image);
+            // RECONIZE_FACE(image);
           }
           // }
         } else {
@@ -436,8 +436,7 @@ class SignInState extends State<SignIn> {
                           )
                         : SizedBox(),
                     Text(
-                      "LIVENESS SCORE = " +
-                          spoofScore.toString().substring(0, 4),
+                      "LIVENESS SCORE = " + spoofScore.toString(),
                       style: TextStyle(
                           color: Colors.blue,
                           fontWeight: FontWeight.bold,
@@ -514,8 +513,7 @@ class SignInState extends State<SignIn> {
   }
 
   Future<void> _loadModels() async {
-    final rawAssetFileAS =
-        await rootBundle.load("assets/AntiSpoofing_print-replay_128.onnx");
+    final rawAssetFileAS = await rootBundle.load("assets/model_float32.onnx");
     final sessionOptionsAS = OrtSessionOptions();
     final bytesAS = rawAssetFileAS.buffer.asUint8List();
     antiSpoof = OrtSession.fromBuffer(bytesAS, sessionOptionsAS);
@@ -541,7 +539,7 @@ class SignInState extends State<SignIn> {
       final input = OrtValueTensor.createTensorWithDataList(
           inputImage, [1, 3, model_size, model_size]);
       final runOptions = OrtRunOptions();
-      final inputs = {'input': input};
+      final inputs = {antiSpoof.inputNames[0]: input};
 
       // Jalankan model
       final output = antiSpoof.run(runOptions, inputs);
@@ -550,12 +548,12 @@ class SignInState extends State<SignIn> {
       List<List<double>> score = output[0]!.value as List<List<double>>;
 
       // Terapkan sigmoid pada setiap elemen dalam array hasil
-      List<double> sigmoidScores = score[0].map((x) => sigmoid(x)).toList();
+      // List<double> sigmoidScores = score[0].map((x) => sigmoid(x)).toList();
 
       // Ambil nilai yang digunakan untuk penentuan label (misalnya nilai ke-3)
 
       setState(() {
-        spoofScore = sigmoidScores[2];
+        spoofScore = score[0].last;
       });
 
       // Cetak hasil setelah sigmoid diterapkan
@@ -615,19 +613,31 @@ class SignInState extends State<SignIn> {
     return img.copyCrop(image, x1, y1, x2 - x1, y2 - y1);
   }
 
-  Float32List _preprocessImage(img.Image image) {
-    final Float32List imageData = Float32List(3 * image.width * image.height);
-    for (int y = 0; y < image.height; y++) {
-      for (int x = 0; x < image.width; x++) {
-        final pixel = image.getPixel(x, y);
-        final r = img.getRed(pixel) / 255.0;
-        final g = img.getGreen(pixel) / 255.0;
-        final b = img.getBlue(pixel) / 255.0;
-        imageData[(y * image.width + x) * 3] = r;
-        imageData[(y * image.width + x) * 3 + 1] = g;
-        imageData[(y * image.width + x) * 3 + 2] = b;
+  Float32List _preprocessImage(imglib.Image image) {
+    int model_size = 128;
+
+    // Resize image to the model input size (128x128 in this case)
+    final resizedImage =
+        imglib.copyResize(image, width: model_size, height: model_size);
+
+    // Create a Float32List to hold the normalized image data
+    final Float32List inputImage = Float32List(model_size * model_size * 3);
+
+    int pixelIndex = 0;
+    for (int y = 0; y < model_size; y++) {
+      for (int x = 0; x < model_size; x++) {
+        final pixel = resizedImage.getPixel(x, y);
+        final r = (pixel >> 16) & 0xFF;
+        final g = (pixel >> 8) & 0xFF;
+        final b = pixel & 0xFF;
+
+        // Normalize the pixel values to [0, 1] and store them in inputImage
+        inputImage[pixelIndex++] = b / 255.0;
+        inputImage[pixelIndex++] = g / 255.0;
+        inputImage[pixelIndex++] = r / 255.0;
       }
     }
-    return imageData;
+
+    return inputImage;
   }
 }

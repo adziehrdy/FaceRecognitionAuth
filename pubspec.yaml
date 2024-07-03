@@ -121,10 +121,12 @@ flutter:
     - assets/AntiSpoofing_bin_1.5_128.onnx
     - assets/AntiSpoofing_print-replay_128.onnx
     - assets/2.7_80x80_MiniFASNetV2.onnx
+    - assets/adziehrdy_FAS.tflite
     - assets/logo.png
     - assets/images/
     - assets/lottie/
     - assets/FaceDeSpoofing.tflite
+    - assets/model_float32.onnx
     - assets/sound/
   #   - images/a_dot_ham.jpeg
 

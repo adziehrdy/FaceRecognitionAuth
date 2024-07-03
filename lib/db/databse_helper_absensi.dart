@@ -521,6 +521,26 @@ class DatabaseHelperAbsensi {
     }
   }
 
+  Future<void> tidakAbsenKeluar(int attendanceId, String id_approval,
+      String notes, bool isAbsenMasuk, String statusApproval) async {
+    final db = await database;
+    try {
+      await db.update(
+        tableName,
+        {
+          columnAttendanceNoteOut: notes,
+          approval_status_out: statusApproval,
+          approval_employee_id: id_approval,
+          columnCheckOutStatus: "TIDAK ABSEN KELUAR"
+        },
+        where: 'attendance_id = ?',
+        whereArgs: [attendanceId],
+      );
+    } catch (e) {
+      showToast("error saat Approve Absensi - " + e.toString());
+    }
+  }
+
   Future<void> updateIsUploaded(int attendanceId) async {
     final db = await database;
     try {

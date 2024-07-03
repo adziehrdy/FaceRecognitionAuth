@@ -738,7 +738,7 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                       onSelected: (value) async {
                                     if (widget.isLocked) {
                                       PinInputDialog.show(context, (p0) async {
-                                        await _dataBaseHelper.approveAbsensi(
+                                        await _dataBaseHelper.tidakAbsenKeluar(
                                             widget.data.attendanceId!,
                                             await getActiveSuperIntendentID(),
                                             value[1],
@@ -749,7 +749,7 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                         });
                                       });
                                     } else {
-                                      await _dataBaseHelper.approveAbsensi(
+                                      await _dataBaseHelper.tidakAbsenKeluar(
                                           widget.data.attendanceId!,
                                           await getActiveSuperIntendentID(),
                                           value[1],
