@@ -26,8 +26,6 @@ import 'package:one_clock/one_clock.dart';
 import 'package:onnxruntime/onnxruntime.dart';
 import 'package:image/image.dart' as img;
 
-import '../FR_ENGINE/pytouch_FAS.dart';
-
 class SignIn extends StatefulWidget {
   const SignIn({Key? key, required this.MODE}) : super(key: key);
 
@@ -49,6 +47,7 @@ class SignInState extends State<SignIn> {
   double long = 0;
   String alamat = "-";
   User? lastUserKnow;
+  int lastTrackingID = 0;
 
   bool _isPictureTaken = false;
   bool _isInitializing = false;
@@ -80,7 +79,7 @@ class SignInState extends State<SignIn> {
   void initState() {
     super.initState();
     getLastLocation();
-    _loadModels();
+    // _loadModels();
     // adzieFAS.loadModelFromAssets();
 
     _start();
@@ -164,25 +163,38 @@ class SignInState extends State<SignIn> {
 
         blurScore = laplaceScore;
 
-        if (blurScore > 0) {
-          final leftEyeOpen =
-              _faceDetectorService.faces[0].leftEyeOpenProbability;
-          final rightEyeOpen =
-              _faceDetectorService.faces[0].rightEyeOpenProbability;
+        if (blurScore > 300) {
+          // final leftEyeOpen =
+          //     _faceDetectorService.faces[0].leftEyeOpenProbability;
+          // final rightEyeOpen =
+          //     _faceDetectorService.faces[0].rightEyeOpenProbability;
 
           // if ((leftEyeOpen! < 0.90) &&
           //     (rightEyeOpen! < 0.90 && rightEyeOpen > 0.20)) {
           //   RECONIZE_FACE(image);
           // } else {
-          img.Image anspImageRaw =
-              await cropFaceANTISPOOF(image, _faceDetectorService.faces[0]);
-          bool result = await _runAntiSpoof(anspImageRaw!);
+
+          // if (lastTrackingID != _faceDetectorService.faces[0].trackingId) {
+          //   resetFAScounter();
+          //   lastTrackingID = _faceDetectorService.faces[0].trackingId ?? 0;
+          // } else {
+          //   lastTrackingID = _faceDetectorService.faces[0].trackingId ?? 0;
+          // }
+
+          // Pytouch_FAS FAS = await Pytouch_FAS();
+
+          // FAS.isFaceSpoofedWithModel(
+          //     image, _faceDetectorService.faces[0], context);
+
+          // img.Image anspImageRaw =
+          //     await cropFaceANTISPOOF(image, _faceDetectorService.faces[0]);
+          // bool result = await _runAntiSpoof(anspImageRaw!);
           // setState(() {
           //   anspImage;
           // });
 
-          if (result) {
-            // RECONIZE_FACE(image);
+          if (true) {
+            RECONIZE_FACE(image);
           }
           // }
         } else {
@@ -198,8 +210,15 @@ class SignInState extends State<SignIn> {
 // RECONIZE_FACE();
 
       //--------
+    } else {
+      resetFAScounter();
     }
     if (mounted) setState(() {});
+  }
+
+  void resetFAScounter() {
+    realCounter = 0;
+    SpoofCounter = 3;
   }
 
   Future<void> takePicture() async {
@@ -404,20 +423,20 @@ class SignInState extends State<SignIn> {
               // )
             ],
           ),
-          if (anspImage != null)
-            Positioned(
-              left: 10,
-              bottom: 10,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 2),
-                ),
-                child: Image.memory(convertImagelibToUint8List(anspImage!),
-                    fit: BoxFit.fill),
-              ),
-            ),
+          // if (anspImage != null)
+          //   Positioned(
+          //     left: 10,
+          //     bottom: 10,
+          //     child: Container(
+          //       width: 100,
+          //       height: 100,
+          //       decoration: BoxDecoration(
+          //         border: Border.all(color: Colors.black, width: 2),
+          //       ),
+          //       child: Image.memory(convertImagelibToUint8List(anspImage!),
+          //           fit: BoxFit.fill),
+          //     ),
+          //   ),
           Positioned(
               bottom: 0,
               right: 0,
@@ -425,7 +444,7 @@ class SignInState extends State<SignIn> {
                 padding: EdgeInsets.all(10),
                 child: Column(
                   children: [
-                    (blurScore < 450)
+                    (blurScore < 300)
                         ? Text(
                             "WAJAH BLUR",
                             style: TextStyle(
@@ -435,13 +454,14 @@ class SignInState extends State<SignIn> {
                                 backgroundColor: Colors.white),
                           )
                         : SizedBox(),
-                    Text(
-                      "LIVENESS SCORE = " + spoofScore.toString(),
-                      style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.bold,
-                          backgroundColor: Colors.white),
-                    ),
+                    // Text(
+                    //   "LIVENESS SCORE = " +
+                    //       spoofScore.toString().substring(0, 4),
+                    //   style: TextStyle(
+                    //       color: Colors.blue,
+                    //       fontWeight: FontWeight.bold,
+                    //       backgroundColor: Colors.white),
+                    // ),
                   ],
                 ),
               ))
@@ -513,7 +533,8 @@ class SignInState extends State<SignIn> {
   }
 
   Future<void> _loadModels() async {
-    final rawAssetFileAS = await rootBundle.load("assets/model_float32.onnx");
+    final rawAssetFileAS =
+        await rootBundle.load("assets/AntiSpoofing_print-replay_128.onnx");
     final sessionOptionsAS = OrtSessionOptions();
     final bytesAS = rawAssetFileAS.buffer.asUint8List();
     antiSpoof = OrtSession.fromBuffer(bytesAS, sessionOptionsAS);
@@ -553,7 +574,7 @@ class SignInState extends State<SignIn> {
       // Ambil nilai yang digunakan untuk penentuan label (misalnya nilai ke-3)
 
       setState(() {
-        spoofScore = score[0].last;
+        spoofScore = sigmoid(score[0].last);
       });
 
       // Cetak hasil setelah sigmoid diterapkan
@@ -561,7 +582,8 @@ class SignInState extends State<SignIn> {
       // print("ANTISPOOF SCORE (sigmoid 0) = " + sigmoidScores[0].toString());
 
       // Gunakan nilai sigmoid untuk menentukan hasil
-      if ((spoofScore >= 0.94 || spoofScore <= 0.75) && spoofScore < 0.99) {
+      // if ((spoofScore >= 0.98 || spoofScore <= 0.75) && spoofScore < 0.99) {
+      if (spoofScore >= 0.96 && spoofScore < 0.99) {
         if (realCounter >= 4) {
           SpoofCounter = 3;
           painterMode = "GOOD";

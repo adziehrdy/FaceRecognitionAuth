@@ -1135,10 +1135,15 @@ imglib.Image cropFaceANTISPOOF(CameraImage image, Face faceDetected) {
     // h = faceDetected.boundingBox.width + 80.0;
     // w = faceDetected.boundingBox.height + 80.0;
 
-    x = faceDetected.boundingBox.left + 25;
-    y = faceDetected.boundingBox.top + 25.0;
-    w = faceDetected.boundingBox.width - 25.0;
-    h = faceDetected.boundingBox.height - 25.0;
+    // x = faceDetected.boundingBox.left - 300;
+    // y = faceDetected.boundingBox.top - 300.0;
+    // w = faceDetected.boundingBox.height + 300.0;
+    // h = faceDetected.boundingBox.height + 300.0;
+
+    x = faceDetected.boundingBox.left;
+    y = faceDetected.boundingBox.top;
+    w = faceDetected.boundingBox.height;
+    h = faceDetected.boundingBox.height;
 
     // x = faceDetected.boundingBox.left + 20;
     // y = faceDetected.boundingBox.top + 30.0;
@@ -1156,16 +1161,14 @@ imglib.Image cropFaceANTISPOOF(CameraImage image, Face faceDetected) {
     h = faceDetected.boundingBox.height + 10.0;
   }
 
-  imglib.Image croppedImage = imglib.flip(
-      imglib.copyCrop(
-          convertedImage, x.round(), y.round(), w.round(), h.round()),
-      imglib.Flip.horizontal);
+  imglib.Image croppedImage = imglib.copyCrop(
+      convertedImage, x.round(), y.round(), w.round(), h.round());
 
   // Resize the image to always 80x80
-  // imglib.Image resizedImage =
-  //     imglib.copyResize(croppedImage, width: 128, height: 128);
+  imglib.Image resizedImage =
+      imglib.copyResize(croppedImage, width: 128, height: 128);
 
-  return croppedImage;
+  return resizedImage;
 }
 
 imglib.Image _convertCameraImage(CameraImage image) {

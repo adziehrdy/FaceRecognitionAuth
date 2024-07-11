@@ -15,7 +15,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 3.0.0+8
+version: 3.0.0+9
 
 environment:
   sdk: ">=3.0.6 <4.0.0"
@@ -89,6 +89,7 @@ dependencies:
   audioplayers: ^6.0.0
   internet_connection_checker: ^1.0.0+1
   date_field: ^3.0.3
+  pytorch_mobile: ^0.2.2
   # pytorch_mobile: ^0.2.2
 
 dev_dependencies:
@@ -116,18 +117,19 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/mobilefacenet.tflite
-    - assets/FaceAntiSpoofing.tflite
-    - assets/FaceBagNet_color_96.onnx
-    - assets/AntiSpoofing_bin_1.5_128.onnx
-    - assets/AntiSpoofing_print-replay_128.onnx
-    - assets/2.7_80x80_MiniFASNetV2.onnx
-    - assets/adziehrdy_FAS.tflite
+    # - assets/FaceAntiSpoofing.tflite
+    # - assets/FaceBagNet_color_96.onnx
+    # - assets/AntiSpoofing_bin_1.5_128.onnx
+    # - assets/AntiSpoofing_print-replay_128.onnx
+    # - assets/2.7_80x80_MiniFASNetV2.onnx
+    # - assets/adziehrdy_FAS.tflite
     - assets/logo.png
     - assets/images/
     - assets/lottie/
-    - assets/FaceDeSpoofing.tflite
-    - assets/model_float32.onnx
+    # - assets/FaceDeSpoofing.tflite
+    # - assets/model_float32.onnx
     - assets/sound/
+    # - assets/spoofnet_celeba-best.pt
   #   - images/a_dot_ham.jpeg
 
 
