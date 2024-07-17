@@ -23,7 +23,7 @@ import 'package:flutter/services.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:intl/intl.dart' as intl;
 import 'package:one_clock/one_clock.dart';
-import 'package:onnxruntime/onnxruntime.dart';
+// import 'package:onnxruntime/onnxruntime.dart';
 import 'package:image/image.dart' as img;
 
 class SignIn extends StatefulWidget {
@@ -50,7 +50,7 @@ class SignInState extends State<SignIn> {
   int lastTrackingID = 0;
 
   bool _isPictureTaken = false;
-  bool _isInitializing = false;
+  bool _isInitializing = true;
   bool enable_recognize_process = true;
   int SpoofCounter = 3;
   int BlurrCounter = 0;
@@ -70,10 +70,10 @@ class SignInState extends State<SignIn> {
   int blurScore = 0;
   img.Image? anspImage;
   // Pytouch_FAS adzieFAS = Pytouch_FAS();
-  FaceDeSpoofing FAS = FaceDeSpoofing();
+  // FaceDeSpoofing FAS = FaceDeSpoofing();
   // AdziehrdyAntiSpoof FAS = AdziehrdyAntiSpoof();
 
-  late OrtSession antiSpoof;
+  // late OrtSession antiSpoof;
 
   @override
   void initState() {
@@ -102,7 +102,7 @@ class SignInState extends State<SignIn> {
     _cameraService.dispose();
     _mlService.dispose();
     _faceDetectorService.dispose();
-    antiSpoof.release();
+    // antiSpoof.release();
     super.dispose();
   }
 
@@ -110,6 +110,7 @@ class SignInState extends State<SignIn> {
     // FAS.loadModel();
     await _cameraService.initialize();
     await _frameFaces();
+    _isInitializing = false;
 
     // adzieFAS.loadModelFromAssets();
   }
@@ -192,6 +193,8 @@ class SignInState extends State<SignIn> {
           // setState(() {
           //   anspImage;
           // });
+
+          painterMode = "GOOD";
 
           if (true) {
             RECONIZE_FACE(image);
@@ -532,86 +535,86 @@ class SignInState extends State<SignIn> {
     // _frameFaces();
   }
 
-  Future<void> _loadModels() async {
-    final rawAssetFileAS =
-        await rootBundle.load("assets/AntiSpoofing_print-replay_128.onnx");
-    final sessionOptionsAS = OrtSessionOptions();
-    final bytesAS = rawAssetFileAS.buffer.asUint8List();
-    antiSpoof = OrtSession.fromBuffer(bytesAS, sessionOptionsAS);
+  // Future<void> _loadModels() async {
+  //   final rawAssetFileAS =
+  //       await rootBundle.load("assets/AntiSpoofing_print-replay_128.onnx");
+  //   final sessionOptionsAS = OrtSessionOptions();
+  //   final bytesAS = rawAssetFileAS.buffer.asUint8List();
+  //   antiSpoof = OrtSession.fromBuffer(bytesAS, sessionOptionsAS);
 
-    // antiSpoof = await onnx.OrtSession.fromBytes(
-    //   File('assets/AntiSpoofing_bin_1.5_128.onnx').readAsBytesSync(),
-    // );
-  }
+  //   // antiSpoof = await onnx.OrtSession.fromBytes(
+  //   //   File('assets/AntiSpoofing_bin_1.5_128.onnx').readAsBytesSync(),
+  //   // );
+  // }
 
   double sigmoid(double x) {
     return 1.0 / (1.0 + exp(-x));
   }
 
-  Future<bool> _runAntiSpoof(imglib.Image rawImage) async {
-    int model_size = 128;
-    // Resize image
-    anspImage =
-        imglib.copyResize(rawImage, width: model_size, height: model_size);
-    final Float32List inputImage = _preprocessImage(anspImage!);
+  // Future<bool> _runAntiSpoof(imglib.Image rawImage) async {
+  //   int model_size = 128;
+  //   // Resize image
+  //   anspImage =
+  //       imglib.copyResize(rawImage, width: model_size, height: model_size);
+  //   final Float32List inputImage = _preprocessImage(anspImage!);
 
-    try {
-      // Buat input tensor
-      final input = OrtValueTensor.createTensorWithDataList(
-          inputImage, [1, 3, model_size, model_size]);
-      final runOptions = OrtRunOptions();
-      final inputs = {antiSpoof.inputNames[0]: input};
+  //   try {
+  //     // Buat input tensor
+  //     final input = OrtValueTensor.createTensorWithDataList(
+  //         inputImage, [1, 3, model_size, model_size]);
+  //     final runOptions = OrtRunOptions();
+  //     final inputs = {antiSpoof.inputNames[0]: input};
 
-      // Jalankan model
-      final output = antiSpoof.run(runOptions, inputs);
+  //     // Jalankan model
+  //     final output = antiSpoof.run(runOptions, inputs);
 
-      // Dapatkan hasil
-      List<List<double>> score = output[0]!.value as List<List<double>>;
+  //     // Dapatkan hasil
+  //     List<List<double>> score = output[0]!.value as List<List<double>>;
 
-      // Terapkan sigmoid pada setiap elemen dalam array hasil
-      // List<double> sigmoidScores = score[0].map((x) => sigmoid(x)).toList();
+  //     // Terapkan sigmoid pada setiap elemen dalam array hasil
+  //     // List<double> sigmoidScores = score[0].map((x) => sigmoid(x)).toList();
 
-      // Ambil nilai yang digunakan untuk penentuan label (misalnya nilai ke-3)
+  //     // Ambil nilai yang digunakan untuk penentuan label (misalnya nilai ke-3)
 
-      setState(() {
-        spoofScore = sigmoid(score[0].last);
-      });
+  //     setState(() {
+  //       spoofScore = sigmoid(score[0].last);
+  //     });
 
-      // Cetak hasil setelah sigmoid diterapkan
-      print("ANTISPOOF SCORE (sigmoid) = " + spoofScore.toString());
-      // print("ANTISPOOF SCORE (sigmoid 0) = " + sigmoidScores[0].toString());
+  //     // Cetak hasil setelah sigmoid diterapkan
+  //     print("ANTISPOOF SCORE (sigmoid) = " + spoofScore.toString());
+  //     // print("ANTISPOOF SCORE (sigmoid 0) = " + sigmoidScores[0].toString());
 
-      // Gunakan nilai sigmoid untuk menentukan hasil
-      // if ((spoofScore >= 0.98 || spoofScore <= 0.75) && spoofScore < 0.99) {
-      if (spoofScore >= 0.96 && spoofScore < 0.99) {
-        if (realCounter >= 4) {
-          SpoofCounter = 3;
-          painterMode = "GOOD";
-          return true;
-        } else {
-          if (realCounter < 4) {
-            realCounter = realCounter + 1;
-          }
-          SpoofCounter = SpoofCounter - 1;
-          painterMode = "BLUR";
+  //     // Gunakan nilai sigmoid untuk menentukan hasil
+  //     // if ((spoofScore >= 0.98 || spoofScore <= 0.75) && spoofScore < 0.99) {
+  //     if (spoofScore >= 0.96 && spoofScore < 0.99) {
+  //       if (realCounter >= 4) {
+  //         SpoofCounter = 3;
+  //         painterMode = "GOOD";
+  //         return true;
+  //       } else {
+  //         if (realCounter < 4) {
+  //           realCounter = realCounter + 1;
+  //         }
+  //         SpoofCounter = SpoofCounter - 1;
+  //         painterMode = "BLUR";
 
-          return false;
-        }
-      } else {
-        if (SpoofCounter <= 3) {
-          SpoofCounter = SpoofCounter + 1;
-        }
-        if (realCounter != 0) {
-          realCounter = realCounter - 1;
-        }
-        painterMode = "SPOOF";
-        return false;
-      }
-    } catch (e) {
-      print("Error: $e");
-      return false;
-    }
-  }
+  //         return false;
+  //       }
+  //     } else {
+  //       if (SpoofCounter <= 3) {
+  //         SpoofCounter = SpoofCounter + 1;
+  //       }
+  //       if (realCounter != 0) {
+  //         realCounter = realCounter - 1;
+  //       }
+  //       painterMode = "SPOOF";
+  //       return false;
+  //     }
+  //   } catch (e) {
+  //     print("Error: $e");
+  //     return false;
+  //   }
+  // }
 
   img.Image _increasedCrop(img.Image image, List<int> bbox,
       {double bboxInc = 1.5}) {

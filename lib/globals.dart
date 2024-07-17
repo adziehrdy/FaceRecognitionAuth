@@ -35,7 +35,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
-import 'package:trust_location/trust_location.dart';
+// import 'package:trust_location/trust_location.dart';
 import 'package:unique_identifier/unique_identifier.dart';
 
 import 'services/image_converter.dart';
@@ -69,19 +69,19 @@ void showToastShort(String msg) {
       fontSize: 16.0);
 }
 
-getCurrentLocation() async {
-  LatLongPosition? position;
+// getCurrentLocation() async {
+//   LatLongPosition? position;
 
-  TrustLocation.start(5);
+//   TrustLocation.start(5);
 
-  /// the stream getter where others can listen to.
-  TrustLocation.onChange.listen((values) => position = values
-      // print('${values.latitude} ${values.longitude} ${values.isMockLocation}')
-      );
+//   /// the stream getter where others can listen to.
+//   TrustLocation.onChange.listen((values) => position = values
+//       // print('${values.latitude} ${values.longitude} ${values.isMockLocation}')
+//       );
 
-  print(position?.latitude.toString() ?? "0");
-  return position;
-}
+//   print(position?.latitude.toString() ?? "0");
+//   return position;
+// }
 
 enum ApiMethods { GET, POST, DELETE }
 

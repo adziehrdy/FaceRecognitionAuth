@@ -327,10 +327,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_udid
-      sha256: "666412097b86d9a6f9803073d0f0ba70de9b198fe6493d89d352a1f8cd6c5c84"
+      sha256: "63384bd96203aaefccfd7137fab642edda18afede12b0e9e1a2c96fe2589fd07"
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.1"
+    version: "3.0.0"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
@@ -688,14 +688,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.8"
-  onnxruntime:
-    dependency: "direct main"
-    description:
-      name: onnxruntime
-      sha256: e77ec05acafc135cc5fe7bcdf11b101b39f06513c9d5e9fa02cb1929f6bac72a
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.4.1"
   order_tracker_zen:
     dependency: "direct main"
     description:
@@ -816,14 +808,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.4"
-  pytorch_mobile:
-    dependency: "direct main"
-    description:
-      name: pytorch_mobile
-      sha256: "43733398db3f2b7c97d6d02a6333a94eedcc1cfdfddb5b5c1aa62ee5b665fd9c"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.2"
   quiver:
     dependency: transitive
     description:
@@ -1037,14 +1021,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
-  trust_location:
-    dependency: "direct main"
-    description:
-      name: trust_location
-      sha256: "2457f4bcd9ef8423fd12d8ae1701040ecef37a488e4a46bfa50bad26d8cf7d80"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.13"
   typed_data:
     dependency: transitive
     description:
