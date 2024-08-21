@@ -450,7 +450,7 @@ class SignUpState extends State<SignUp> {
                   CustomPaint(
                     child: Center(
                       child: Container(
-                        padding: EdgeInsets.all(150),
+                        padding: EdgeInsets.all(100),
                         child: Image.asset("assets/images/face.png"),
                       ),
                     ),

@@ -37,16 +37,26 @@ class Attendance {
   String? attendance_location_id;
 
   Attendance();
-  
-  Attendance.fromMap(Map<String, dynamic> map){
-attendanceId = map["attendance_id"];
+
+  Attendance.fromMap(Map<String, dynamic> map) {
+    attendanceId = map["attendance_id"];
     employee_id = map["employee_id"];
-    attendanceDate = map['attendance_date'] != null ? DateFormat('yyyy-MM-dd').parse(map['attendance_date']) : null;
-    checkIn = map['check_in'] != null ? DateFormat('yyyy-MM-dd HH:mm:ss').parse(map["check_in"]) : null;
-    checkInActual = map['check_in_actual'] != null ? DateFormat('yyyy-MM-dd HH:mm:ss').parse(map["check_in_actual"]) : null;
+    attendanceDate = map['attendance_date'] != null
+        ? DateFormat('yyyy-MM-dd').parse(map['attendance_date'])
+        : null;
+    checkIn = map['check_in'] != null
+        ? DateFormat('yyyy-MM-dd HH:mm:ss').parse(map["check_in"])
+        : null;
+    checkInActual = map['check_in_actual'] != null
+        ? DateFormat('yyyy-MM-dd HH:mm:ss').parse(map["check_in_actual"])
+        : null;
     checkInStatus = statusNameChange(map['check_in_status']);
-    checkOut = map['check_out'] != null ? DateFormat('yyyy-MM-dd HH:mm:ss').parse(map["check_out"]) : null;
-    checkOutActual = map['check_out_actual'] != null ? DateFormat('yyyy-MM-dd HH:mm:ss').parse(map["check_out_actual"]) : null;
+    checkOut = map['check_out'] != null
+        ? DateFormat('yyyy-MM-dd HH:mm:ss').parse(map["check_out"])
+        : null;
+    checkOutActual = map['check_out_actual'] != null
+        ? DateFormat('yyyy-MM-dd HH:mm:ss').parse(map["check_out_actual"])
+        : null;
     checkOutStatus = statusNameChange(map['check_out_status']);
     attendanceTypeIn = map['attendance_type_in'];
     attendanceLocationIn = map['attendance_location_in'];
@@ -61,7 +71,7 @@ attendanceId = map["attendance_id"];
     companyId = map['company_id'];
     branch_status_id = map['branch_status_id'];
     attendance_location_id = map['attendance_location_id'];
-    if(map['approvals'] != null){
+    if (map['approvals'] != null) {
       // attendanceApproval = map['approvals'];
       List<dynamic> list = map['approvals'];
       approvals = list.map((e) => Approval.fromMap(e)).toList();
@@ -75,36 +85,51 @@ attendanceId = map["attendance_id"];
     shift_id = map['shift_id'];
     approval_status_in = map['approval_status_in'];
     approval_status_out = map['approval_status_out'];
-
   }
 
-  Map<String, dynamic> toCreateMap(){
+  Map<String, dynamic> toCreateMap() {
     Map<String, dynamic> map = {};
-    
+
     map["employee_id"] = employee_id;
-    if(attendanceDate != null) map["attendance_date"] = DateFormat("yyyy-MM-dd").format(attendanceDate!);
-    if(checkIn != null) map["check_in"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkIn!);
-    if(checkInActual != null) map["check_in_actual"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkInActual!);
-    if(checkInStatus != null) map["check_in_status"] = checkInStatus;
-    if(checkOut != null) map["check_out"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkOut!);
-    if(checkOutActual != null) map["check_out_actual"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkOutActual!);
-    if(checkOutStatus != null) map["check_out_status"] = checkOutStatus;
-    if(attendanceTypeIn != null) map['attendance_type_in'] = attendanceTypeIn;
-    if(attendanceLocationIn != null) map["attendance_location_in"] = attendanceLocationIn;
-    if(attendanceAddressIn != null) map["attendance_address_in"] = attendanceAddressIn;
-    if(attendanceNoteIn != null) map["attendance_note_in"] = attendanceNoteIn;
-    if(attendanceTypeOut != null) map['attendance_type_out'] = attendanceTypeOut;
-    if(attendanceLocationOut != null) map["attendance_location_out"] = attendanceLocationOut;
-    if(attendanceAddressOut != null) map["attendance_address_out"] = attendanceAddressOut;
-    if(attendanceNoteOut != null) map["attendance_note_out"] = attendanceNoteOut;
-    if(attendancePhotoIn != null) map["attendance_photo_in"] = attendancePhotoIn;
-    if(attendancePhotoOut != null) map["attendance_photo_out"] = attendancePhotoOut;
-    if(employee_name != null) map["employee_name"] = employee_name;
-    if(type_absensi != null) map["type_absensi"] = type_absensi;
-    if(type_absensi != null) map["type_absensi"] = type_absensi;
-    if(branch_status_id != null) map["branch_status_id"] = branch_status_id;
-    if(attendance_location_id != null) map["attendance_location_id"] = attendance_location_id;
-    
+    if (attendanceDate != null)
+      map["attendance_date"] = DateFormat("yyyy-MM-dd").format(attendanceDate!);
+    if (checkIn != null)
+      map["check_in"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkIn!);
+    if (checkInActual != null)
+      map["check_in_actual"] =
+          DateFormat("yyyy-MM-dd HH:mm:ss").format(checkInActual!);
+    if (checkInStatus != null) map["check_in_status"] = checkInStatus;
+    if (checkOut != null)
+      map["check_out"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkOut!);
+    if (checkOutActual != null)
+      map["check_out_actual"] =
+          DateFormat("yyyy-MM-dd HH:mm:ss").format(checkOutActual!);
+    if (checkOutStatus != null) map["check_out_status"] = checkOutStatus;
+    if (attendanceTypeIn != null) map['attendance_type_in'] = attendanceTypeIn;
+    if (attendanceLocationIn != null)
+      map["attendance_location_in"] = attendanceLocationIn;
+    if (attendanceAddressIn != null)
+      map["attendance_address_in"] = attendanceAddressIn;
+    if (attendanceNoteIn != null) map["attendance_note_in"] = attendanceNoteIn;
+    if (attendanceTypeOut != null)
+      map['attendance_type_out'] = attendanceTypeOut;
+    if (attendanceLocationOut != null)
+      map["attendance_location_out"] = attendanceLocationOut;
+    if (attendanceAddressOut != null)
+      map["attendance_address_out"] = attendanceAddressOut;
+    if (attendanceNoteOut != null)
+      map["attendance_note_out"] = attendanceNoteOut;
+    if (attendancePhotoIn != null)
+      map["attendance_photo_in"] = attendancePhotoIn;
+    if (attendancePhotoOut != null)
+      map["attendance_photo_out"] = attendancePhotoOut;
+    if (employee_name != null) map["employee_name"] = employee_name;
+    if (type_absensi != null) map["type_absensi"] = type_absensi;
+    if (type_absensi != null) map["type_absensi"] = type_absensi;
+    if (branch_status_id != null) map["branch_status_id"] = branch_status_id;
+    if (attendance_location_id != null)
+      map["attendance_location_id"] = attendance_location_id;
+
     map["company_id"] = companyId;
     map['note_status'] = note_status;
     map['is_uploaded'] = is_uploaded;
@@ -112,106 +137,115 @@ attendanceId = map["attendance_id"];
     map['shift_id'] = shift_id;
     map['approval_status_in'] = approval_status_in;
     map['approval_status_out'] = approval_status_out;
-    
 
-    
     return map;
   }
 
-Map<String, dynamic> toCreateMapForHitAPI(){
+  Map<String, dynamic> toCreateMapForHitAPI(String app_version) {
     Map<String, dynamic> map = {};
-    
+
     map["employee_id"] = employee_id;
-    if(attendanceDate != null) map["attendance_date"] = DateFormat("yyyy-MM-dd").format(attendanceDate!);
-    if(checkIn != null) map["check_in"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkIn!);
-    if(checkInActual != null) map["check_in_actual"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkInActual!);
-    if(checkInStatus != null) map["check_in_status"] = checkInStatus;
-    if(checkOut != null) map["check_out"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkOut!);
-    if(checkOutActual != null) map["check_out_actual"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkOutActual!);
-    if(checkOutStatus != null) map["check_out_status"] = checkOutStatus;
-    if(attendanceTypeIn != null) map['attendance_type_in'] = attendanceTypeIn;
-    if(attendanceLocationIn != null) map["attendance_location_in"] = attendanceLocationIn;
-    if(attendanceAddressIn != null) map["attendance_address_in"] = attendanceAddressIn;
-    if(attendanceNoteIn != null) map["attendance_note_in"] = attendanceNoteIn;
-    if(attendanceTypeOut != null) map['attendance_type_out'] = attendanceTypeOut;
-    if(attendanceLocationOut != null) map["attendance_location_out"] = attendanceLocationOut;
-    if(attendanceAddressOut != null) map["attendance_address_out"] = attendanceAddressOut;
-    if(attendanceNoteOut != null) map["attendance_note_out"] = attendanceNoteOut;
-    if(attendancePhotoIn != null) map["attendance_photo_in"] = attendancePhotoIn;
-    if(shift_id != null) map["shift_id"] = shift_id;
-    if(branch_status_id != null) map["branch_status_id"] = branch_status_id;
-    if(attendance_location_id != null) map['attendance_location_id'] = attendance_location_id;
-
+    if (attendanceDate != null)
+      map["attendance_date"] = DateFormat("yyyy-MM-dd").format(attendanceDate!);
+    if (checkIn != null)
+      map["check_in"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkIn!);
+    if (checkInActual != null)
+      map["check_in_actual"] =
+          DateFormat("yyyy-MM-dd HH:mm:ss").format(checkInActual!);
+    if (checkInStatus != null) map["check_in_status"] = checkInStatus;
+    if (checkOut != null)
+      map["check_out"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkOut!);
+    if (checkOutActual != null)
+      map["check_out_actual"] =
+          DateFormat("yyyy-MM-dd HH:mm:ss").format(checkOutActual!);
+    if (checkOutStatus != null) map["check_out_status"] = checkOutStatus;
+    if (attendanceTypeIn != null) map['attendance_type_in'] = attendanceTypeIn;
+    if (attendanceLocationIn != null)
+      map["attendance_location_in"] = attendanceLocationIn;
+    if (attendanceAddressIn != null)
+      map["attendance_address_in"] = attendanceAddressIn;
+    if (attendanceNoteIn != null) map["attendance_note_in"] = attendanceNoteIn;
+    if (attendanceTypeOut != null)
+      map['attendance_type_out'] = attendanceTypeOut;
+    if (attendanceLocationOut != null)
+      map["attendance_location_out"] = attendanceLocationOut;
+    if (attendanceAddressOut != null)
+      map["attendance_address_out"] = attendanceAddressOut;
+    if (attendanceNoteOut != null)
+      map["attendance_note_out"] = attendanceNoteOut;
+    if (attendancePhotoIn != null)
+      map["attendance_photo_in"] = attendancePhotoIn;
+    if (shift_id != null) map["shift_id"] = shift_id;
+    if (branch_status_id != null) map["branch_status_id"] = branch_status_id;
+    if (attendance_location_id != null)
+      map['attendance_location_id'] = attendance_location_id;
     map["company_id"] = companyId;
-    
+
+    // SEND APP VERSION
+    map["app_version"] = app_version;
+
     return map;
   }
 
-
-  Map<String, dynamic>? toCreateMapForHit_Approval_in(){
-    Map<String, dynamic> map = {};
-    
-    if(checkInStatus != null){
-      map["approval_employee_id"] = approval_employee_id;
-       map["employee_id"] = employee_id;
-
-      if(attendanceDate != null) map["approval_date"] = DateFormat("yyyy-MM-dd").format(attendanceDate!);
-
-
-       map["updated_by"] = approval_employee_id;
-
-       
-   
-    if(checkInActual != null) map["check_in_actual"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkInActual!);
-
-     map["company_id"] = companyId;
-
-
-    if(checkInStatus != null) map["check_in_status"] = checkInStatus;
-    if(approval_status_in != null) map["approval_status_in"] = approval_status_in;
-    
-    return map;
-    }else{
-      return null;
-    }
-    
-    
-  }
-
-  Map<String, dynamic>? toCreateMapForHit_Approval_out(){
+  Map<String, dynamic>? toCreateMapForHit_Approval_in() {
     Map<String, dynamic> map = {};
 
-    if(checkOutStatus != null){
+    if (checkInStatus != null) {
       map["approval_employee_id"] = approval_employee_id;
-       map["employee_id"] = employee_id;
+      map["employee_id"] = employee_id;
 
-      if(attendanceDate != null) map["approval_date"] = DateFormat("yyyy-MM-dd").format(attendanceDate!);
+      if (attendanceDate != null)
+        map["approval_date"] = DateFormat("yyyy-MM-dd").format(attendanceDate!);
 
+      map["updated_by"] = approval_employee_id;
 
-       map["updated_by"] = approval_employee_id;
+      if (checkInActual != null)
+        map["check_in_actual"] =
+            DateFormat("yyyy-MM-dd HH:mm:ss").format(checkInActual!);
 
-       
-   
-    if(checkOutActual != null) map["check_out_actual"] = DateFormat("yyyy-MM-dd HH:mm:ss").format(checkOutActual!);
+      map["company_id"] = companyId;
 
-     map["company_id"] = companyId;
+      if (checkInStatus != null) map["check_in_status"] = checkInStatus;
+      if (approval_status_in != null)
+        map["approval_status_in"] = approval_status_in;
 
-
-    if(checkOutStatus != null) map["check_out_status"] = checkOutStatus;
-    if(approval_status_out != null) map["approval_status_out"] = approval_status_out;
-    
-    return map;
-    }else{
+      return map;
+    } else {
       return null;
     }
-    
-    
   }
 
-  statusNameChange(String? status){
-    if(status == null) return null;
-    if(status == "LUPA CO") return "LUPA ABSEN PULANG";
+  Map<String, dynamic>? toCreateMapForHit_Approval_out() {
+    Map<String, dynamic> map = {};
+
+    if (checkOutStatus != null) {
+      map["approval_employee_id"] = approval_employee_id;
+      map["employee_id"] = employee_id;
+
+      if (attendanceDate != null)
+        map["approval_date"] = DateFormat("yyyy-MM-dd").format(attendanceDate!);
+
+      map["updated_by"] = approval_employee_id;
+
+      if (checkOutActual != null)
+        map["check_out_actual"] =
+            DateFormat("yyyy-MM-dd HH:mm:ss").format(checkOutActual!);
+
+      map["company_id"] = companyId;
+
+      if (checkOutStatus != null) map["check_out_status"] = checkOutStatus;
+      if (approval_status_out != null)
+        map["approval_status_out"] = approval_status_out;
+
+      return map;
+    } else {
+      return null;
+    }
+  }
+
+  statusNameChange(String? status) {
+    if (status == null) return null;
+    if (status == "LUPA CO") return "LUPA ABSEN PULANG";
     return status;
   }
 }
-

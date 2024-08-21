@@ -9,6 +9,7 @@ import 'package:face_net_authentication/db/databse_helper_absensi.dart';
 import 'package:face_net_authentication/repo/attendance_repos.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
@@ -63,6 +64,11 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
   String branch_status_id = "";
   String attendance_location_id = "";
   String Tipe_absensi = "REGULER";
+  Color statusColor = Colors.blue;
+
+  String checkoutPlusTolerance = "";
+  String checkInPlusTolerance = "";
+  DatabaseHelperAbsensi databaseHelperAbsensi = DatabaseHelperAbsensi.instance;
 
   ProgressButton progressbutt = ProgressButton(
     stateWidgets: {
@@ -124,8 +130,7 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
     }
 
     setTolerance().then((value) {
-      isOvernight =
-          checkShiftIsOvernight(widget.user.check_in!, widget.user.check_out!);
+      isOvernight = checkShiftIsOvernight(checkin_onShift, checkOut_onShift);
       getTimeOut().then((value) {
         _counter = value;
       });
@@ -287,7 +292,7 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
               Container(
                 padding: EdgeInsets.fromLTRB(30, 15, 30, 15),
                 decoration: BoxDecoration(
-                    color: Colors.blue,
+                    color: statusColor,
                     borderRadius: BorderRadius.all(Radius.circular(50))),
                 child: Text(
                   status,
@@ -327,14 +332,25 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
     if (widget.user.check_in != widget.user.check_out) {
       if (!isOvernight) {
         if (terlambatChecker(widget.textJamAbsensi, checkin_onShift)) {
+          setState(() {
+            statusColor = Colors.orange;
+          });
           note_status = "TERLAMBAT";
         }
       } else {
+        DateTime? lastAttendaceDate =
+            await databaseHelperAbsensi.getLastOvernightDate(
+                widget.user.employee_id!,
+                isOvernight,
+                widget.user.shift_id ?? "NO SHIFT");
+
         String? result = checkLemburStatus(
             isModeMasuk: true,
             jamAbsen: widget.textJamAbsensi,
             shiftMasuk: checkin_onShift,
-            shiftKeluar: checkOut_onShift);
+            shiftKeluar: checkOut_onShift,
+            lastAttendanceDate: lastAttendaceDate);
+
         if (result != null) {
           note_status = result;
         }
@@ -391,19 +407,30 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
     if (widget.user.check_in != widget.user.check_out) {
       if (!isOvernight) {
         if (await pulangCepatChecker(widget.textJamAbsensi, checkOut_onShift)) {
+          // if (await pulangCepatChecker("2024-08-12 19:00:01", checkOut_onShift)) {
+          setState(() {
+            statusColor = Colors.orange;
+          });
           note_status = "PULANG CEPAT";
         }
       } else {
+        DateTime? lastAttendaceDate =
+            await databaseHelperAbsensi.getLastOvernightDate(
+                widget.user.employee_id!,
+                isOvernight,
+                widget.user.shift_id ?? "NO SHIFT");
         String? result = checkLemburStatus(
             isModeMasuk: false,
             jamAbsen: widget.textJamAbsensi,
             shiftMasuk: checkin_onShift,
-            shiftKeluar: checkOut_onShift);
+            shiftKeluar: checkOut_onShift,
+            lastAttendanceDate: lastAttendaceDate);
         if (result != null) {
           note_status = result;
         }
       }
     }
+
     // String attendndaceDateString = dateFormat.format(widget.jamAbsensi);
     Map<String, dynamic> sampleData = {
       // "attendance_date": attendndaceDateString,
@@ -517,8 +544,15 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
     if (statusRig != null) {
       for (ShiftRig rigShift in statusRig.shift!) {
         if (rigShift.id == widget.user.shift_id) {
-          checkin = rigShift.checkin!;
-          checkin = rigShift.checkout!;
+          try {
+            checkin = rigShift.checkin!;
+            checkout = rigShift.checkout!;
+          } catch (e) {
+            showToast(
+                "Jam Checkin/Checkout pada Rig Status Kosong, Kemungkinan Sedang IDLE, atau mohon hubungi admin");
+            Navigator.pop(context);
+          }
+
           break;
         }
       }
@@ -553,8 +587,7 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
 
   insertToLocalDB(Attendance dataAbsen) async {
     await successSound();
-    DatabaseHelperAbsensi databaseHelperAbsensi =
-        DatabaseHelperAbsensi.instance;
+
     String statusDb = await databaseHelperAbsensi.insertAttendance(dataAbsen,
         widget.type_absensi, isOvernight, widget.user.shift_id ?? "NO SHIFT");
     setState(() {
@@ -562,10 +595,12 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
         if (note_status != null) {
           showToast(note_status!);
         }
-
         status = "SUKSES ABSEN " + widget.type_absensi;
         showJam = true;
       } else if (statusDb == "ALLREADY") {
+        setState(() {
+          statusColor = Colors.redAccent;
+        });
         status = "ANDA SUDAH ABSEN " + widget.type_absensi;
         showJam = false;
       } else {

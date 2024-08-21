@@ -25,6 +25,7 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
   RigStatusRepo repo = RigStatusRepo();
 
   RigStatusShift? brachStatus;
+  RigStatusShift? statusSelected;
 
   DateTime today = DateTime.now();
 
@@ -204,7 +205,6 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
                                 showToast(
                                     "Untuk Mengedit Status Hari Ini Mohon Edit Di menu Utama");
                               } else {
-                                RigStatusShift? statusSelected;
                                 await showDialog(
                                   context: context,
                                   builder: (BuildContext context) {
@@ -219,8 +219,8 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
                                 if (statusSelected != null) {
                                   data.shift == "-"
                                       ? brachStatus!.shift![0].id
-                                      : await _showDialogPilihShift(
-                                              context, data.shift ?? "") ??
+                                      : await _showDialogPilihShift(context,
+                                              data.shift ?? "", data) ??
                                           null;
                                   if (selectedShift != null) {
                                     await dbHelper.update(
@@ -248,13 +248,13 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
   }
 
   sync() async {
-    if (await dBsync().dBsyncCateringHistory()) {
+    if (await dBsync().dbSyncRigHistory()) {
       loadLocalData();
     }
   }
 
-  _showDialogPilihShift(BuildContext context, String lastShift) async {
-    selectedShift = null;
+  _showDialogPilihShift(BuildContext context, String lastShift,
+      RigStatusHistoryModel data) async {
     await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -278,7 +278,15 @@ class _RigStatusHistoryState extends State<RigStatusHistory> {
           actions: <Widget>[
             TextButton(
               child: Text('Submit'),
-              onPressed: () {
+              onPressed: () async {
+                await dbHelper.update(
+                    data,
+                    statusSelected?.statusBranchId ?? "-",
+                    statusSelected?.statusBranch ?? "-",
+                    selectedShift!);
+                await loadLocalData();
+                await sync();
+
                 Navigator.pop(context);
               },
             ),

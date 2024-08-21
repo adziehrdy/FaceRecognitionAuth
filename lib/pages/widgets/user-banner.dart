@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:face_net_authentication/db/database_helper_catering_status.dart';
+import 'package:face_net_authentication/db/dbSync.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/catering_history_model.dart';
 import 'package:face_net_authentication/models/login_model.dart';
@@ -305,6 +306,8 @@ class _UserBannerState extends State<UserBanner> {
           shift: onShift));
     }
 
+    dBsync().syncAllDB();
+
     await showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -356,7 +359,11 @@ class _UserBannerState extends State<UserBanner> {
     String currentShift = "-";
     TimeOfDay today = TimeOfDay.now();
     for (ShiftRig shift in status_rig!.shift!) {
-      if (isTimeInRange(shift.checkin!, shift.checkout!, today)) {
+      try {
+        if (isTimeInRange(shift.checkin!, shift.checkout!, today)) {
+          currentShift = shift.id!;
+        }
+      } catch (e) {
         currentShift = shift.id!;
       }
     }

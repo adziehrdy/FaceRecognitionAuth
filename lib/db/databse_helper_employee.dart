@@ -226,13 +226,26 @@ $status_dk
               check_out +
               ' is NOT NULL ) AND ( ' +
               check_in +
-              " is NOT NULL )");
+              " is NOT NULL ) AND (" +
+              shift_id +
+              " is NOT 'PDC_OFF')");
       // List<Map<String, dynamic>> users = await db.rawQuery('SELECT * FROM $table WHERE is_verif_fr = 0');
       // print(users.length);
       return users.map((u) => User.fromMap(u)).toList();
     } catch (e) {
       print(e);
       return [];
+    }
+  }
+
+  Future<User?> getFirstUser() async {
+    Database db = await instance.database;
+    List<Map<String, dynamic>> result = await db.query(table);
+
+    if (result.isNotEmpty) {
+      return User.fromMap(result.first);
+    } else {
+      return null;
     }
   }
 }

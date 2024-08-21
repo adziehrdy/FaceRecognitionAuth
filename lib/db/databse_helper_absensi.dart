@@ -556,4 +556,35 @@ class DatabaseHelperAbsensi {
       showToast("error saat Approve Absensi - " + e.toString());
     }
   }
+
+  Future<DateTime?> getLastOvernightDate(
+      String employee_id, bool isOvernight, String shift_id) async {
+    DateTime now = DateTime.now();
+
+    // //TESTING ABSENSI
+    // String textJamAbsensi = "2024-01-04 01:51:46";
+    // now = DateTime.parse(textJamAbsensi!);
+    // //TESTING ABSENSI
+
+    String hariIni = DateFormat("ddMM").format(now);
+
+    DateTime yesterday = now.subtract(Duration(days: 1));
+    String kemarin = DateFormat("ddMM").format(yesterday);
+
+    List<Attendance> allRecord =
+        await getAllAttendancesKELUAR(employee_id, shift_id, isOvernight);
+    if (allRecord.isEmpty) {
+    } else {
+      for (var data in allRecord) {
+        String tanggalCheckIn = DateFormat("ddMM").format(data.attendanceDate!);
+        if (data.checkOut == null &&
+            (tanggalCheckIn == hariIni || tanggalCheckIn == kemarin)) {
+          return data.checkIn;
+        } else {
+          return null;
+        }
+      }
+    }
+    return null;
+  }
 }

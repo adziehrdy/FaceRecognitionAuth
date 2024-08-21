@@ -4,16 +4,14 @@ import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:face_net_authentication/constants/constants.dart';
+import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/db/databse_helper_employee_relief.dart';
-import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/services/image_converter.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
-
-import '../db/databse_helper_employee.dart';
 
 class MLService {
   Interpreter? _interpreter;
@@ -26,7 +24,6 @@ class MLService {
 
   Future initialize() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
-    // threshold = pref.getDouble("threshold") ?? CONSTANT_VAR.DEFAULT_TRESHOLD;
     threshold = CONSTANT_VAR.DEFAULT_TRESHOLD;
 
     landscape_mode = pref.getBool("LANDSCAPE_MODE") ?? false;
@@ -95,10 +92,10 @@ class MLService {
     double w;
 
     if (landscape_mode) {
-      x = faceDetected.boundingBox.left;
-      y = faceDetected.boundingBox.top;
-      h = faceDetected.boundingBox.width;
-      w = faceDetected.boundingBox.height;
+      x = faceDetected.boundingBox.left - 10.0;
+      y = faceDetected.boundingBox.top - 10.0;
+      h = faceDetected.boundingBox.width + 10.0;
+      w = faceDetected.boundingBox.height + 10.0;
     } else {
       x = faceDetected.boundingBox.left - 10.0;
       y = faceDetected.boundingBox.top - 10.0;
@@ -138,7 +135,7 @@ class MLService {
   }
 
   Future<User?> _searchResult(List predictedData) async {
-    if (users.isEmpty || users == null) {
+    if (users.isEmpty) {
       users = await getAlluser();
     }
 
@@ -161,7 +158,6 @@ class MLService {
           minDist = currDist;
           print("FR- FINAL DISTANCE" + currDist.toString());
           predictedResult = u;
-          break;
         } else {
           print("FR - SCANNED DISTANCE" + currDist.toString());
         }

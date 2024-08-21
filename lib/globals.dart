@@ -670,22 +670,45 @@ int calculateTimeDifference(String jamMasuk, String JamKeluar) {
   return hours;
 }
 
-String? checkLemburStatus({
-  required bool isModeMasuk,
-  required String jamAbsen,
-  required String shiftMasuk,
-  required String shiftKeluar,
-}) {
+String? checkLemburStatus(
+    {required bool isModeMasuk,
+    required String jamAbsen,
+    required String shiftMasuk,
+    required String shiftKeluar,
+    required DateTime? lastAttendanceDate}) {
+  String lastAttendanceDateString;
+  String tanggalAbsensiOnly;
+
+  if (lastAttendanceDate != null && isModeMasuk == false) {
+    lastAttendanceDateString =
+        DateFormat('yyyy-MM-dd').format(lastAttendanceDate);
+    tanggalAbsensiOnly = jamAbsen.substring(0, 10);
+  } else {
+    lastAttendanceDateString = "2024-01-02";
+    tanggalAbsensiOnly = "2024-01-02";
+  }
+
   DateTime dateTime = DateTime.parse(jamAbsen);
+
   String timeOnly =
       "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}";
 
   // timeOnly = "13:00:00";
 
   try {
-    final DateTime jamAbsenDT = DateTime.parse("2024-01-02 $timeOnly");
-    final DateTime shiftMasukDT = DateTime.parse("2024-01-02 $shiftMasuk");
-    final DateTime shiftKeluarDT = DateTime.parse("2024-01-02 $shiftKeluar");
+    // final DateTime jamAbsenDT = DateTime.parse("2024-01-02 $timeOnly");
+    // final DateTime shiftMasukDT = DateTime.parse("2024-01-02 $shiftMasuk");
+    // final DateTime shiftKeluarDT = DateTime.parse("2024-01-02 $shiftKeluar");
+
+    final DateTime jamAbsenDT = DateTime.parse("$tanggalAbsensiOnly $timeOnly");
+
+    // final DateTime jamAbsenDT = DateTime.parse("$tanggalAbsensiOnly 18:46:00");
+    final DateTime shiftMasukDT =
+        DateTime.parse("$lastAttendanceDateString $shiftMasuk");
+    final DateTime shiftKeluarDT =
+        DateTime.parse("$lastAttendanceDateString $shiftKeluar")
+            .add(Duration(days: 1));
+    ;
 
     if (isModeMasuk) {
       if (jamAbsenDT.isAfter(shiftMasukDT)) {
@@ -708,6 +731,7 @@ String? checkLemburStatus({
     }
   } catch (e) {
     print(e);
+    showToast(e.toString() + "on Cek Lembur");
   }
 
   return "UNKNOW";
@@ -772,8 +796,15 @@ bool checkShiftIsOvernight(String checkin, String checkout) {
 
   // Jika jam checkin lebih besar dari jam checkout, itu artinya overnight
   if (checkinTime.isAfter(checkoutTime)) {
+    print(
+        "CHECKIN =" + checkin + " | CHECKOUT = " + checkout + " == OVERNIGHT");
     return true;
   } else {
+    print("CHECKIN =" +
+        checkin +
+        " | CHECKOUT = " +
+        checkout +
+        " == NOT OVERNIGHT");
     return false;
   }
 }

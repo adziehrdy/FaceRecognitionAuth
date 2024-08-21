@@ -28,7 +28,7 @@ class RigStatusHistoryModel {
         branchStatusId: map['branch_status_id'],
         requester: map['requester'],
         approver: map['approver'], // handle nullable
-        status: map['status'],
+        status: map['status']?.toString() ?? '-',
         date: map['date'],
         api_flag: map['api_flag'],
         shift: map['shift']);

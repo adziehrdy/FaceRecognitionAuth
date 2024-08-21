@@ -3,6 +3,7 @@ import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/pages/home_page.dart';
 import 'package:face_net_authentication/pages/login.dart';
+import 'package:face_net_authentication/testing_absen.dart';
 // import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -58,6 +59,7 @@ class MyApp extends StatelessWidget {
       theme:
           ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue)),
       home: isLoggedIn ? HomePage() : LoginPage(),
+      // home: TestingAbsen()
 
       // builder: EasyLoading.init(),
     );
