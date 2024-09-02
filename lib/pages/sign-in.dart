@@ -1,11 +1,10 @@
 import 'dart:async';
 
 import 'package:camera/camera.dart';
-import 'package:face_net_authentication/db/databse_helper_employee.dart';
+import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/pages/Catering/catering_history.dart';
 import 'package:face_net_authentication/pages/fr_detected_page.dart';
 import 'package:face_net_authentication/pages/widgets/camera_detection_preview.dart';
 import 'package:face_net_authentication/pages/widgets/camera_header.dart';
@@ -14,7 +13,6 @@ import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/face_detector_service.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:intl/intl.dart' as intl;
@@ -51,6 +49,8 @@ class SignInState extends State<SignIn> {
   String? textJamAbsensi;
 
   Image? DetectedFaceImage;
+
+  User? lastUser;
 
   @override
   void initState() {
@@ -107,8 +107,14 @@ class SignInState extends State<SignIn> {
     if (_faceDetectorService.faceDetected) {
 //---------
 
-      if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
-          _faceDetectorService.faces[0].headEulerAngleY! < -10) {
+      if (_faceDetectorService.faces[0].headEulerAngleY! >
+              CONSTANT_VAR.headEulerY ||
+          _faceDetectorService.faces[0].headEulerAngleY! <
+              -CONSTANT_VAR.headEulerY ||
+          _faceDetectorService.faces[0].headEulerAngleX! >
+              CONSTANT_VAR.headEulerX ||
+          _faceDetectorService.faces[0].headEulerAngleX! <
+              -CONSTANT_VAR.headEulerX) {
         print("=== POSISI MUKA TIDAK BAGUS=== ");
       } else {
         _mlService.setCurrentPrediction(image, _faceDetectorService.faces[0]);
@@ -116,9 +122,16 @@ class SignInState extends State<SignIn> {
         //SET FACE
 
         print("POSISI MUKA BAGUS");
-        RECONIZE_FACE(image);
+        imglib.Image faceImageCrop =
+            _mlService.cropFace(image, _faceDetectorService.faces[0]);
+        int blurScore = laplacian(faceImageCrop);
+
+        print("BLURR SCORE = " + blurScore.toString());
+        if (blurScore >= 100) {
+          RECONIZE_FACE(image);
+        }
       }
-// RECONIZE_FACE();
+      // RECONIZE_FACE();
 
       //--------
     }
@@ -140,44 +153,54 @@ class SignInState extends State<SignIn> {
   RECONIZE_FACE(CameraImage image) async {
     if (enable_recognize_process) {
       if (_faceDetectorService.faceDetected) {
-        User? user = await _mlService.predict();
+        User? user = await _mlService.predict(context);
+
         if (user != null) {
-          enable_recognize_process = false;
-          //  await _cameraService.takePicture();
-          getDateTimeNow();
-          pauseCameraAndMLKit();
-          imglib.Image faceImage =
-              _mlService.cropFace(image, _faceDetectorService.faces[0]);
+          if (lastUser == null) {
+            lastUser = user;
+          } else {
+            if (lastUser == user) {
+              lastUser = null;
+              enable_recognize_process = false;
+              //  await _cameraService.takePicture();
+              getDateTimeNow();
+              pauseCameraAndMLKit();
+              imglib.Image faceImage =
+                  _mlService.cropFace(image, _faceDetectorService.faces[0]);
 
-          //  //TESTING ABSENSI
+              //  //TESTING ABSENSI
 
-          //  textJamAbsensi = "2024-02-11 07:30:00";
-          //  jamAbsensi = DateTime.parse(textJamAbsensi!);
+              //  textJamAbsensi = "2024-02-11 07:30:00";
+              //  jamAbsensi = DateTime.parse(textJamAbsensi!);
 
-          //  //TESTING ABSENSI
+              //  //TESTING ABSENSI
 
-          await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => FrDetectedPage(
-                  // employee_name: user.employee_name!,
-                  textJamAbsensi: textJamAbsensi!,
-                  jamAbsensi: jamAbsensi!,
-                  alamat: alamat,
-                  lat: lat.toString(),
-                  long: long.toString(),
-                  // company_id: user.company_id!,
-                  // employee_id: user.employee_id!,
-                  type_absensi: widget.MODE,
-                  faceImage: convertImagelibToUint8List(faceImage),
-                  user: user,
-                ),
-              ));
+              await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => FrDetectedPage(
+                      // employee_name: user.employee_name!,
+                      textJamAbsensi: textJamAbsensi!,
+                      jamAbsensi: jamAbsensi!,
+                      alamat: alamat,
+                      lat: lat.toString(),
+                      long: long.toString(),
+                      // company_id: user.company_id!,
+                      // employee_id: user.employee_id!,
+                      type_absensi: widget.MODE,
+                      faceImage: convertImagelibToUint8List(faceImage),
+                      user: user,
+                    ),
+                  ));
 
-          // _reload();
+              // _reload();
 
-          resumeCameraAndMLKit();
-          enable_recognize_process = true;
+              resumeCameraAndMLKit();
+              enable_recognize_process = true;
+            } else {
+              lastUser = user;
+            }
+          }
         }
         // namaReconized = user?.employee_name ?? "UNRECONIZE";
 
@@ -236,9 +259,7 @@ class SignInState extends State<SignIn> {
     if (_isInitializing) return Center(child: CircularProgressIndicator());
     if (_isPictureTaken)
       return SinglePicture(imagePath: _cameraService.imagePath!);
-    return CameraDetectionPreview(
-      painterMode: "GOOD",
-    );
+    return CameraDetectionPreview();
   }
 
   @override
@@ -269,66 +290,20 @@ class SignInState extends State<SignIn> {
                       datetime: DateTime.now()),
                   // Text(_latitude + "," + _longitude),
                   // Text(alamat)
-
-                  kDebugMode
-                      ? ElevatedButton(
-                          onPressed: () async {
-                            DatabaseHelperEmployee dbHelper =
-                                DatabaseHelperEmployee.instance;
-                            getDateTimeNow();
-
-                            User? user = await dbHelper.getFirstUser();
-
-                            if (user != null) {
-                              imglib.Image dummyImage = imglib.Image(100, 100);
-
-                              // Isi image dengan warna merah sebagai contoh
-                              for (int y = 0; y < dummyImage.height; y++) {
-                                for (int x = 0; x < dummyImage.width; x++) {
-                                  dummyImage.setPixel(
-                                      x,
-                                      y,
-                                      imglib.getColor(
-                                          255, 0, 0)); // Warna merah
-                                }
-                              }
-
-                              await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => FrDetectedPage(
-                                      // employee_name: user.employee_name!,
-                                      textJamAbsensi: textJamAbsensi!,
-                                      jamAbsensi: jamAbsensi!,
-                                      alamat: alamat,
-                                      lat: lat.toString(),
-                                      long: long.toString(),
-                                      // company_id: user.company_id!,
-                                      // employee_id: user.employee_id!,
-                                      type_absensi: widget.MODE,
-                                      faceImage: convertImagelibToUint8List(
-                                          dummyImage),
-                                      user: user,
-                                    ),
-                                  ));
-                            }
-                          },
-                          child: Text("BYPASS"))
-                      : SizedBox()
                 ],
               )
             ]),
-            // SizedBox(height: 5),
-            // Text(lat.toString() + " , " + long.toString()),
-            // SizedBox(height: 5),
-            // Padding(
-            //   padding: const EdgeInsets.all(15),
-            //   child: Text(
-            //     alamat,
-            //     textAlign: TextAlign.center,
-            //     maxLines: 2,
-            //   ),
-            // )
+            SizedBox(height: 5),
+            Text(lat.toString() + " , " + long.toString()),
+            SizedBox(height: 5),
+            Padding(
+              padding: const EdgeInsets.all(15),
+              child: Text(
+                alamat,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+              ),
+            )
           ]),
         ],
       ),
@@ -395,5 +370,38 @@ class SignInState extends State<SignIn> {
   void resumeCameraAndMLKit() async {
     _cameraService.cameraController?.resumePreview();
     _frameFaces();
+  }
+
+  int laplacian(imglib.Image bitmap) {
+    // Resize the face to a size of 256X256, because the shape of the placeholder that needs feed data below is (1, 256, 256, 3)
+    imglib.Image bitmapScale =
+        imglib.copyResizeCropSquare(bitmap, bitmap.height);
+
+    var laplace = [
+      [0, 1, 0],
+      [1, -4, 1],
+      [0, 1, 0]
+    ];
+    int size = laplace.length;
+    var img = imglib.grayscale(bitmapScale);
+    int height = img.height;
+    int width = img.width;
+
+    int score = 0;
+    for (int x = 0; x < height - size + 1; x++) {
+      for (int y = 0; y < width - size + 1; y++) {
+        int result = 0;
+        // Convolution operation on size*size area
+        for (int i = 0; i < size; i++) {
+          for (int j = 0; j < size; j++) {
+            result += (img.getPixel(x + i, y + j) & 0xFF) * laplace[i][j];
+          }
+        }
+        if (result > 50) {
+          score++;
+        }
+      }
+    }
+    return score;
   }
 }

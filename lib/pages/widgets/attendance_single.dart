@@ -738,23 +738,25 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                       onSelected: (value) async {
                                     if (widget.isLocked) {
                                       PinInputDialog.show(context, (p0) async {
-                                        await _dataBaseHelper.tidakAbsenKeluar(
-                                            widget.data.attendanceId!,
-                                            await getActiveSuperIntendentID(),
-                                            value[1],
-                                            false,
-                                            value[0]);
+                                        await _dataBaseHelper
+                                            .approveTidakAbsenKeluar(
+                                                widget.data.attendanceId!,
+                                                await getActiveSuperIntendentID(),
+                                                value[1],
+                                                false,
+                                                value[0]);
                                         setState(() {
                                           widget.onUpdate();
                                         });
                                       });
                                     } else {
-                                      await _dataBaseHelper.tidakAbsenKeluar(
-                                          widget.data.attendanceId!,
-                                          await getActiveSuperIntendentID(),
-                                          value[1],
-                                          false,
-                                          value[0]);
+                                      await _dataBaseHelper
+                                          .approveTidakAbsenKeluar(
+                                              widget.data.attendanceId!,
+                                              await getActiveSuperIntendentID(),
+                                              value[1],
+                                              false,
+                                              value[0]);
                                       setState(() {
                                         widget.onUpdate();
                                       });

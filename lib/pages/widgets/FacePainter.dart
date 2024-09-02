@@ -1,11 +1,10 @@
+import 'package:face_net_authentication/constants/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 
 class FacePainter extends CustomPainter {
-  FacePainter(
-      {required this.imageSize, required this.face, required this.painterMode});
+  FacePainter({required this.imageSize, required this.face});
   final Size imageSize;
-  String painterMode;
   double? scaleX, scaleY;
   Face? face;
   @override
@@ -14,28 +13,19 @@ class FacePainter extends CustomPainter {
 
     Paint paint;
 
-    if (this.face!.headEulerAngleY! > 10 || this.face!.headEulerAngleY! < -10) {
+    if (this.face!.headEulerAngleY! > CONSTANT_VAR.headEulerY ||
+        this.face!.headEulerAngleY! < -CONSTANT_VAR.headEulerY ||
+        this.face!.headEulerAngleX! > CONSTANT_VAR.headEulerX ||
+        this.face!.headEulerAngleX! < -CONSTANT_VAR.headEulerX) {
       paint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3.0
-        ..color = Colors.grey;
+        ..color = Colors.white;
     } else {
-      if (painterMode == "BLUR") {
-        paint = Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3.0
-          ..color = Colors.orange;
-      } else if (painterMode == "SPOOF") {
-        paint = Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 5.0
-          ..color = Colors.red;
-      } else {
-        paint = Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3.0
-          ..color = Colors.green;
-      }
+      paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.0
+        ..color = Colors.green;
     }
 
     scaleX = size.width / imageSize.width;
@@ -75,5 +65,5 @@ RRect _scaleRect(
       rect.top.toDouble() * scaleY,
       widgetSize.width - rect.right.toDouble() * scaleX,
       rect.bottom.toDouble() * scaleY,
-      Radius.circular(100));
+      Radius.circular(10));
 }

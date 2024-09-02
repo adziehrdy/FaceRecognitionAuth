@@ -4,6 +4,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:camera/camera.dart';
+import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/models/user.dart';
@@ -57,6 +58,7 @@ class SignUpState extends State<SignUp> {
   UserRepo repo = UserRepo();
 
   Queue<double> dataQueue = Queue<double>();
+  bool canRegister = false;
 
   @override
   void initState() {
@@ -133,40 +135,23 @@ class SignUpState extends State<SignUp> {
 
         try {
           await _faceDetectorService.detectFacesFromImage(img!);
+          faceDetected = _faceDetectorService.faces[0];
 
           if (_faceDetectorService.faces.isNotEmpty) {
-            double rightEyeProbability =
-                _faceDetectorService.faces[0].rightEyeOpenProbability ?? 0.0;
-            double leftEyeProbability =
-                _faceDetectorService.faces[0].leftEyeOpenProbability ?? 0.0;
-
-            print("HEAD Y " +
-                (_faceDetectorService.faces[0].headEulerAngleY!).toString());
-
-            addData(_faceDetectorService.faces[0].headEulerAngleY! +
-                rightEyeProbability);
-
-            // Liveness detection logic based on eye probabilities
-            if (rightEyeProbability != 0.0) {
-              print("EYE RIGHT PROBABILITY = $rightEyeProbability");
-              print("EYE LEFT PROBABILITY = $leftEyeProbability");
-
-              if (rightEyeProbability < 0.8 || leftEyeProbability < 0.8) {
-                print(
-                    "REAL person detected"); // At least one eye is open enough
-              } else {
-                print(
-                    "FAKE person detected"); // Both eyes are closed or nearly closed
-              }
-            }
-
             setState(() {
-              if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
-                  _faceDetectorService.faces[0].headEulerAngleY! < -10) {
-                // Your logic for head angle if needed
+              if (_faceDetectorService.faces[0].headEulerAngleY! >
+                      CONSTANT_VAR.headEulerY ||
+                  _faceDetectorService.faces[0].headEulerAngleY! <
+                      -CONSTANT_VAR.headEulerY ||
+                  _faceDetectorService.faces[0].headEulerAngleX! >
+                      CONSTANT_VAR.headEulerX ||
+                  _faceDetectorService.faces[0].headEulerAngleX! <
+                      -CONSTANT_VAR.headEulerX) {
+                canRegister = true;
               } else {
-                faceDetected = _faceDetectorService.faces[0];
-                // faceDetectedJPG = faceDetected!.detectedFaceAsImage()
+                setState(() {
+                  canRegister = false;
+                });
               }
             });
 
@@ -344,7 +329,7 @@ class SignUpState extends State<SignUp> {
           ],
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        floatingActionButton: !_bottomSheetVisible
+        floatingActionButton: !canRegister
             ? AuthActionButton(
                 onPressed: onShot,
                 isLogin: false,
@@ -450,14 +435,14 @@ class SignUpState extends State<SignUp> {
                   CustomPaint(
                     child: Center(
                       child: Container(
-                        padding: EdgeInsets.all(100),
+                        padding: EdgeInsets.all(120),
                         child: Image.asset("assets/images/face.png"),
                       ),
                     ),
                     painter: FacePainter(
-                        face: faceDetected,
-                        imageSize: imageSize!,
-                        painterMode: ""),
+                      face: faceDetected,
+                      imageSize: imageSize!,
+                    ),
                   ),
                 ],
               ),
@@ -495,9 +480,9 @@ class SignUpState extends State<SignUp> {
                       ),
                     ),
                     painter: FacePainter(
-                        face: faceDetected,
-                        imageSize: imageSize!,
-                        painterMode: ""),
+                      face: faceDetected,
+                      imageSize: imageSize!,
+                    ),
                   ),
                 ],
               ),

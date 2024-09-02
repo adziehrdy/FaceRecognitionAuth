@@ -1,26 +1,37 @@
 {
   "project_info": {
-    "project_number": "1013487452016",
-    "project_id": "com-pdc-smartcheck-multiple",
-    "storage_bucket": "com-pdc-smartcheck-multiple.appspot.com"
+    "project_number": "908209109268",
+    "firebase_url": "https://facerecognitionauth.firebaseio.com",
+    "project_id": "facerecognitionauth",
+    "storage_bucket": "facerecognitionauth.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1013487452016:android:32b56b2e935c3ea0e119b5",
+        "mobilesdk_app_id": "1:908209109268:android:22aa62a69fde9e6a0e6a01",
         "android_client_info": {
           "package_name": "com.pdc.smartcheck.multiple"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "908209109268-8833dnentno68sbhh1q3sbd5k0epm8a3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyClHqY0GECp8MzZrTuUkrJ8Bnr7y2R2UP8"
+          "current_key": "AIzaSyDzlmpvIAirzjtO_1TDasHocRk3UrTrkig"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "908209109268-8833dnentno68sbhh1q3sbd5k0epm8a3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

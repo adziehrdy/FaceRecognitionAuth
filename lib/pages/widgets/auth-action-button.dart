@@ -29,19 +29,19 @@ class _AuthActionButtonState extends State<AuthActionButton> {
   User? predictedUser;
 
   Future _signUp(context) async {
-  //   DatabaseHelper _databaseHelper = DatabaseHelper.instance;
-  //   List predictedData = _mlService.predictedData;
-  //   String user = _userTextEditingController.text;
-  //   String password = _passwordTextEditingController.text;
-  //   User userToSave = User(
-  //     user: user,
-  //     password: password,
-  //     modelData: predictedData,
-  //   );
-  //   await _databaseHelper.insert(userToSave);
-  //   this._mlService.setPredictedData([]);
-  //   Navigator.push(context,
-  //       MaterialPageRoute(builder: (BuildContext context) => MyHomePage()));
+    //   DatabaseHelper _databaseHelper = DatabaseHelper.instance;
+    //   List predictedData = _mlService.predictedData;
+    //   String user = _userTextEditingController.text;
+    //   String password = _passwordTextEditingController.text;
+    //   User userToSave = User(
+    //     user: user,
+    //     password: password,
+    //     modelData: predictedData,
+    //   );
+    //   await _databaseHelper.insert(userToSave);
+    //   this._mlService.setPredictedData([]);
+    //   Navigator.push(context,
+    //       MaterialPageRoute(builder: (BuildContext context) => MyHomePage()));
   }
 
   Future _signIn(context) async {
@@ -67,7 +67,7 @@ class _AuthActionButtonState extends State<AuthActionButton> {
   }
 
   Future<User?> _predictUser() async {
-    User? userAndPass = await _mlService.predict();
+    User? userAndPass = await _mlService.predict(context);
     return userAndPass;
   }
 
