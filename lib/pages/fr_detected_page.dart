@@ -2,13 +2,20 @@ import 'dart:typed_data';
 
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/attendance.dart';
+import 'package:face_net_authentication/models/login_model.dart';
+import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
 import 'package:face_net_authentication/repo/attendance_repos.dart';
+import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart' as intl;
+import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:progress_state_button/progress_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'db/databse_helper_absensi.dart';
 
 class FrDetectedPage extends StatefulWidget {
   const FrDetectedPage(
@@ -22,12 +29,8 @@ class FrDetectedPage extends StatefulWidget {
       // required this.company_id,
       // required this.employee_id,
       required this.type_absensi,
-
       required this.faceImage,
-      required this.user
-
-      
-      })
+      required this.user})
       : super(key: key);
   // final String employee_name;
   final DateTime jamAbsensi;
@@ -36,7 +39,6 @@ class FrDetectedPage extends StatefulWidget {
   final String lat;
   final String long;
 
-  
   // final String company_id;
   // final String employee_id;
   final String type_absensi;
@@ -57,11 +59,17 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
   String status = "";
   bool showJam = false;
   bool isOvernight = false;
-
   String? note_status = null;
+  String checkin_onShift = "";
+  String checkOut_onShift = "";
+  String branch_status_id = "";
+  String attendance_location_id = "";
+  String Tipe_absensi = "REGULER";
+  Color statusColor = Colors.blue;
 
-
-
+  String checkoutPlusTolerance = "";
+  String checkInPlusTolerance = "";
+  DatabaseHelperAbsensi databaseHelperAbsensi = DatabaseHelperAbsensi.instance;
 
   ProgressButton progressbutt = ProgressButton(
     stateWidgets: {
@@ -94,36 +102,51 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
     state: ButtonState.fail,
   );
 
-
   int _counter = 10;
   bool isLoading = true;
 
-  
-
   void initState() {
     super.initState();
+    //CHECK IS DK OR NOT
 
-      isOvernight = checkShiftIsOvernight(widget.user.check_in!,widget.user.check_out!);
-    getTimeOut().then((value) {
-      _counter = value;
-    });
-     
-
-    // checOut();
-
-    if (widget.type_absensi == "MASUK") {
-      saveAbsenMasuk();
-    } else {
-      saveAbsenKeluar();
+    if (DKStatusChecker(widget.user.dk_start_date, widget.user.dk_end_date)) {
+      Tipe_absensi = "DINAS KHUSUS";
     }
+
+    //CHECK IS RELIEF OR NOT
+
+    if (widget.user.is_relief_employee == "1") {
+      Tipe_absensi = "RELIEF";
+    }
+
+    try {
+      SpGetSelectedStatusRig().then(
+        (value) {
+          branch_status_id = value!.statusBranchId!;
+        },
+      );
+    } catch (e) {
+      showToast("branch_status_id tidak ditemukan, mohon hubungi admin");
+      Navigator.pop(context);
+    }
+
+    setTolerance().then((value) {
+      isOvernight = checkShiftIsOvernight(checkin_onShift, checkOut_onShift);
+      getTimeOut().then((value) {
+        _counter = value;
+      });
+
+      // checOut();
+
+      if (widget.type_absensi == "MASUK") {
+        saveAbsenMasuk();
+      } else {
+        saveAbsenKeluar();
+      }
+    });
   }
 
-  
-
   Future<void> startTimer() async {
-
-   
-    
     Future.delayed(Duration(seconds: 1), () {
       if (_counter > 1) {
         setState(() {
@@ -145,130 +168,156 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: 
-      Container(
+      body: Container(
         decoration: BoxDecoration(
-    borderRadius: BorderRadius.circular(5),
-    gradient: LinearGradient(
-      colors: [Colors.white, Colors.white], // Ubah warna gradasi sesuai kebutuhan
-      begin: Alignment.bottomRight,
-      end: Alignment.centerLeft,
-    ),
-  ),
-        child: 
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Lottie.asset(
-                //   'assets/lottie/success.json',
-                //   width: 200,
-                //   height: 200,
-                //   fit: BoxFit.fill,
-                // ),
-          
-                
-                ClipOval(
-                  child: Image.memory(
-                  widget.faceImage,
-                  width: 200,
-                  height: 200,
-                  fit: BoxFit.fill,
-                ),),
-                
-                SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    widget.user.employee_name!.toUpperCase(),
-                    style: TextStyle(fontSize: 30,fontWeight: FontWeight.bold),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    widget.user.shift_id!.toUpperCase(),
-                    style: TextStyle(fontSize: 15),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(height: 5),
-                
-          
-                if (showJam)
-                
-                Column(children: [Text(
-                  'Kordinat',
-                  style: TextStyle(fontSize: 12),
-                ),
-                Text(
-                  widget.lat + "," + widget.long,
-                  style: TextStyle(fontSize: 12),
-                ),
-                SizedBox(height: 5),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text(
-                    widget.alamat,
-                    style: TextStyle(fontSize: 12),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                SizedBox(height: 5),
-                  Column(
-                    children: [
-                      Text(
-                        'Jam Absensi',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                       Text(
-                  dateFormatText.format(widget.jamAbsensi),
-                  style: TextStyle(fontSize: 25),
-                ),
-                    ],
-                  ),],),
-                
-               
-                SizedBox(),
-          
-                SizedBox(height: 5),
-                Container(
-                  padding: EdgeInsets.all(15),
-                  decoration: BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.all(Radius.circular(50))),
-                  child: Text(
-                    status,
-                    style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-          
-                SizedBox(height: 10),
-                // Container(
-                //   width: 300,
-                //   child: buildCustomButton(),
-                // ),
-                Text(info),
-                SizedBox(height: 10),
-                Text(
-                  'Otomatis kembali $_counter detik',
-                  style: TextStyle(fontSize: 14),
-                ),
-              ],
-            ),
+          borderRadius: BorderRadius.circular(5),
+          gradient: LinearGradient(
+            colors: [
+              Colors.white,
+              Colors.white
+            ], // Ubah warna gradasi sesuai kebutuhan
+            begin: Alignment.bottomRight,
+            end: Alignment.centerLeft,
           ),
-        
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Lottie.asset(
+              //   'assets/lottie/success.json',
+              //   width: 200,
+              //   height: 200,
+              //   fit: BoxFit.fill,
+              // ),
+              Container(
+                height: 250,
+                width: 250,
+                child: Stack(
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: ClipRect(
+                        child: Transform.scale(
+                          scale: 1.5, // Adjust the scale factor to zoom in
+                          child: LottieBuilder.asset(
+                            "assets/lottie/face_circle.json",
+                            height: 250,
+                            width: 250,
+                            repeat: false,
+                            frameRate: FrameRate(30),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Align(
+                      alignment: Alignment.center,
+                      child: ClipOval(
+                        child: Image.memory(
+                          widget.faceImage,
+                          width: 180,
+                          height: 180,
+                          fit: BoxFit.fill,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  widget.user.employee_name!.toUpperCase(),
+                  style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Text(
+                  widget.user.shift_id!.toUpperCase(),
+                  style: TextStyle(fontSize: 15),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              SizedBox(height: 5),
+
+              if (showJam)
+                Column(
+                  children: [
+                    // Text(
+                    //   'Kordinat',
+                    //   style: TextStyle(fontSize: 12),
+                    // ),
+                    // Text(
+                    //   widget.lat + "," + widget.long,
+                    //   style: TextStyle(fontSize: 12),
+                    // ),
+                    SizedBox(height: 5),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        widget.alamat,
+                        style: TextStyle(fontSize: 12),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Column(
+                      children: [
+                        Text(
+                          'Jam Absensi',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        Text(
+                          dateFormatText.format(widget.jamAbsensi),
+                          style: TextStyle(fontSize: 25),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+              SizedBox(),
+
+              SizedBox(height: 5),
+              Container(
+                padding: EdgeInsets.fromLTRB(30, 15, 30, 15),
+                decoration: BoxDecoration(
+                    color: statusColor,
+                    borderRadius: BorderRadius.all(Radius.circular(50))),
+                child: Text(
+                  status,
+                  style: TextStyle(
+                      fontSize: 25,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+
+              SizedBox(height: 10),
+              // Container(
+              //   width: 300,
+              //   child: buildCustomButton(),
+              // ),
+              Text(info),
+              SizedBox(height: 10),
+              Text(
+                'Otomatis kembali $_counter detik',
+                style: TextStyle(fontSize: 14),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -278,26 +327,36 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
     // Map<String, dynamic> result = await repo.canCheckIn(_employee_id);
     // bool canCheckIn = result["canCheckIn"];
 
-
-
-
     intl.DateFormat dateFormat = intl.DateFormat('yyyy-MM-dd');
     String attendndaceDateString = dateFormat.format(widget.jamAbsensi);
 
+    if (widget.user.check_in != widget.user.check_out) {
+      if (!isOvernight) {
+        if (terlambatChecker(widget.textJamAbsensi, checkin_onShift)) {
+          setState(() {
+            statusColor = Colors.orange;
+          });
+          note_status = "TERLAMBAT";
+        }
+      } else {
+        DateTime? lastAttendaceDate =
+            await databaseHelperAbsensi.getLastOvernightDate(
+                widget.user.employee_id!,
+                isOvernight,
+                widget.user.shift_id ?? "NO SHIFT");
 
-    if(!isOvernight){
-       if(terlambatChecker(widget.textJamAbsensi, widget.user.check_in!)){
-      note_status = "TERLAMBAT";
-    }
-    }else{
-      
-       String? result = checkLemburStatus(isModeMasuk: true, jamAbsen: widget.textJamAbsensi, shiftMasuk: widget.user.check_in!, shiftKeluar:  widget.user.check_out!);
-       if(result != null){
-        note_status = result;
-       }
-    }
-   
+        String? result = checkLemburStatus(
+            isModeMasuk: true,
+            jamAbsen: widget.textJamAbsensi,
+            shiftMasuk: checkin_onShift,
+            shiftKeluar: checkOut_onShift,
+            lastAttendanceDate: lastAttendaceDate);
 
+        if (result != null) {
+          note_status = result;
+        }
+      }
+    }
 
     Map<String, dynamic> sampleData = {
       "attendance_date": attendndaceDateString,
@@ -312,8 +371,11 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
       "type_absensi": widget.type_absensi,
       // "note_status": note_status,
       "check_in_status": note_status,
-      "is_uploaded" : "0",
-      "shift_id" : widget.user.shift_id
+      "is_uploaded": "0",
+      "shift_id": widget.user.shift_id,
+      "branch_status_id": branch_status_id,
+      "attendance_location_id": attendance_location_id,
+      "type_attendance": Tipe_absensi
     };
     Attendance dataAbsen = Attendance.fromMap(sampleData);
 
@@ -343,25 +405,36 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
 
     // Format the DateTime object into a string
 
-    if(!isOvernight){
-       if(pulangCepatChecker(widget.textJamAbsensi, widget.user.check_out!)){
-      note_status = "PULANG CEPAT";
+    if (widget.user.check_in != widget.user.check_out) {
+      if (!isOvernight) {
+        if (await pulangCepatChecker(widget.textJamAbsensi, checkOut_onShift)) {
+          // if (await pulangCepatChecker("2024-08-12 19:00:01", checkOut_onShift)) {
+          setState(() {
+            statusColor = Colors.orange;
+          });
+          note_status = "PULANG CEPAT";
+        }
+      } else {
+        DateTime? lastAttendaceDate =
+            await databaseHelperAbsensi.getLastOvernightDate(
+                widget.user.employee_id!,
+                isOvernight,
+                widget.user.shift_id ?? "NO SHIFT");
+        String? result = checkLemburStatus(
+            isModeMasuk: false,
+            jamAbsen: widget.textJamAbsensi,
+            shiftMasuk: checkin_onShift,
+            shiftKeluar: checkOut_onShift,
+            lastAttendanceDate: lastAttendaceDate);
+        if (result != null) {
+          note_status = result;
+        }
+      }
     }
-    }else{
-      
-       String? result = checkLemburStatus(isModeMasuk: false, jamAbsen: widget.textJamAbsensi, shiftMasuk: widget.user.check_in!, shiftKeluar:  widget.user.check_out!);
-       if(result != null){
-        note_status = result;
-       }
-    
-    }
-    
 
-
-
-    String attendndaceDateString = dateFormat.format(widget.jamAbsensi);
+    // String attendndaceDateString = dateFormat.format(widget.jamAbsensi);
     Map<String, dynamic> sampleData = {
-      "attendance_date": attendndaceDateString,
+      // "attendance_date": attendndaceDateString,
       "check_out_actual": widget.textJamAbsensi,
       "attendance_address_out": widget.alamat,
       "attendance_location_out": widget.lat + ", " + widget.long,
@@ -375,8 +448,11 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
       "type_absensi": widget.type_absensi,
       // "note_status": note_status,
       "check_out_status": note_status,
-      "is_uploaded" : "0",
-      "shift_id" : widget.user.shift_id
+      "is_uploaded": "0",
+      "shift_id": widget.user.shift_id,
+      "branch_status_id": branch_status_id,
+      "attendance_location_id": attendance_location_id,
+      "type_attendance": Tipe_absensi
     };
 
     Attendance dataAbsen = Attendance.fromMap(sampleData);
@@ -446,23 +522,86 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
     return progressbutt;
   }
 
-insertToLocalDB(Attendance dataAbsen) async {
+  Future<void> setTolerance() async {
+    LoginModel user = await getUserLoginData();
 
+    attendance_location_id = user.branch!.branchId;
 
+    int toleranceHour = 0;
+    print(toleranceHour * toleranceHour);
+    try {
+      toleranceHour =
+          int.parse(user.branch?.tolerance ?? "0"); // contoh 1 = 1 jam
+    } catch (e) {
+      showToast(e.toString());
+    }
 
-    DatabaseHelperAbsensi databaseHelperAbsensi =
-        DatabaseHelperAbsensi.instance;
-    String statusDb = await databaseHelperAbsensi.insertAttendance(
-        dataAbsen, widget.type_absensi,isOvernight,widget.user.shift_id ?? "NO SHIFT");
+    /// GET SHIFT BY RIG STATUS
+    String checkin = widget.user.check_in!;
+    String checkout = widget.user.check_out!;
+
+    RigStatusShift? statusRig = await SpGetSelectedStatusRig();
+
+    if (statusRig != null) {
+      for (ShiftRig rigShift in statusRig.shift!) {
+        if (rigShift.id == widget.user.shift_id) {
+          try {
+            checkin = rigShift.checkin!;
+            checkout = rigShift.checkout!;
+          } catch (e) {
+            showToast(
+                "Jam Checkin/Checkout pada Rig Status Kosong, Kemungkinan Sedang IDLE, atau mohon hubungi admin");
+            Navigator.pop(context);
+          }
+
+          break;
+        }
+      }
+    }
+
+    /// GET SHIFT BY RIG STATUS
+
+    // String checkin = widget.user.check_in!;
+    // String checkout = widget.user.check_out!;
+
+    DateTime checkinDateTime = DateTime.parse("2024-01-01 " + checkin);
+    DateTime checkoutDateTime = DateTime.parse("2024-01-01 " + checkout);
+
+    // Mengurangi toleransi dari waktu checkin dan checkout
+    DateTime checkOutOnShift =
+        checkoutDateTime.subtract(Duration(hours: toleranceHour));
+    DateTime checkinOnShift =
+        checkinDateTime.subtract(Duration(hours: (toleranceHour *= -1)));
+
+    // Mengonversi DateTime ke string dengan format "HH:mm"
+    String checkOutOnShiftString = DateFormat('HH:mm').format(checkOutOnShift);
+    String checkinOnShiftString = DateFormat('HH:mm').format(checkinOnShift);
+
+    setState(() {
+      checkOut_onShift = checkOutOnShiftString;
+      checkin_onShift = checkinOnShiftString;
+    });
+
+    print("checkOut_onShift: $checkOutOnShiftString");
+    print("checkin_onShift: $checkinOnShiftString");
+  }
+
+  insertToLocalDB(Attendance dataAbsen) async {
+    await successSound();
+
+    String statusDb = await databaseHelperAbsensi.insertAttendance(dataAbsen,
+        widget.type_absensi, isOvernight, widget.user.shift_id ?? "NO SHIFT");
     setState(() {
       if (statusDb == "SUCCESS") {
-        if(note_status != null){
- showToast(note_status!);
+        if (note_status != null) {
+          showToast(note_status!);
         }
-       
         status = "SUKSES ABSEN " + widget.type_absensi;
         showJam = true;
       } else if (statusDb == "ALLREADY") {
+        setState(() {
+          statusColor = Colors.redAccent;
+        });
         status = "ANDA SUDAH ABSEN " + widget.type_absensi;
         showJam = false;
       } else {

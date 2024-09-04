@@ -37,10 +37,10 @@ class _HomeWigetState extends State<HomeWiget> {
   }
 
   Future<void> update_loc_text() async {
-    await GET_LOCATION();
+    // await GET_LOCATION(context);
     lat = await SpGetLastLat();
     log = await SpGetLastlong();
-    alamat = await SpGetLastAlamat();
+    alamat = await SpGetLastAlamat(context);
 
     kordinat =
         "Latitude: " + lat.toString() + " | Longitude :" + log.toString();
@@ -165,11 +165,15 @@ class _HomeWigetState extends State<HomeWiget> {
                     ),
                     IconButton(
                         onPressed: () {
-                          PinInputDialog.show(context, (p0) {
-                            dialog_update_kordinat.show(context, (p0) {
-                              
-                            },);
-                          },);
+                          PinInputDialog.show(
+                            context,
+                            (p0) {
+                              dialog_update_kordinat.show(
+                                context,
+                                (p0) {},
+                              );
+                            },
+                          );
                         },
                         icon: Icon(
                           Icons.pin_invoke_outlined,

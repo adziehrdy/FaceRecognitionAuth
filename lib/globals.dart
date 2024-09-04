@@ -1,32 +1,44 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:ffi';
 import 'dart:io';
+import 'dart:math' as mt;
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
-import 'package:connectivity/connectivity.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/model_master_shift.dart';
+import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/force_upgrade.dart';
 import 'package:face_net_authentication/pages/login.dart';
 import 'package:face_net_authentication/repo/custom_exception.dart';
+import 'package:face_net_authentication/repo/user_repos.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
+// import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image/image.dart' as img;
 import 'package:image/image.dart' as imglib;
+import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 // import 'package:location/location.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:trust_location/trust_location.dart';
+import 'package:sn_progress_dialog/progress_dialog.dart';
+// import 'package:trust_location/trust_location.dart';
 import 'package:unique_identifier/unique_identifier.dart';
+
+import 'pages/db/databse_helper_employee.dart';
+import 'pages/db/databse_helper_employee_relief.dart';
+import 'services/image_converter.dart';
 
 String? endpointUrl;
 late String publicUrl;
@@ -35,49 +47,43 @@ bool bypass_office_location_range = false;
 
 String token = "";
 
-void showToast(String msg){
-      Fluttertoast.showToast(
-        msg: msg,
-        toastLength: Toast.LENGTH_LONG,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 1,
-        backgroundColor: Colors.blue,
-        textColor: Colors.white,
-        fontSize: 16.0);
+void showToast(String msg) {
+  Fluttertoast.showToast(
+      msg: msg,
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.blue,
+      textColor: Colors.white,
+      fontSize: 16.0);
 }
 
-void showToastShort(String msg){
-      Fluttertoast.showToast(
-        msg: msg,
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 1,
-        backgroundColor: Colors.blue,
-        textColor: Colors.white,
-        fontSize: 16.0);
+void showToastShort(String msg) {
+  Fluttertoast.showToast(
+      msg: msg,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.blue,
+      textColor: Colors.white,
+      fontSize: 16.0);
 }
 
-getCurrentLocation() async {
-LatLongPosition? position;
-  
-TrustLocation.start(5);
+// getCurrentLocation() async {
+//   LatLongPosition? position;
 
-/// the stream getter where others can listen to.
-TrustLocation.onChange.listen((values) =>
-position = values
-    // print('${values.latitude} ${values.longitude} ${values.isMockLocation}')
-);
+//   TrustLocation.start(5);
 
-print(position?.latitude.toString() ?? "0");
-return position;
-}
+//   /// the stream getter where others can listen to.
+//   TrustLocation.onChange.listen((values) => position = values
+//       // print('${values.latitude} ${values.longitude} ${values.isMockLocation}')
+//       );
 
-  
+//   print(position?.latitude.toString() ?? "0");
+//   return position;
+// }
 
-enum ApiMethods {
-  GET,
-  POST
-}
+enum ApiMethods { GET, POST, DELETE }
 
 Future<bool?> showAlert({
   required BuildContext context,
@@ -116,7 +122,8 @@ class RaisedButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: onPressed,
       child: child,
-      style: style?.copyWith(backgroundColor: MaterialStateProperty.all<Color>(primaryColor)),
+      style: style?.copyWith(
+          backgroundColor: MaterialStateProperty.all<Color>(primaryColor)),
       clipBehavior: clipBehavior!,
     );
   }
@@ -179,40 +186,36 @@ Dio dio = Dio(options);
 //   }
 // }
 
-Future<Response<dynamic>> callApi(ApiMethods method, String url, {Map<String, dynamic>? data}) async {
-
-  EasyLoading.show(status: "Loading..");
+Future<Response<dynamic>> callApi(ApiMethods method, String url,
+    {Map<String, dynamic>? data}) async {
+  // EasyLoading.show(status: "Loading..");
 
   final dio = Dio();
 
   try {
-
-        var connectivityResult = await (Connectivity().checkConnectivity());
+    var connectivityResult = await (Connectivity().checkConnectivity());
 
     if (connectivityResult == ConnectivityResult.none) {
       // Tidak ada koneksi internet, tampilkan pesan dan hentikan pemanggilan API
-      EasyLoading.dismiss();
+      // EasyLoading.dismiss();
       showToast("Cek koneksi Internet");
       // throw Exception("Tidak ada koneksi internet");
     }
-    
+
     // await getEndpointURL();
-    url = COSTANT_VAR.BASE_URL_API + "" + url;
+    url = CONSTANT_VAR.BASE_URL_API + "" + url;
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     await getUserLoginData().then((value) => token = value.accessToken!);
 
-    
-
     // print("PAYLOAD = "+jsonEncode(data));
-    log("PAYLOAD = "+jsonEncode(data));
-    
+    log("API = " + url);
+    log("PAYLOAD = " + jsonEncode(data));
 
     Map<String, dynamic> headers;
 
-
-    print("HITTED ENDPOINT - "+url);
+    print("HITTED ENDPOINT - " + url);
 
     if (token != null) {
       headers = {
@@ -222,7 +225,6 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url, {Map<String, dy
       var test = url.split('?');
       if (test.length > 1) {
         url = test[0] + '?token=$token&' + test[1];
-        
       } else {
         url = url + "?token=$token";
       }
@@ -242,60 +244,65 @@ Future<Response<dynamic>> callApi(ApiMethods method, String url, {Map<String, dy
       return await dio.get(url);
     } else if (method == ApiMethods.POST) {
       String jsonSting = jsonEncode(data);
-      print(jsonSting);
+      log("================ RESPONSE ==================");
+      log(jsonSting);
       return await dio.post(
         url,
         data: data != null ? json.encode(data) : "",
       );
+    } else if (method == ApiMethods.DELETE) {
+      String jsonSting = jsonEncode(data);
+      log("================ RESPONSE ==================");
+      log(jsonSting);
+      return await dio.delete(
+        url,
+        data: data != null ? json.encode(data) : "",
+      );
     }
-    EasyLoading.dismiss();
-    
+    // EasyLoading.dismiss();
   } catch (error) {
-    EasyLoading.dismiss();
+    // EasyLoading.dismiss();
     print(error.toString());
-    if (error is DioException){
-     if (error.response!.statusCode == 400 || error.response!.statusCode == 500) {
-      print(error.response!.data['message']);
-       showToast(error.response!.data['message']);
-    }else{
-      
-      showToast(error.response?.statusMessage.toString() ?? "Error");
-    }
+    if (error is DioException) {
+      if (error.response!.statusCode == 400 ||
+          error.response!.statusCode == 500) {
+        print(error.response!.data['message']);
+        showToast(error.response!.data['message']);
+      } else {
+        showToast(error.response?.statusMessage.toString() ?? "Error");
+      }
     }
 
-    
     rethrow; // Re-throw the error after handling it
   }
-  EasyLoading.dismiss();
+  // EasyLoading.dismiss();
   throw Exception("Invalid API method");
 }
 
-
-Future<Response<dynamic>> callApiWithoutToken(ApiMethods method, String url, {Map<String, dynamic>? data}) async {
+Future<Response<dynamic>> callApiWithoutToken(ApiMethods method, String url,
+    {Map<String, dynamic>? data}) async {
   final dio = Dio();
 
   try {
-
-      // await getEndpointURL();
-
-
+    // await getEndpointURL();
 
     Map<String, dynamic> headers = {
       "Content-Type": "application/json",
       "Accept": "application/json",
     };
 
-    url = COSTANT_VAR.BASE_URL_API + "" + url;
+    url = CONSTANT_VAR.BASE_URL_API + "" + url;
 
     print(url);
-    
+
     dio.options.headers = headers;
 
     if (method == ApiMethods.GET) {
       return await dio.get(url);
     } else if (method == ApiMethods.POST) {
       String jsonString = jsonEncode(data);
-      print(jsonString);
+      log("================ RESPONSE ==================");
+      log(jsonString);
       return await dio.post(
         url,
         data: data != null ? json.encode(data) : "",
@@ -305,29 +312,27 @@ Future<Response<dynamic>> callApiWithoutToken(ApiMethods method, String url, {Ma
     print(error.toString());
     if (error is DioError) {
       if (error.response != null) {
-        if (error.response!.statusCode == 400 || error.response!.statusCode == 500) {
-          
+        if (error.response!.statusCode == 400 ||
+            error.response!.statusCode == 500) {
           showToast(error.response!.data['message']);
           print(error.response!.data['message']);
         } else {
           showToast(error.response!.statusMessage.toString() ?? "Error");
-           print(error.response!.statusMessage.toString() ?? "Error");
+          print(error.response!.statusMessage.toString() ?? "Error");
         }
       } else {
         showToast(error.response.toString());
       }
     }
-    
+
     rethrow; // Re-throw the error after handling it
   }
 
   throw Exception("Invalid API method");
 }
 
-
-
-
-void handleError(BuildContext context, GlobalKey<ScaffoldState> scaffoldKey, Object ex) {
+void handleError(
+    BuildContext context, GlobalKey<ScaffoldState> scaffoldKey, Object ex) {
   if (scaffoldKey == null) {
     if (ex != null) {
       showAlert(
@@ -341,23 +346,32 @@ void handleError(BuildContext context, GlobalKey<ScaffoldState> scaffoldKey, Obj
     if (ex != null) {
       if (ex is DioException) {
         if (ex.response!.statusCode == 401) {
-          Navigator.popUntil(context, ModalRoute.withName(Navigator.defaultRouteName));
-        } else if (ex.response!.statusCode == 400 || ex.response!.statusCode == 500) {
+          Navigator.popUntil(
+              context, ModalRoute.withName(Navigator.defaultRouteName));
+        } else if (ex.response!.statusCode == 400 ||
+            ex.response!.statusCode == 500) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(ex.response!.data['message']), duration: Duration(milliseconds: 2500)),
+            SnackBar(
+                content: Text(ex.response!.data['message']),
+                duration: Duration(milliseconds: 2500)),
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(ex.response!.statusMessage!), duration: Duration(milliseconds: 2500)),
+            SnackBar(
+                content: Text(ex.response!.statusMessage!),
+                duration: Duration(milliseconds: 2500)),
           );
         }
       } else if (ex is CustomException) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ex.cause), duration: Duration(milliseconds: 2500)),
+          SnackBar(
+              content: Text(ex.cause), duration: Duration(milliseconds: 2500)),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(ex.toString()), duration: Duration(milliseconds: 2500)),
+          SnackBar(
+              content: Text(ex.toString()),
+              duration: Duration(milliseconds: 2500)),
         );
       }
       return;
@@ -385,8 +399,6 @@ class TimeModel extends ChangeNotifier {
     notifyListeners();
   }
 }
-
-
 
 // class LocationDisplayWidget extends StatefulWidget {
 //   @override
@@ -449,49 +461,56 @@ class LoadingDialog {
   }
 }
 
-
-
 String formatDate(DateTime dateTime) {
   DateFormat formatter = DateFormat("yyyy-MM-dd HH:mm:ss.SSS");
   return formatter.format(dateTime);
 }
 
-String formatDateRegisterForm(DateTime dateTime) {
+String formatDateTime(DateTime dateTime) {
+  DateFormat formatter = DateFormat("yyyy-MM-dd HH:mm:ss");
+  return formatter.format(dateTime);
+}
+
+String formatDateForFilter(DateTime dateTime) {
+  DateFormat formatter = DateFormat("yyyy-MM-dd");
+  return formatter.format(dateTime);
+}
+
+String formatDateOnly(DateTime dateTime) {
   DateFormat formatter = DateFormat("dd-MM-yyyy");
   return formatter.format(dateTime);
 }
 
-  String uint8listToString(Uint8List uint8listData) {
-    return base64.encode(uint8listData);
-  }
-
-  Uint8List stringToUint8list(String stringData) {
-    return base64.decode(stringData);
-  }
-
-  Future<LoginModel> getUserLoginData() async {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String JsonData = await prefs.getString("LOGIN_DATA")!;
-      LoginModel data = LoginModel.fromMap(json.decode(JsonData));
-      
-      return data;
-      
-    
-  }
-
-  Future<void> logout(context)async {
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-      prefs.clear();
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage(),));
-      
+String uint8listToString(Uint8List uint8listData) {
+  return base64.encode(uint8listData);
 }
 
+Uint8List stringToUint8list(String stringData) {
+  return base64.decode(stringData);
+}
+
+Future<LoginModel> getUserLoginData() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String JsonData = await prefs.getString("LOGIN_DATA")!;
+  LoginModel data = LoginModel.fromMap(json.decode(JsonData));
+
+  return data;
+}
+
+Future<void> logout(context) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.clear();
+  Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoginPage(),
+      ));
+}
 
 String encode_FR_ToBase64(dynamic data) {
   String encodedData = base64Encode(utf8.encode(jsonEncode(data)));
   return encodedData;
 }
-
 
 List<dynamic> decode_FR_FromBase64(String encodedData) {
   List<int> byteData = base64Decode(encodedData);
@@ -501,48 +520,60 @@ List<dynamic> decode_FR_FromBase64(String encodedData) {
 }
 
 Future<void> savePIN(String pin) async {
-   SharedPreferences prefs = await SharedPreferences.getInstance();
-   int active_super_attendance = prefs.getInt("ACTIVE_SUPER_ATTENDANCE") ?? 0;
-   prefs.setString("PIN_"+active_super_attendance.toString(), pin);
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  int active_super_attendance = prefs.getInt("ACTIVE_SUPER_ATTENDANCE") ?? 0;
+  prefs.setString("PIN_" + active_super_attendance.toString(), pin);
 }
 
 Future<String?> getPIN() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    int active_super_attendance = prefs.getInt("ACTIVE_SUPER_ATTENDANCE") ?? 0;
-   return prefs.getString("PIN_"+active_super_attendance.toString());
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  int active_super_attendance = prefs.getInt("ACTIVE_SUPER_ATTENDANCE") ?? 0;
+  return prefs.getString("PIN_" + active_super_attendance.toString());
 }
 
-Future<void> checkIsNeedForceUpgrade(context) async {
+Future<void> checkIsNeedForceUpgrade(BuildContext context) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? latestVersion = await prefs.getString("LATEST_VERSION");
 
-      PackageInfo info = await PackageInfo.fromPlatform();
-
-    
+  PackageInfo info = await PackageInfo.fromPlatform();
   String currentVersion = info.version;
 
-  if(latestVersion != null){
+  // latestVersion = "3.0.0";
+
+  if (latestVersion != null) {
     List<String> latestParts = latestVersion.split('.');
-  List<String> currentParts = currentVersion.split('.');
+    List<String> currentParts = currentVersion.split('.');
 
-  // Menentukan panjang maksimum dari kedua versi
-  int maxLength = latestParts.length > currentParts.length ? latestParts.length : currentParts.length;
+    // Menentukan panjang maksimum dari kedua versi
+    int maxLength = latestParts.length > currentParts.length
+        ? latestParts.length
+        : currentParts.length;
 
-  for (int i = 0; i < maxLength; i++) {
-    int latest = i < latestParts.length ? int.parse(latestParts[i]) : 0;
-    int current = i < currentParts.length ? int.parse(currentParts[i]) : 0;
+    for (int i = 0; i < maxLength; i++) {
+      int latest = i < latestParts.length ? int.parse(latestParts[i]) : 0;
+      int current = i < currentParts.length ? int.parse(currentParts[i]) : 0;
 
-    if (latest > current) {
-
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ForceUpgrade(isLoged: true,currentVersion: currentVersion,latestVersion: latestVersion),));
-     
-    } else if (latest < current) {
-      
+      if (latest > current) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ForceUpgrade(
+              isLoged: true,
+              currentVersion: currentVersion,
+              latestVersion: latestVersion!,
+            ),
+          ),
+        );
+        return; // Keluar dari metode setelah melakukan navigasi
+      } else if (latest < current) {
+        return; // Keluar dari metode karena versi terbaru lebih kecil
+      }
+      // Jika kedua versi sama pada bagian ini, lanjutkan perbandingan untuk bagian berikutnya
     }
-    // Jika kedua versi sama pada bagian ini, lanjutkan perbandingan untuk bagian berikutnya
+
+    // Jika kedua versi sama, tidak perlu melakukan apa-apa
+    return; // Keluar dari metode karena kedua versi sama
   }
-  }
-  
 }
 
 Future<List<int>> convertXFIleToImage(XFile file) async {
@@ -552,9 +583,9 @@ Future<List<int>> convertXFIleToImage(XFile file) async {
   // return image;
 
   final bytes = await file.readAsBytes();
-      img.Image image = img.decodeImage(bytes.toList())!;
-      List<int> jpg = img.encodeJpg(image);
-      return jpg;
+  img.Image image = img.decodeImage(bytes.toList())!;
+  List<int> jpg = img.encodeJpg(image);
+  return jpg;
 }
 
 Future<String> imageToBase64(List<int> file) async {
@@ -562,117 +593,151 @@ Future<String> imageToBase64(List<int> file) async {
 }
 
 Uint8List decodeToBase64ToImage(String input) {
-    return base64Decode(input);
+  return base64Decode(input);
+}
+
+Future<double?> getThreshold() async {
+  double? threshold;
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  threshold = await prefs.getDouble("threshold") ?? null;
+
+  return threshold;
+}
+
+saveThreshold(String tresh) async {
+  double newThreshold = double.parse(tresh);
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setDouble('threshold', newThreshold);
+}
+
+bool terlambatChecker(String jamMasuk, String jamShift) {
+  // jamMasuk = "2024-01-13 06:00:00";
+
+  // Memisahkan tanggal dan waktu pada time1
+  List<String> splitTime1 = jamMasuk.split(' ');
+  // Menggabungkan waktu dari time1 dengan tanggal dari time2
+  String combinedTime = "${splitTime1[0]} $jamShift";
+
+  // Konversi string waktu menjadi objek DateTime
+  DateTime dateTime1 = DateTime.parse(combinedTime);
+  DateTime dateTime2 = DateTime.parse(jamMasuk);
+
+  // Bandingkan waktu
+  if (dateTime2.isAfter(dateTime1)) {
+    log("MASUK TIME = " + jamMasuk + "=" "TERLAMBAT");
+    return true;
+  } else {
+    log("MASUK TIME = " + jamMasuk + "=" "NORMAL");
+    return false;
   }
+}
 
-    Future<double?>  getThreshold() async {
-    double? threshold;
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    threshold = await prefs.getDouble("threshold") ?? null;
+bool pulangCepatChecker(String jamKeluar, String jamShift) {
+  // Memisahkan tanggal dan waktu pada time1
 
-    return threshold;
+  List<String> splitTime1 = jamKeluar.split(' ');
+  // Menggabungkan waktu dari time1 dengan tanggal dari time2
+  String combinedTime = "${splitTime1[0]} $jamShift";
+
+  // Konversi string waktu menjadi objek DateTime
+  DateTime dateTime1 = DateTime.parse(combinedTime);
+
+  //TOLERANCE
+
+  DateTime dateTime2 = DateTime.parse(jamKeluar);
+
+  // Bandingkan waktu
+  if (dateTime2.isBefore(dateTime1)) {
+    log("KELUAR TIME = " + jamKeluar + "=" "PULANG CEPAT");
+    return true;
+  } else {
+    log("KELUAR TIME = " + jamKeluar + "=" "NORMAL");
+    return false;
   }
+}
 
-    saveThreshold(String tresh) async {
-    double newThreshold = double.parse(tresh);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('threshold', newThreshold);
+int calculateTimeDifference(String jamMasuk, String JamKeluar) {
+  DateTime start = DateTime.parse(jamMasuk);
+  DateTime end = DateTime.parse(JamKeluar);
+  // DateTime start = DateTime.parse("2022-01-01 $jamMasuk");
+  // DateTime end = DateTime.parse("2022-01-01 $JamKeluar");
+
+  Duration differenceDuration = end.difference(start);
+
+  int hours = differenceDuration.inHours;
+  int minutes = (differenceDuration.inMinutes % 60).abs();
+
+  return hours;
+}
+
+String? checkLemburStatus(
+    {required bool isModeMasuk,
+    required String jamAbsen,
+    required String shiftMasuk,
+    required String shiftKeluar,
+    required DateTime? lastAttendanceDate}) {
+  String lastAttendanceDateString;
+  String tanggalAbsensiOnly;
+
+  if (lastAttendanceDate != null && isModeMasuk == false) {
+    lastAttendanceDateString =
+        DateFormat('yyyy-MM-dd').format(lastAttendanceDate);
+    tanggalAbsensiOnly = jamAbsen.substring(0, 10);
+  } else {
+    lastAttendanceDateString = "2024-01-02";
+    tanggalAbsensiOnly = "2024-01-02";
   }
-
-   bool terlambatChecker(String jamMasuk, String jamShift) {
-
-    // jamMasuk = "2024-01-13 06:00:00";
-
-    
-    // Memisahkan tanggal dan waktu pada time1
-    List<String> splitTime1 = jamMasuk.split(' ');
-    // Menggabungkan waktu dari time1 dengan tanggal dari time2
-    String combinedTime = "${splitTime1[0]} $jamShift";
-
-    // Konversi string waktu menjadi objek DateTime
-    DateTime dateTime1 = DateTime.parse(combinedTime);
-    DateTime dateTime2 = DateTime.parse(jamMasuk);
-
-    // Bandingkan waktu
-    if (dateTime2.isAfter(dateTime1)) {
-       log("MASUK TIME = " + jamMasuk + "=" "TERLAMBAT");
-      return true;
-    } else {
-       log("MASUK TIME = " + jamMasuk + "=" "NORMAL");
-      return false;
-    }
-  }
-
-     bool pulangCepatChecker(String jamKeluar, String jamShift) {
-    // Memisahkan tanggal dan waktu pada time1
-
-
-    List<String> splitTime1 = jamKeluar.split(' ');
-    // Menggabungkan waktu dari time1 dengan tanggal dari time2
-    String combinedTime = "${splitTime1[0]} $jamShift";
-
-    // Konversi string waktu menjadi objek DateTime
-    DateTime dateTime1 = DateTime.parse(combinedTime);
-    DateTime dateTime2 = DateTime.parse(jamKeluar);
-
-    // Bandingkan waktu
-    if (dateTime2.isBefore(dateTime1)) {
-      log("KELUAR TIME = " + jamKeluar + "=" "PULANG CEPAT");
-      return true;
-    } else {
-      log("KELUAR TIME = " + jamKeluar + "=" "NORMAL");
-      return false;
-    }
-  }
-
-
-String? checkLemburStatus({
-  required bool isModeMasuk,
-  required String jamAbsen,
-  required String shiftMasuk,
-  required String shiftKeluar,
-}) {
 
   DateTime dateTime = DateTime.parse(jamAbsen);
-  String timeOnly = "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}";
+
+  String timeOnly =
+      "${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}:${dateTime.second.toString().padLeft(2, '0')}";
 
   // timeOnly = "13:00:00";
 
-try{
-  final DateTime jamAbsenDT = DateTime.parse("2024-01-02 $timeOnly");
-  final DateTime shiftMasukDT = DateTime.parse("2024-01-02 $shiftMasuk");
-  final DateTime shiftKeluarDT = DateTime.parse("2024-01-02 $shiftKeluar");
+  try {
+    // final DateTime jamAbsenDT = DateTime.parse("2024-01-02 $timeOnly");
+    // final DateTime shiftMasukDT = DateTime.parse("2024-01-02 $shiftMasuk");
+    // final DateTime shiftKeluarDT = DateTime.parse("2024-01-02 $shiftKeluar");
 
-  
+    final DateTime jamAbsenDT = DateTime.parse("$tanggalAbsensiOnly $timeOnly");
 
-  
+    // final DateTime jamAbsenDT = DateTime.parse("$tanggalAbsensiOnly 18:46:00");
+    final DateTime shiftMasukDT =
+        DateTime.parse("$lastAttendanceDateString $shiftMasuk");
+    final DateTime shiftKeluarDT =
+        DateTime.parse("$lastAttendanceDateString $shiftKeluar")
+            .add(Duration(days: 1));
+    ;
 
-
-  if (isModeMasuk) {
-    if (jamAbsenDT.isAfter(shiftMasukDT)) {
-      log("MASUK TIME = " + timeOnly + "=" "TERLAMBAT");
-      return "TERLAMBAT";
-    } else if (jamAbsenDT.isBefore(shiftMasukDT) || jamAbsenDT.isAtSameMomentAs(shiftMasukDT)) {
-      log("MASUK TIME = " + timeOnly + "=" "NORMAL");
-      return null;
+    if (isModeMasuk) {
+      if (jamAbsenDT.isAfter(shiftMasukDT)) {
+        log("MASUK TIME = " + timeOnly + "=" "TERLAMBAT");
+        return "TERLAMBAT";
+      } else if (jamAbsenDT.isBefore(shiftMasukDT) ||
+          jamAbsenDT.isAtSameMomentAs(shiftMasukDT)) {
+        log("MASUK TIME = " + timeOnly + "=" "NORMAL");
+        return null;
+      }
+    } else {
+      if (jamAbsenDT.isBefore(shiftKeluarDT)) {
+        log("KELUAR TIME = " + timeOnly + "=" "PULANG CEPAT");
+        return "PULANG CEPAT";
+      } else if (jamAbsenDT.isAfter(shiftKeluarDT) ||
+          jamAbsenDT.isAtSameMomentAs(shiftKeluarDT)) {
+        log("KELUAR TIME = " + timeOnly + "=" "NORMAL");
+        return null;
+      }
     }
-  } else {
-    if (jamAbsenDT.isBefore(shiftKeluarDT)) {
-      log("KELUAR TIME = " + timeOnly + "=" "PULANG CEPAT");
-      return "PULANG CEPAT";
-    } else if (jamAbsenDT.isAfter(shiftKeluarDT) || jamAbsenDT.isAtSameMomentAs(shiftKeluarDT)) {
-      log("KELUAR TIME = " + timeOnly + "=" "NORMAL");
-      return null;
-    }
+  } catch (e) {
+    print(e);
+    showToast(e.toString() + "on Cek Lembur");
   }
-  }catch (e){
-  print(e);
-}
 
   return "UNKNOW";
 }
 
-  Uint8List convertImagelibToUint8List(imglib.Image? image) {
+Uint8List convertImagelibToUint8List(imglib.Image? image) {
   // Konversi imglib.Image menjadi format PNG
   imglib.PngEncoder pngEncoder = imglib.PngEncoder();
   List<int> png = pngEncoder.encodeImage(image!);
@@ -695,7 +760,6 @@ String convertImagelibToBase64JPG(imglib.Image image) {
   return base64String;
 }
 
-
 Future<void> setActiveSuperIntendent(int index) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   await prefs.setInt("ACTIVE_SUPER_ATTENDANCE", index);
@@ -709,20 +773,20 @@ Future<int> getActiveSuperIntendent(int index) async {
 Future<String> getActiveSuperIntendentName() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   int sa_index = prefs.getInt("ACTIVE_SUPER_ATTENDANCE") ?? 0;
-    LoginModel user = await getUserLoginData();
-    return user.superAttendence[sa_index].name;
+  LoginModel user = await getUserLoginData();
+  return user.superAttendence[sa_index].name;
 }
 
 Future<String> getActiveSuperIntendentID() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   int sa_index = prefs.getInt("ACTIVE_SUPER_ATTENDANCE") ?? 0;
-    LoginModel user = await getUserLoginData();
-    return user.superAttendence[sa_index].id;
+  LoginModel user = await getUserLoginData();
+  return user.superAttendence[sa_index].id;
 }
 
 Future<String> getBranchID() async {
-    LoginModel user = await getUserLoginData();
-    return user.branch!.branchId;
+  LoginModel user = await getUserLoginData();
+  return user.branch!.branchId;
 }
 
 bool checkShiftIsOvernight(String checkin, String checkout) {
@@ -732,8 +796,15 @@ bool checkShiftIsOvernight(String checkin, String checkout) {
 
   // Jika jam checkin lebih besar dari jam checkout, itu artinya overnight
   if (checkinTime.isAfter(checkoutTime)) {
+    print(
+        "CHECKIN =" + checkin + " | CHECKOUT = " + checkout + " == OVERNIGHT");
     return true;
   } else {
+    print("CHECKIN =" +
+        checkin +
+        " | CHECKOUT = " +
+        checkout +
+        " == NOT OVERNIGHT");
     return false;
   }
 }
@@ -742,7 +813,6 @@ bool checkShiftIsOvernight(String checkin, String checkout) {
 
 //   if(!COSTANT_VAR.EMULATOR_MODE){
 
-  
 //     DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
 //     if(Platform.isAndroid){
 //       AndroidDeviceInfo info = await deviceInfoPlugin.androidInfo;
@@ -760,9 +830,7 @@ bool checkShiftIsOvernight(String checkin, String checkout) {
 
 //     // BYPASS DEVICE ID
 
-   
 //   }
-
 
 Future<String> getDeviceId() async {
   DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
@@ -772,74 +840,462 @@ Future<String> getDeviceId() async {
     deviceId = await UniqueIdentifier.serial;
   } else if (Platform.isIOS) {
     IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-    deviceId = iosInfo.identifierForVendor; // Gunakan salah satu ID yang tersedia
+    deviceId =
+        iosInfo.identifierForVendor; // Gunakan salah satu ID yang tersedia
   }
-  if(deviceId != null){
+  if (deviceId != null) {
     return deviceId;
-  }else{
+  } else {
     return "UNABLE TO GET DEVICE ID";
   }
-  
 }
 
-
 Future<void> setDeviceOrientationByDevice() async {
-DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+  DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
 
   String? deviceType;
   if (Platform.isAndroid) {
     AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    deviceType =  androidInfo.id;
+    deviceType = androidInfo.id;
   } else if (Platform.isIOS) {
     IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
     deviceType = iosInfo.identifierForVendor;
-}
+  }
 
-print(deviceType);
+  print(deviceType);
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  if(deviceType == "TP1A.220624.014"){
-    await prefs.setBool("LANDSCAPE_MODE",true);
-     SystemChrome.setPreferredOrientations([
+  if (deviceType == "TP1A.220624.014") {
+    await prefs.setBool("LANDSCAPE_MODE", true);
+    SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
-]);
-  }else{
-      SystemChrome.setPreferredOrientations([
+    ]);
+  } else {
+    SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
-]);
+    ]);
   }
 }
 
-
-    Widget checkFrPhoto(String? file){
-
-      if(file == null){
-        return Image.asset("assets/images/blank-profile-pic.png");
-      }else{
-            try{
+Widget checkFrPhoto(String? file) {
+  if (file == null) {
+    return Image.asset("assets/images/blank-profile-pic.png");
+  } else {
+    try {
       return Image.memory(
-            decodeToBase64ToImage(file!),
+        decodeToBase64ToImage(file!),
 
-            fit: BoxFit.cover, // Sesuaikan sesuai kebutuhan Anda
+        fit: BoxFit.cover, // Sesuaikan sesuai kebutuhan Anda
+      );
+    } catch (e) {
+      return Image.network(CONSTANT_VAR.BASE_URL_PUBLIC + file!);
+    }
+  }
+}
+
+Future<List<ShiftData>> getMasterShift() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  String? stringMastershift = prefs.getString("MASTER_SHIFT");
+  if (stringMastershift != null) {
+    model_master_shift shift =
+        model_master_shift.fromJson(jsonDecode(stringMastershift));
+    return shift.data;
+  } else {
+    return [];
+  }
+}
+
+//   List<BranchStatus> getAllBrachStatus(String jsonStr) {
+//   final parsed = json.decode(jsonStr).cast<Map<String, dynamic>>();
+//   return parsed.map<BranchStatus>((json) => BranchStatus.fromJson(json)).toList();
+// }
+
+Future<bool?> showLocationPermissionDialog(BuildContext context) async {
+  return await showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('SmartCheck ingin mengakses lokasi Anda'),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Aplikasi kami membutuhkan akses lokasi Anda untuk memungkinkan Anda melakukan absensi dengan lebih akurat. Lokasi Anda akan digunakan hanya selama sesi absensi dan tidak akan disimpan atau digunakan untuk tujuan lain. Kami menghargai privasi Anda dan ingin memastikan bahwa Anda merasa aman menggunakan aplikasi kami.',
+            ),
+            SizedBox(height: 16.0),
+            Text('Apa yang akan kami lakukan dengan informasi lokasi Anda:'),
+            Text('- Menentukan lokasi Anda saat melakukan absensi.'),
+            Text(
+                '- Meningkatkan akurasi absensi dengan memastikan Anda berada di lokasi yang benar.'),
+            SizedBox(height: 16.0),
+            Text('Apa yang tidak akan kami lakukan:'),
+            Text(
+                '- Tidak akan membagikan informasi lokasi Anda dengan pihak ketiga.'),
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(false); // Tidak memberikan izin
+            },
+            child: Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(true); // Memberikan izin
+            },
+            child: Text('Izinkan Akses Lokasi'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Future<bool> hitApproveFR(User user) async {
+  UserRepo repo = UserRepo();
+  DatabaseHelperEmployee _dataBaseHelper = DatabaseHelperEmployee.instance;
+
+  //  String fr_base64 = encode_FR_ToBase64(user.face_template);
+
+  bool hitApproveSuccess = await repo.hitApproveFR(user.employee_id!);
+
+  if (hitApproveSuccess) {
+    await _dataBaseHelper.approveFR(user.employee_id);
+    showToast((user.employee_name ?? " ") + " Sukses Di Approve");
+    return true;
+  } else {
+    return false;
+  }
+}
+
+String formatRupiah(int number) {
+  String rupiah = number.toString();
+  String result = '';
+  int count = 0;
+  for (int i = rupiah.length - 1; i >= 0; i--) {
+    result = rupiah[i] + result;
+    count++;
+    if (count == 3 && i > 0) {
+      result = '.' + result;
+      count = 0;
+    }
+  }
+  return 'Rp. $result';
+}
+
+Future<List<bool>> refreshEmployee(BuildContext context) async {
+  LoginModel loginData = await getUserLoginData();
+  String branchID = loginData.branch!.branchId;
+  List<User> user_list = [];
+  List<bool> selected = [];
+  DatabaseHelperEmployee _dataBaseHelper = DatabaseHelperEmployee.instance;
+  UserRepo userRepo = UserRepo();
+  ProgressDialog progressDialog = ProgressDialog(context: context);
+  progressDialog.show(max: 100, msg: 'Fetching data...');
+  String? jsonKaryawan = await userRepo
+      .apiGetAllEmployeeByBranch(branchID)
+      .onError((error, stackTrace) {
+    progressDialog.close();
+  });
+
+  if (jsonKaryawan != null) {
+    // jsonKaryawan = DummyJson;
+    print(jsonKaryawan);
+    try {
+      List<dynamic> jsonDataList = jsonDecode(jsonKaryawan);
+
+      user_list.clear();
+      _dataBaseHelper.deleteAll();
+
+      int totalItems = jsonDataList.length;
+      int processedItems = 0;
+
+      try {
+        for (var jsonData in jsonDataList) {
+          var person = User.fromMap(jsonData);
+          await _dataBaseHelper.insert(person);
+
+          processedItems++;
+          progressDialog.update(
+            value: ((processedItems / totalItems) * 100).toInt(),
+            msg: 'Updating data... ($processedItems/$totalItems)',
           );
-    }catch(e){
-      return Image.network(COSTANT_VAR.BASE_URL_PUBLIC + file!);
-    }
+          selected.add(false);
+        }
+      } catch (e) {
+        await _dataBaseHelper.deleteAll();
+
+        print(e.toString());
       }
-  }
 
-  Future<List<ShiftData>> getMasterShift() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    
-    String? stringMastershift = prefs.getString("MASTER_SHIFT");
-    if(stringMastershift != null){
-      model_master_shift shift = model_master_shift.fromJson(jsonDecode(stringMastershift));
-      return shift.data;
-    }else{
-      return [];
+      return selected;
+      // await loadUserData();
+    } catch (e) {
+      print(e);
+      progressDialog.close();
+    } finally {
+      progressDialog.close();
     }
-
+  } else {
+    showToast('Terjadi kesalahan saat mengambil data karyawan');
+    progressDialog.close();
   }
+  return selected;
+}
+
+bool DKStatusChecker(String? startDate, String? endDate) {
+  if (startDate != null || endDate != null) {
+    final start = DateFormat("yyyy-MM-dd").parse(startDate!);
+    final end = DateFormat("yyyy-MM-dd").parse(endDate!);
+    final currentDate = DateTime.now();
+
+    return currentDate.isAfter(start.subtract(Duration(days: 1))) &&
+        currentDate.isBefore(end.add(Duration(days: 1)));
+  } else {
+    return false;
+  }
+}
+
+String formatDateString(String dateString) {
+  try {
+    DateTime date = DateTime.parse(dateString);
+    DateFormat formatter = DateFormat("dd MMMM yyyy", "id");
+    return formatter.format(date);
+  } catch (e) {
+    return "-";
+  }
+}
+
+// void testReliefChecker() {
+//   List<DateTime> startDates =
+//       List.generate(10, (i) => DateTime.now().add(Duration(days: i * 2)));
+//   List<DateTime> endDates =
+//       List.generate(10, (i) => DateTime.now().add(Duration(days: (i * 2) + 5)));
+
+//   for (int i = 0; i < 10; i++) {
+//     String startDateStr =
+//         DateFormat("yyyy-MM-dd HH:mm:ss").format(startDates[i]);
+//     String endDateStr = DateFormat("yyyy-MM-dd HH:mm:ss").format(endDates[i]);
+
+//     bool result = reliefChecker(startDateStr, endDateStr);
+//     print(
+//         'Test rel $i: Start Date: $startDateStr, End Date: $endDateStr, Result: $result');
+//   }
+// }
+
+bool reliefChecker(String? startDate, String? endDate) {
+  if (startDate != null && endDate != null) {
+    // startDate = "2024-05-06 00:00:00";
+    // endDate = "2024-05-06 00:00:00";
+    final start = DateFormat("yyyy-MM-dd HH:mm:ss").parse(startDate);
+    final end =
+        DateFormat("yyyy-MM-dd HH:mm:ss").parse(endDate).add(Duration(days: 1));
+    final currentDate = DateTime.now();
+
+    bool result =
+        (currentDate.isAfter(start) || currentDate.isAtSameMomentAs(start)) &&
+            (currentDate.isBefore(end) || currentDate.isAtSameMomentAs(end));
+
+    return result;
+  } else {
+    return false;
+  }
+}
+
+void showLoadingMessageDialog(BuildContext context, String message) {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 20),
+            Text(message),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+Future<List<User>> getAllEmployeeAndRelief() async {
+  List<User> users = [];
+
+  DatabaseHelperEmployee _dbHelper = DatabaseHelperEmployee.instance;
+  users = await _dbHelper.queryAllUsersForMLKit();
+
+  //FOR RELIEF
+  DatabaseHelperEmployeeRelief _dbHelperRelief =
+      DatabaseHelperEmployeeRelief.instance;
+  List<User> userRelief = await _dbHelperRelief.queryAllUsersForMLKit();
+  for (User user in userRelief) {
+    if (reliefChecker(user.relief_start_date, user.relief_end_date)) {
+      users.add(user);
+    }
+  }
+
+  return users;
+}
+
+successSound() async {
+  try {
+    final player = AudioPlayer();
+    await player.setVolume(0.4);
+    await player.play(AssetSource("sound/success_sound.mp3"));
+  } catch (e) {
+    print(e.toString());
+  }
+}
+
+imglib.Image cropFaceANTISPOOF(CameraImage image, Face faceDetected) {
+  imglib.Image convertedImage = _convertCameraImage(image);
+
+  double x;
+  double y;
+  double h;
+  double w;
+
+  if (true) {
+    // x = faceDetected.boundingBox.left - 80.0;
+    // y = faceDetected.boundingBox.top - 80.0;
+    // h = faceDetected.boundingBox.width + 80.0;
+    // w = faceDetected.boundingBox.height + 80.0;
+
+    // x = faceDetected.boundingBox.left - 300;
+    // y = faceDetected.boundingBox.top - 300.0;
+    // w = faceDetected.boundingBox.height + 300.0;
+    // h = faceDetected.boundingBox.height + 300.0;
+
+    x = faceDetected.boundingBox.left;
+    y = faceDetected.boundingBox.top;
+    w = faceDetected.boundingBox.height;
+    h = faceDetected.boundingBox.height;
+
+    // x = faceDetected.boundingBox.left + 20;
+    // y = faceDetected.boundingBox.top + 30.0;
+    // w = faceDetected.boundingBox.width - 25.0;
+    // h = faceDetected.boundingBox.height - 25.0;
+
+    // x = faceDetected.boundingBox.left - 10;
+    // y = faceDetected.boundingBox.top - 10.0;
+    // w = faceDetected.boundingBox.width + 25.0;
+    // h = faceDetected.boundingBox.height + 25.0;
+  } else {
+    x = faceDetected.boundingBox.left - 10.0;
+    y = faceDetected.boundingBox.top - 10.0;
+    w = faceDetected.boundingBox.width + 10.0;
+    h = faceDetected.boundingBox.height + 10.0;
+  }
+
+  imglib.Image croppedImage = imglib.copyCrop(
+      convertedImage, x.round(), y.round(), w.round(), h.round());
+
+  // Resize the image to always 80x80
+  imglib.Image resizedImage =
+      imglib.copyResize(croppedImage, width: 128, height: 128);
+
+  return resizedImage;
+}
+
+imglib.Image _convertCameraImage(CameraImage image) {
+  var img = convertToImage(image);
+  var img1 = true ? imglib.copyRotate(img, 0) : imglib.copyRotate(img, -90);
+  return img1;
+}
+
+Future<bool> getCateringToday() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getBool("IS_CATERING_TODAY") ?? false;
+}
+
+setCateringToady(bool cateringStatus) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  prefs.setBool("IS_CATERING_TODAY", cateringStatus);
+}
+
+bool isTimeInRange(String startTime, String endTime, TimeOfDay currentTime) {
+  try {
+    final now = DateTime.now();
+    final startDateTime =
+        DateTime.parse(now.toString().substring(0, 10) + ' ' + startTime);
+    final endDateTime =
+        DateTime.parse(now.toString().substring(0, 10) + ' ' + endTime);
+    final currentDateTime = DateTime(
+        now.year, now.month, now.day, currentTime.hour, currentTime.minute);
+
+    if (endDateTime.isBefore(startDateTime)) {
+      // Handle case where the range crosses midnight
+      final endDateTimeNextDay = endDateTime.add(Duration(days: 1));
+      return currentDateTime.isAfter(startDateTime) ||
+          currentDateTime.isBefore(endDateTimeNextDay);
+    }
+    return currentDateTime.isAfter(startDateTime) &&
+        currentDateTime.isBefore(endDateTime);
+  } catch (e) {
+    showToast("Error Saat Konversi Shift Ke DateTime");
+    showToast("Mohon Atur Shift di menu Rig Status History");
+    return false;
+  }
+}
+
+int laplacian(imglib.Image bitmap) {
+  // Resize the face to a size of 256X256, because the shape of the placeholder that needs feed data below is (1, 256, 256, 3)
+  imglib.Image bitmapScale = imglib.copyResizeCropSquare(bitmap, bitmap.height);
+
+  var laplace = [
+    [0, 1, 0],
+    [1, -4, 1],
+    [0, 1, 0]
+  ];
+  int size = laplace.length;
+  var img = imglib.grayscale(bitmapScale);
+  int height = img.height;
+  int width = img.width;
+
+  int score = 0;
+  for (int x = 0; x < height - size + 1; x++) {
+    for (int y = 0; y < width - size + 1; y++) {
+      int result = 0;
+      // Convolution operation on size*size area
+      for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+          result += (img.getPixel(x + i, y + j) & 0xFF) * laplace[i][j];
+        }
+      }
+      if (result > 50) {
+        score++;
+      }
+    }
+  }
+  return score;
+}
+
+bool isTodayChecker(DateTime dateToday, String dateCompare) {
+  if (dateCompare.contains(formatDateForFilter(dateToday))) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+Future<bool> onLineChecker() async {
+  return await InternetConnectionChecker().hasConnection;
+}
+
+
+
+
+
+  
+
+
+
+
 
 
 

@@ -1,36 +1,48 @@
+import 'dart:convert';
+
 import 'package:face_net_authentication/globals.dart';
+import 'package:face_net_authentication/models/catering_history_model.dart';
 import 'package:face_net_authentication/models/login_model.dart';
+import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:face_net_authentication/pages/setting_page.dart';
 import 'package:face_net_authentication/pages/switch_supper_attendance.dart';
+import 'package:face_net_authentication/pages/widgets/dialog_change_rig_status.dart';
+import 'package:face_net_authentication/pages/widgets/dialog_rig_info.dart';
 import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
+import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
 
+import '../../models/rig_status_history_model.dart';
+import '../db/database_helper_catering_status.dart';
+import '../db/database_helper_rig_status_history.dart';
+import '../db/dbSync.dart';
+
 class UserBanner extends StatefulWidget {
-  const UserBanner({ Key? key }) : super(key: key);
+  const UserBanner({Key? key}) : super(key: key);
 
   @override
   _UserBannerState createState() => _UserBannerState();
-
-
 }
 
 class _UserBannerState extends State<UserBanner> {
   LoginModel? userInfo;
   String activeSuperAttendace = "-";
+  RigStatusShift? status_rig;
+  bool isCatering = false;
 
-  
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
 
     _loadUserInfo();
-
-
   }
 
-    Future<void> _loadUserInfo() async {
+  Future<void> _loadUserInfo() async {
     userInfo = await getUserLoginData();
+    status_rig = await SpGetSelectedStatusRig();
+    isCatering = await getCateringToday();
+
     activeSuperAttendace = await getActiveSuperIntendentName();
 
     // Memanggil setState untuk memicu pembaruan UI setelah mendapatkan data.
@@ -39,73 +51,322 @@ class _UserBannerState extends State<UserBanner> {
 
   @override
   Widget build(BuildContext context) {
-
-     if (userInfo == null) {
+    if (userInfo == null) {
       // Tampilkan widget loading atau indikator lainnya jika data belum tersedia.
       return CircularProgressIndicator();
-    }else
-    // AuthModel model = Provider.of<AuthModel>(context);
-    return Padding(
-      padding: EdgeInsets.only(left: 16, bottom: 14, right: 20),
-      child: InkWell(
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => SwitchSupperAttendance())
-        ),
+    } else
+      // AuthModel model = Provider.of<AuthModel>(context);
+      return Padding(
+        padding: EdgeInsets.only(left: 16, bottom: 14, right: 20),
         child: Row(
           children: <Widget>[
             Padding(
               padding: const EdgeInsets.only(right: 8.0),
               child: Container(
-                height: 42,
-                width: 42,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle
-                ),
-                child: Center(
-                  // child: Container(
-                  //   height: 40,
-                  //   width: 40,
-                  //   decoration: BoxDecoration(
-                  //     shape: BoxShape.circle,
-                  //     image: DecorationImage(
-                  //       image: model.user!.profileImage!,
-                  //       fit: BoxFit.cover
-                  //     )
-                  //   ),
-                  // ),
-                ),
+                padding: EdgeInsets.all(8),
+                height: 45,
+                width: 45,
+                decoration:
+                    BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                child: Image.asset("assets/images/pertamina_logo.png"),
               ),
             ),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(left: 8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-
-                    Text(activeSuperAttendace.toUpperCase(), style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w400,overflow: TextOverflow.ellipsis),),
-                    Text(userInfo!.branch!.branchName ?? " ", style: TextStyle(color: Colors.white, fontSize: 12, fontStyle: FontStyle.italic,overflow: TextOverflow.ellipsis),),
-                  ],
-                ),
-              ),
-            ),
-            Row(
-              children: [
-                IconButton(onPressed: () {
-                                                PinInputDialog.show(context, (p0) {
-                               Navigator.push(context, MaterialPageRoute(builder: (context) => SettingPage(),));
-                              },);
-                  
-                }, icon: Icon(Icons.settings)),
-                IconButton(onPressed: () {
-                  logout(context);
-                }, icon: Icon(Icons.exit_to_app)),
-              ],
-            )
+                child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                  Row(
+                    children: [
+                      InkWell(
+                        onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    SwitchSupperAttendance())),
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                activeSuperAttendace.toUpperCase(),
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w400,
+                                    overflow: TextOverflow.ellipsis),
+                              ),
+                              Text(
+                                userInfo!.branch!.branchName ?? " ",
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontStyle: FontStyle.italic,
+                                    overflow: TextOverflow.ellipsis),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 30,
+                      ),
+                      InkWell(
+                        onTap: () {},
+                        child: Row(
+                          children: [
+                            Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
+                                child: InkWell(
+                                  child: Card(
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 20, vertical: 5),
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Text(
+                                            "STATUS RIG :",
+                                            style: TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 9,
+                                                fontStyle: FontStyle.italic,
+                                                overflow:
+                                                    TextOverflow.ellipsis),
+                                          ),
+                                          Text(
+                                            (status_rig?.statusBranch ?? "-"),
+                                            style: TextStyle(
+                                                color: Colors.red,
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                overflow:
+                                                    TextOverflow.ellipsis),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  onTap: () async {
+                                    PinInputDialog.show(context, (p0) async {
+                                      await showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return dialog_change_rig_status(
+                                            onStatusSelected: (selectedStatus) {
+                                              setState(() {
+                                                saveRigStatus(selectedStatus);
+                                                setState(() {
+                                                  isCatering = false;
+                                                  saveRigCateringStatus();
+                                                });
+                                              });
+                                            },
+                                          );
+                                        },
+                                      );
+                                    });
+                                  },
+                                )),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      Column(
+                        children: [
+                          Text(
+                            "Catering",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          Switch(
+                            inactiveThumbColor: Colors.white,
+                            inactiveTrackColor: Colors.redAccent,
+                            value: isCatering,
+                            onChanged: (value) {
+                              setState(() {
+                                isCatering = !isCatering;
+                                saveRigCateringStatus();
+                                if (isCatering) {
+                                  showToast("Catering Aktif");
+                                } else {
+                                  showToast("Catering Tidak Aktif");
+                                }
+                              });
+                            },
+                          )
+                        ],
+                      )
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                          onPressed: () async {
+                            await showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return dialog_rig_info();
+                              },
+                            );
+                          },
+                          icon: Icon(
+                            Icons.info,
+                            color: Colors.white,
+                          )),
+                      IconButton(
+                          onPressed: () {
+                            PinInputDialog.show(
+                              context,
+                              (p0) {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SettingPage(),
+                                    ));
+                              },
+                            );
+                          },
+                          icon: Icon(
+                            Icons.settings,
+                            color: Colors.white,
+                          )),
+                      IconButton(
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: Text('Konfirmasi Logout'),
+                                  content:
+                                      Text('Apakah Anda yakin ingin logout?'),
+                                  actions: <Widget>[
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.of(context)
+                                            .pop(); // Tutup dialog
+                                      },
+                                      child: Text('Batal'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        logout(context);
+                                      },
+                                      child: Text('Logout'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          },
+                          icon: Icon(
+                            Icons.exit_to_app,
+                            color: Colors.white,
+                          )),
+                    ],
+                  )
+                ])),
           ],
         ),
-      ),
+      );
+  }
+
+  Future<void> saveRigStatus(RigStatusShift statusRig) async {
+    setState(() {
+      status_rig = statusRig;
+    });
+    await SpSetSelectedStatusRig(jsonEncode(statusRig));
+    String onShift = await getCurrentShiftRange();
+
+    DatabaseHelperRigStatusHistory dbHelper =
+        DatabaseHelperRigStatusHistory.instance;
+
+    List<RigStatusHistoryModel> historyStatus = await dbHelper.queryAllStatus();
+    String today = formatDateForFilter(DateTime.now());
+
+    if (historyStatus.length != 0 && historyStatus[0].date.contains(today)) {
+      await dbHelper.update(historyStatus[0], statusRig.statusBranchId ?? "-",
+          statusRig.statusBranch ?? "-", onShift);
+    } else {
+      String branch_id = await getBranchID();
+      String requester = await getActiveSuperIntendentID();
+      DateTime date = DateTime.now();
+
+      await dbHelper.insert(RigStatusHistoryModel(
+          branchId: branch_id,
+          requester: requester,
+          status: statusRig.statusBranch ?? "-",
+          branchStatusId: statusRig.statusBranchId ?? "-",
+          date: formatDateTime(date),
+          api_flag: "I",
+          shift: onShift));
+    }
+
+    dBsync().syncAllDB();
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return dialog_rig_info();
+      },
     );
+  }
+
+  Future<void> saveRigCateringStatus() async {
+    String onShift = await getCurrentShiftRange();
+
+    setState(() {
+      setCateringToady(isCatering);
+    });
+
+    DatabaseHelperCateringHistory dbHelper =
+        DatabaseHelperCateringHistory.instance;
+
+    List<CateringHistoryModel> ListcateringHistory =
+        await dbHelper.queryAllStatus();
+    String today = formatDateForFilter(DateTime.now());
+
+    if (ListcateringHistory.length != 0 &&
+        ListcateringHistory[0].date.contains(today)) {
+      dbHelper.update(ListcateringHistory[0], onShift, isCatering);
+    } else {
+      String branch_id = await getBranchID();
+      String requester = await getActiveSuperIntendentID();
+      DateTime date = DateTime.now();
+      String flagStatus = "-";
+
+      if (isCatering) {
+        flagStatus = "AKTIF";
+      } else {
+        flagStatus = "TIDAK AKTIF";
+      }
+
+      await dbHelper.insert(CateringHistoryModel(
+          branchId: branch_id,
+          requester: requester,
+          status: flagStatus,
+          date: formatDateTime(date),
+          api_flag: "I",
+          shift: onShift));
+    }
+  }
+
+  Future<String> getCurrentShiftRange() async {
+    String currentShift = "-";
+    TimeOfDay today = TimeOfDay.now();
+    for (ShiftRig shift in status_rig!.shift!) {
+      try {
+        if (isTimeInRange(shift.checkin!, shift.checkout!, today)) {
+          currentShift = shift.id!;
+        }
+      } catch (e) {
+        currentShift = shift.id!;
+      }
+    }
+    return currentShift;
   }
 }

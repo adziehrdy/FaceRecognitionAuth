@@ -18,6 +18,8 @@ import 'package:image/image.dart' as imglib;
 import 'package:intl/intl.dart' as intl;
 import 'package:one_clock/one_clock.dart';
 
+import '../constants/constants.dart';
+
 class SignIn extends StatefulWidget {
   const SignIn({Key? key, required this.MODE}) : super(key: key);
 
@@ -48,8 +50,7 @@ class SignInState extends State<SignIn> {
   DateTime? jamAbsensi;
   String? textJamAbsensi;
 
-
-  Image? DetectedFaceImage ;
+  Image? DetectedFaceImage;
 
   @override
   void initState() {
@@ -63,7 +64,7 @@ class SignInState extends State<SignIn> {
   Future<void> getLastLocation() async {
     lat = await SpGetLastLat() ?? 0;
     long = await SpGetLastlong() ?? 0;
-    alamat = await SpGetLastAlamat() ?? "-";
+    alamat = await SpGetLastAlamat(context) ?? "-";
 
     setState(() {
       lat;
@@ -101,23 +102,22 @@ class SignInState extends State<SignIn> {
 
   Future<void> _predictFacesDetect({@required CameraImage? image}) async {
     assert(image != null, 'Image is null');
-     await _faceDetectorService.detectFacesFromImage(image!);
-     
-  
-    if (_faceDetectorService.faceDetected) {
-       
+    await _faceDetectorService.detectFacesFromImage(image!);
 
+    if (_faceDetectorService.faceDetected) {
 //---------
 
-      if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
-          _faceDetectorService.faces[0].headEulerAngleY! < -10) {
+      if (_faceDetectorService.faces[0].headEulerAngleY! >
+              CONSTANT_VAR.headEulerY ||
+          _faceDetectorService.faces[0].headEulerAngleY! <
+              -CONSTANT_VAR.headEulerY ||
+          _faceDetectorService.faces[0].headEulerAngleX! >
+              CONSTANT_VAR.headEulerX ||
+          _faceDetectorService.faces[0].headEulerAngleX! <
+              -CONSTANT_VAR.headEulerX) {
         print("=== POSISI MUKA TIDAK BAGUS=== ");
       } else {
-
-
-      _mlService.setCurrentPrediction(image, _faceDetectorService.faces[0]);
-
-       
+        _mlService.setCurrentPrediction(image, _faceDetectorService.faces[0]);
 
         //SET FACE
 
@@ -144,61 +144,54 @@ class SignInState extends State<SignIn> {
   }
 
   RECONIZE_FACE(CameraImage image) async {
-    if(enable_recognize_process){
+    if (enable_recognize_process) {
+      if (_faceDetectorService.faceDetected) {
+        User? user = await _mlService.predict();
+        if (user != null) {
+          enable_recognize_process = false;
+          //  await _cameraService.takePicture();
+          getDateTimeNow();
+          pauseCameraAndMLKit();
+          imglib.Image faceImage =
+              _mlService.cropFace(image, _faceDetectorService.faces[0]);
 
-       if (_faceDetectorService.faceDetected) {
-      User? user = await _mlService.predict();
-      if (user != null) {
+          //  //TESTING ABSENSI
 
+          //  textJamAbsensi = "2024-01-04 01:51:46";
+          //  jamAbsensi = DateTime.parse(textJamAbsensi!);
 
-        
-        enable_recognize_process = false;
-        //  await _cameraService.takePicture();
-        getDateTimeNow();
-        pauseCameraAndMLKit();
-       imglib.Image faceImage =  _mlService.cropFace(image, _faceDetectorService.faces[0]);
+          //  //TESTING ABSENSI
 
-      //  //TESTING ABSENSI
+          await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FrDetectedPage(
+                  // employee_name: user.employee_name!,
+                  textJamAbsensi: textJamAbsensi!,
+                  jamAbsensi: jamAbsensi!,
+                  alamat: alamat,
+                  lat: lat.toString(),
+                  long: long.toString(),
+                  // company_id: user.company_id!,
+                  // employee_id: user.employee_id!,
+                  type_absensi: widget.MODE,
+                  faceImage: convertImagelibToUint8List(faceImage),
+                  user: user,
+                ),
+              ));
 
-      //  textJamAbsensi = "2024-01-04 01:51:46";
-      //  jamAbsensi = DateTime.parse(textJamAbsensi!);
+          // _reload();
 
-      //  //TESTING ABSENSI
+          resumeCameraAndMLKit();
+          enable_recognize_process = true;
+        }
+        // namaReconized = user?.employee_name ?? "UNRECONIZE";
 
-        await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => FrDetectedPage(
-                // employee_name: user.employee_name!,
-                textJamAbsensi: textJamAbsensi!,
-                jamAbsensi: jamAbsensi!,
-                alamat: alamat,
-                lat: lat.toString(),
-                long: long.toString(),
-                // company_id: user.company_id!,
-                // employee_id: user.employee_id!,
-                type_absensi: widget.MODE, faceImage: 
-                convertImagelibToUint8List(faceImage) ,
-                user: user,
-
-              ),
-            ));
-
-        // _reload();
-
-        resumeCameraAndMLKit();
-        enable_recognize_process = true;
+        // var bottomSheetController = scaffoldKey.currentState!
+        //     .showBottomSheet((context) => signInSheet(user: user));
+        // bottomSheetController.closed.whenComplete(_reload);
       }
-      // namaReconized = user?.employee_name ?? "UNRECONIZE";
-
-      // var bottomSheetController = scaffoldKey.currentState!
-      //     .showBottomSheet((context) => signInSheet(user: user));
-      // bottomSheetController.closed.whenComplete(_reload);
     }
-
-      
-    }
-   
   }
 
   _onBackPressed() {
@@ -266,30 +259,33 @@ class SignInState extends State<SignIn> {
           body,
           Column(children: [
             header,
-            Column(
-               
-                children: [Column(
-                  children: [
-                    DigitalClock(
-                        textScaleFactor: 2,
-                        showSeconds: true,
-                        isLive: true,
-                        decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.rectangle,
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(15))),
-                        datetime: DateTime.now()),
-                    // Text(_latitude + "," + _longitude),
-                    // Text(alamat)
-                  ],
-                )]),
+            Column(children: [
+              Column(
+                children: [
+                  DigitalClock(
+                      textScaleFactor: 2,
+                      showSeconds: true,
+                      isLive: true,
+                      decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.all(Radius.circular(15))),
+                      datetime: DateTime.now()),
+                  // Text(_latitude + "," + _longitude),
+                  // Text(alamat)
+                ],
+              )
+            ]),
             SizedBox(height: 5),
             Text(lat.toString() + " , " + long.toString()),
             SizedBox(height: 5),
             Padding(
               padding: const EdgeInsets.all(15),
-              child: Text(alamat,textAlign: TextAlign.center,maxLines: 2,),
+              child: Text(
+                alamat,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+              ),
             )
           ]),
         ],

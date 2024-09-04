@@ -1,9 +1,11 @@
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/attendance.dart';
-import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
 import 'package:face_net_authentication/pages/widgets/dialog_approval_absensi.dart';
+import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
+import '../db/databse_helper_absensi.dart';
 
 typedef void OnDeleteCallback(String deleteType);
 typedef void OnUpdate();
@@ -13,13 +15,15 @@ class AttendanceSingle extends StatefulWidget {
       {Key? key,
       required this.data,
       required this.onDelete,
-      required this.onUpdate})
+      required this.onUpdate,
+      required this.isLocked}) // Added isLocked as per instructions
       : super(key: key);
 
   final Attendance data;
   // final VoidCallback onDelete;
   final OnDeleteCallback onDelete;
-  final OnUpdate onUpdate; // Gunakan tipe OnDeleteCallback
+  final OnUpdate onUpdate;
+  final bool isLocked; // Added isLocked as per instructions
 
   @override
   _AttendanceSingleState createState() => _AttendanceSingleState();
@@ -111,7 +115,6 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
               height: 3,
             ),
             Row(
-              // mainAxisAlignment: MainAxisAlignment.spa,
               children: [
                 single_absensi_masuk(
                     DateFormat('HH:mm').format(widget.data.checkInActual!),
@@ -139,12 +142,6 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                             Colors.deepOrange.shade500,
                             widget.data.checkOutStatus ?? "")
                         : single_absensi_belum_keluar()
-
-                    //     single_absensi_keluar(
-                    // "-",
-                    // "-",
-                    // "-",
-                    //     "ABSEN KELUAR", Colors.deepOrange.shade500, "BELUM ABSEN KELUAR")
                   ],
                 ),
               ],
@@ -169,10 +166,7 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(5),
                     gradient: LinearGradient(
-                      colors: [
-                        bg_color,
-                        Colors.green
-                      ], // Ubah warna gradasi sesuai kebutuhan
+                      colors: [bg_color, Colors.green],
                       begin: Alignment.bottomRight,
                       end: Alignment.centerLeft,
                     ),
@@ -312,8 +306,12 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                                             return dialog_approval_absensi(
                                                                 onSelected:
                                                                     (value) async {
-                                                              await _dataBaseHelper
-                                                                  .approveAbsensi(
+                                                              if (widget
+                                                                  .isLocked) {
+                                                                PinInputDialog.show(
+                                                                    context,
+                                                                    (p0) async {
+                                                                  await _dataBaseHelper.approveAbsensi(
                                                                       widget
                                                                           .data
                                                                           .attendanceId!,
@@ -321,12 +319,33 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                                                       value[1],
                                                                       true,
                                                                       value[0]);
-                                                              setState(() {
-                                                                setState(() {
-                                                                  widget
-                                                                      .onUpdate();
+                                                                  setState(() {
+                                                                    setState(
+                                                                        () {
+                                                                      widget
+                                                                          .onUpdate();
+                                                                    });
+                                                                  });
                                                                 });
-                                                              });
+                                                              } else {
+                                                                await _dataBaseHelper
+                                                                    .approveAbsensi(
+                                                                        widget
+                                                                            .data
+                                                                            .attendanceId!,
+                                                                        await getActiveSuperIntendentID(),
+                                                                        value[
+                                                                            1],
+                                                                        true,
+                                                                        value[
+                                                                            0]);
+                                                                setState(() {
+                                                                  setState(() {
+                                                                    widget
+                                                                        .onUpdate();
+                                                                  });
+                                                                });
+                                                              }
                                                             });
                                                           },
                                                         );
@@ -563,17 +582,42 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                                           return dialog_approval_absensi(
                                                               onSelected:
                                                                   (value) async {
-                                                            await _dataBaseHelper
-                                                                .approveAbsensi(
-                                                                    widget.data
-                                                                        .attendanceId!,
-                                                                    await getActiveSuperIntendentID(),
-                                                                    value[1],
-                                                                    false,
-                                                                    value[0]);
-                                                            setState(() {
-                                                              widget.onUpdate();
-                                                            });
+                                                            if (widget
+                                                                .isLocked) {
+                                                              PinInputDialog.show(
+                                                                  context,
+                                                                  (p0) async {
+                                                                await _dataBaseHelper
+                                                                    .approveAbsensi(
+                                                                        widget
+                                                                            .data
+                                                                            .attendanceId!,
+                                                                        await getActiveSuperIntendentID(),
+                                                                        value[
+                                                                            1],
+                                                                        false,
+                                                                        value[
+                                                                            0]);
+                                                                setState(() {
+                                                                  widget
+                                                                      .onUpdate();
+                                                                });
+                                                              });
+                                                            } else {
+                                                              await _dataBaseHelper
+                                                                  .approveAbsensi(
+                                                                      widget
+                                                                          .data
+                                                                          .attendanceId!,
+                                                                      await getActiveSuperIntendentID(),
+                                                                      value[1],
+                                                                      false,
+                                                                      value[0]);
+                                                              setState(() {
+                                                                widget
+                                                                    .onUpdate();
+                                                              });
+                                                            }
                                                           });
                                                         },
                                                       );
@@ -669,12 +713,13 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                     color: Colors.grey.shade300,
                     borderRadius: BorderRadius.all(Radius.circular(10))),
                 child: Column(children: [
-                  (widget.data.approval_status_out == null) ?
-                  Text(
-                    "BELUM ABSEN KELUAR",
-                  ) : Text(
-                    "TIDAK ABSEN KELUAR",
-                  ),
+                  (widget.data.approval_status_out == null)
+                      ? Text(
+                          "BELUM ABSEN KELUAR",
+                        )
+                      : Text(
+                          "TIDAK ABSEN KELUAR",
+                        ),
                   SizedBox(
                     height: 5,
                   ),
@@ -692,15 +737,31 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                                 builder: (BuildContext context) {
                                   return dialog_approval_absensi(
                                       onSelected: (value) async {
-                                    await _dataBaseHelper.approveAbsensi(
-                                        widget.data.attendanceId!,
-                                        await getActiveSuperIntendentID(),
-                                        value[1],
-                                        false,
-                                        value[0]);
-                                    setState(() {
-                                      widget.onUpdate();
-                                    });
+                                    if (widget.isLocked) {
+                                      PinInputDialog.show(context, (p0) async {
+                                        await _dataBaseHelper
+                                            .approveTidakAbsenKeluar(
+                                                widget.data.attendanceId!,
+                                                await getActiveSuperIntendentID(),
+                                                value[1],
+                                                false,
+                                                value[0]);
+                                        setState(() {
+                                          widget.onUpdate();
+                                        });
+                                      });
+                                    } else {
+                                      await _dataBaseHelper
+                                          .approveTidakAbsenKeluar(
+                                              widget.data.attendanceId!,
+                                              await getActiveSuperIntendentID(),
+                                              value[1],
+                                              false,
+                                              value[0]);
+                                      setState(() {
+                                        widget.onUpdate();
+                                      });
+                                    }
                                   });
                                 },
                               );
@@ -710,36 +771,36 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                               style:
                                   TextStyle(fontSize: 11, color: Colors.white),
                             ))
-                        : 
-                        Column(
-                          children: [
-                            InkWell(
+                        : Column(
+                            children: [
+                              InkWell(
                                 onTap: () {
                                   showToast("Notes : " +
                                       (widget.data.attendanceNoteOut ?? "-"));
                                 },
-                                child: 
-                                Column(
-
+                                child: Column(
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(Icons.notes_sharp),
                                         SizedBox(
                                           width: 5,
                                         ),
                                         Text(
-                                          (widget.data.approval_status_out ?? ""),
-                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                          (widget.data.approval_status_out ??
+                                              ""),
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
                                         ),
                                       ],
                                     ),
                                   ],
                                 ),
                               ),
-                          ],
-                        ),
+                            ],
+                          ),
                   ),
                   SizedBox(
                     height: 3,

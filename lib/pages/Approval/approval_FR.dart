@@ -35,24 +35,26 @@ class _ApprovalFRState extends State<ApprovalFR> {
                           child: Row(
                     children: [
                       Container(
-                        height: 100,
-                        width: 100,
-                        color: Colors.grey,
-                        // child: Image.asset(
-                        //   "assets/images/profile0.png",
-                        //   height: 100,
-                        //   width: 100,
-                        // ),
-                        child : checkFrPhoto(user_list[index].employee_fr_image)
-                      ),
+                          height: 100,
+                          width: 100,
+                          color: Colors.grey,
+                          // child: Image.asset(
+                          //   "assets/images/profile0.png",
+                          //   height: 100,
+                          //   width: 100,
+                          // ),
+                          child:
+                              checkFrPhoto(user_list[index].employee_fr_image)),
                       SizedBox(
                         width: 20,
                       ),
                       Text(user_list[index].employee_name ?? "Unknown"),
                       const Spacer(),
-                      ElevatedButton(onPressed: () async {
-                        await approve(user_list[index]);
-                      }, child: Text("Approve")),
+                      ElevatedButton(
+                          onPressed: () async {
+                            await hitApproveFR(user_list[index]);
+                          },
+                          child: Text("Approve")),
                       const SizedBox(
                         width: 8,
                       )
@@ -60,39 +62,30 @@ class _ApprovalFRState extends State<ApprovalFR> {
                   )));
                 })
             : Center(
-              
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(textAlign: TextAlign.center,"Approval Face Recognition",style: TextStyle(fontSize: 20,color: Colors.blue,fontWeight: FontWeight.bold)),
+                    Text(
+                        textAlign: TextAlign.center,
+                        "Approval Face Recognition",
+                        style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.blue,
+                            fontWeight: FontWeight.bold)),
                     Lottie.asset(
                       'assets/lottie/no_data.json',
                       width: 300,
                       height: 300,
                       fit: BoxFit.fill,
                     ),
-                    Text(textAlign: TextAlign.center,"Tidak Ada Approval Untuk\nFace Recognition",style: TextStyle(fontSize: 15)),
+                    Text(
+                        textAlign: TextAlign.center,
+                        "Tidak Ada Approval Untuk\nFace Recognition",
+                        style: TextStyle(fontSize: 15)),
                   ],
                 ),
               ));
   }
-
-  Future<void> approve(User user) async {
-
-   UserRepo repo =  UserRepo();
-
-  //  String fr_base64 = encode_FR_ToBase64(user.face_template);
-
-
-   bool hitApproveSuccess = await repo.hitApproveFR(user.employee_id!);
-
-   if(hitApproveSuccess){
-     await _dataBaseHelper.approveFR(user.employee_id);
-    showToast((user.employee_name ?? " ")+" Sukses Di Approve");
-    _loadUserData();
-   }
-  }
-
 
   Future<void> _loadUserData() async {
     user_list = await _dataBaseHelper.queryAllUsersNotVerifFR();

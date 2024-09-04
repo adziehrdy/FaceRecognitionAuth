@@ -1,11 +1,14 @@
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/model_master_shift.dart';
+import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/repo/global_repos.dart';
+import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_easyloading/flutter_easyloading.dart';
+// import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:pinput/pinput.dart';
+
+import '../db/databse_helper_employee.dart';
 
 class widget_detail_employee extends StatefulWidget {
   final User user_detail;
@@ -19,7 +22,8 @@ class widget_detail_employee extends StatefulWidget {
 class _widget_detail_employeeState extends State<widget_detail_employee> {
   DatabaseHelperEmployee _dataBaseHelper = DatabaseHelperEmployee.instance;
   String selectedShiftId = "-";
-  List<ShiftData> listShift = [];
+  List<ShiftRig> listShift = [];
+
   String checkin = "-";
   String checkOut = "-";
   String shift_id = "-";
@@ -30,11 +34,20 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
 
     selectedShiftId = widget.user_detail.shift_id ?? "-";
 
-    getMasterShift().then((value) {
-      setState(() {
-        listShift = value;
-      });
-    });
+    // getMasterShift().then((value) {
+    //   setState(() {
+    //     print(value);
+    //   });
+    // });
+
+    SpGetSelectedStatusRig().then(
+      (value) {
+        setState(() {
+          listShift = value!.shift!;
+          listShift.add(ShiftRig(id: "PDC_OFF", checkin: null, checkout: null));
+        });
+      },
+    );
 
     setState(() {
       shift_id = widget.user_detail.shift_id ?? "Shift Belum Dipilih";
@@ -106,7 +119,9 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
               style: TextStyle(fontSize: 21, fontWeight: FontWeight.w600),
             ),
             Text(
-              (widget.user_detail.employee_id ?? "-" )+ " - " + (widget.user_detail.branch_id ?? "-"),
+              (widget.user_detail.employee_id ?? "-") +
+                  " - " +
+                  (widget.user_detail.branch_id ?? "-"),
               maxLines: 2,
               style: TextStyle(
                   fontSize: 12,
@@ -207,10 +222,10 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
                 });
               }
             },
-            items: listShift.map((ShiftData shift) {
+            items: listShift.map((ShiftRig shift) {
               return DropdownMenuItem<String>(
-                value: shift.shiftId,
-                child: Text(shift.shiftId),
+                value: shift.id,
+                child: Text(shift.id ?? "-"),
               );
             }).toList(),
           ),
@@ -222,7 +237,7 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
 
               GlobalRepo repo = GlobalRepo();
 
-              EasyLoading.show(status: "Uploading Shift..");
+              // EasyLoading.show(status: "Uploading Shift..");
 
               bool success = await repo.hitUpdateMasterShift(
                   widget.user_detail.employee_id!, shift_id);
@@ -234,12 +249,18 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
                     checkin,
                     checkOut);
                 Navigator.pop(context);
-                EasyLoading.dismiss();
+                // EasyLoading.dismiss();
                 showToastShort("Shift Berhasil dirubah");
-
-              }else{
-                EasyLoading.dismiss();
-                showToastShort("Perubahan Shift Gagal, mohon coba kembali");
+              } else {
+                await _dataBaseHelper.updateShift(
+                    widget.user_detail.employee_id,
+                    shift_id,
+                    checkin,
+                    checkOut);
+                Navigator.pop(context);
+                // EasyLoading.dismiss();
+                showToastShort(
+                    "Perubahan Shift berhasil karna Disimpan di Local");
               }
             },
             child: Text("Update Shift")),
@@ -251,14 +272,14 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
   }
 
   void getCheckInCheckOut(String selectedShiftId) {
-    ShiftData? selectedShift = listShift.firstWhere(
-      (shift) => shift.shiftId == selectedShiftId,
+    ShiftRig? selectedShift = listShift.firstWhere(
+      (shift) => shift.id == selectedShiftId,
     );
 
     setState(() {
-      shift_id = selectedShift.shiftId;
-      checkin = selectedShift.checkIn ?? "-";
-      checkOut = selectedShift.checkOut ?? "-";
+      shift_id = selectedShift.id ?? "-";
+      checkin = selectedShift.checkin ?? "-";
+      checkOut = selectedShift.checkout ?? "-";
     });
   }
 }

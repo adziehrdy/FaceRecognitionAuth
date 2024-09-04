@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 
+import '../../constants/constants.dart';
+
 class FacePainter extends CustomPainter {
   FacePainter({required this.imageSize, required this.face});
   final Size imageSize;
@@ -12,11 +14,14 @@ class FacePainter extends CustomPainter {
 
     Paint paint;
 
-    if (this.face!.headEulerAngleY! > 10 || this.face!.headEulerAngleY! < -10) {
+    if (this.face!.headEulerAngleY! > CONSTANT_VAR.headEulerY ||
+        this.face!.headEulerAngleY! < -CONSTANT_VAR.headEulerY ||
+        this.face!.headEulerAngleX! > CONSTANT_VAR.headEulerX ||
+        this.face!.headEulerAngleX! < -CONSTANT_VAR.headEulerX) {
       paint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3.0
-        ..color = Colors.red;
+        ..color = Colors.white;
     } else {
       paint = Paint()
         ..style = PaintingStyle.stroke
@@ -35,7 +40,6 @@ class FacePainter extends CustomPainter {
             scaleX: scaleX ?? 1,
             scaleY: scaleY ?? 1),
         paint);
-
   }
 
   @override
@@ -47,12 +51,7 @@ class FacePainter extends CustomPainter {
 RRect _scaleRect(
     {required Rect rect,
     required Size imageSize,
-
-
     required Size widgetSize,
-
-    
-
     double scaleX = 1,
     double scaleY = 1}) {
   // return RRect.fromLTRBR(
@@ -62,7 +61,7 @@ RRect _scaleRect(
   //     rect.bottom.toDouble() * scaleY,
   //     Radius.circular(10));
 
-       return RRect.fromLTRBR(
+  return RRect.fromLTRBR(
       (widgetSize.width - rect.left.toDouble() * scaleX),
       rect.top.toDouble() * scaleY,
       widgetSize.width - rect.right.toDouble() * scaleX,

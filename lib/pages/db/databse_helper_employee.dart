@@ -50,6 +50,14 @@ class DatabaseHelperEmployee {
   static final from_branch = "from_branch";
   static final to_branch = "to_branch";
   static final relief_status = "relief_status";
+  static final relief_start_date = "relief_start_date";
+  static final relief_end_date = "relief_end_date";
+  static final is_relief_employee = "is_relief_employee";
+
+  //DK
+  static final dk_start_date = "dk_start_date";
+  static final dk_end_date = "dk_end_date";
+  static final status_dk = "status_dk";
 
   DatabaseHelperEmployee._privateConstructor();
   static final DatabaseHelperEmployee instance =
@@ -98,7 +106,13 @@ $status_relief TEXT,
 $relief_id TEXT,
 $from_branch TEXT,
 $to_branch TEXT,
-$relief_status TEXT
+$relief_status TEXT,
+$relief_start_date,
+$relief_end_date,
+$is_relief_employee,
+$dk_start_date TEXT,
+$dk_end_date TEXT,
+$status_dk
           )
           ''');
   }
@@ -184,18 +198,14 @@ $relief_status TEXT
     }
   }
 
-    Future<void> updateShift(String? employeeId, String id_shift, String cin, String cout ) async {
+  Future<void> updateShift(
+      String? employeeId, String id_shift, String cin, String cout) async {
     try {
       Database db = await instance.database;
 
       await db.update(
         table,
-        {
-          shift_id : id_shift,
-          check_in :cin,
-          check_out : cout
-
-        },
+        {shift_id: id_shift, check_in: cin, check_out: cout},
         where: 'employee_id = ?',
         whereArgs: [employeeId],
       );
@@ -216,13 +226,26 @@ $relief_status TEXT
               check_out +
               ' is NOT NULL ) AND ( ' +
               check_in +
-              " is NOT NULL )");
+              " is NOT NULL ) AND (" +
+              shift_id +
+              " is NOT 'PDC_OFF')");
       // List<Map<String, dynamic>> users = await db.rawQuery('SELECT * FROM $table WHERE is_verif_fr = 0');
       // print(users.length);
       return users.map((u) => User.fromMap(u)).toList();
     } catch (e) {
       print(e);
       return [];
+    }
+  }
+
+  Future<User?> getFirstUser() async {
+    Database db = await instance.database;
+    List<Map<String, dynamic>> result = await db.query(table);
+
+    if (result.isNotEmpty) {
+      return User.fromMap(result.first);
+    } else {
+      return null;
     }
   }
 }

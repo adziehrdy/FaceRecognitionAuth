@@ -1,10 +1,14 @@
 import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/locator.dart';
-import 'package:face_net_authentication/pages/Approval/approval_main_page.dart';
+import 'package:face_net_authentication/models/login_model.dart';
+import 'package:face_net_authentication/pages/Dinas%20Khusus/DK_page.dart';
+import 'package:face_net_authentication/pages/List%20Karyawan/page_list_karyawan.dart';
+import 'package:face_net_authentication/pages/Rig%20Status%20History/rigStatusHistory.dart';
 import 'package:face_net_authentication/pages/history_absensi_mainPage.dart';
-import 'package:face_net_authentication/pages/list_karyawan.dart';
+import 'package:face_net_authentication/pages/menu_admin.dart';
 import 'package:face_net_authentication/pages/register_pin.dart';
+import 'package:face_net_authentication/pages/relief/relief_page.dart';
 import 'package:face_net_authentication/pages/sign-in.dart';
 import 'package:face_net_authentication/pages/widgets/home_menu.dart';
 import 'package:face_net_authentication/pages/widgets/home_wiget.dart';
@@ -13,10 +17,15 @@ import 'package:face_net_authentication/pages/widgets/user-banner.dart';
 import 'package:face_net_authentication/repo/global_repos.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/face_detector_service.dart';
+import 'package:face_net_authentication/services/location_service_helper.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
+import 'package:face_net_authentication/services/shared_preference_helper.dart';
+// import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:lottie/lottie.dart';
+
+import 'db/dbSync.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -37,10 +46,15 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    // initFirebase();
 
     //GET MASTER DATA FOR REGIST FORM
     // GlobalRepo().getMasterRegister();
     GlobalRepo().hitApiGetMsterShift();
+    GlobalRepo().hitAllMasterRigStatus(context);
+
+    // initLocation();
+    syncAllData();
 
     getPIN().then((value) {
       setState(() {
@@ -61,15 +75,34 @@ class _HomePageState extends State<HomePage> {
     // initLocalNotification();
     // initFirebaseMessaging();
 
-    if (COSTANT_VAR.EMULATOR_MODE) {
+    if (CONSTANT_VAR.EMULATOR_MODE) {
       _loading_init = false;
     } else {
       _initializeServices();
     }
 
     GlobalRepo().getLatestVersion(context);
+    // initLocation();
 
+    // GlobalRepo().hitAllMasterRigStatus(context);
+  }
 
+  initLocation() async {
+    if (await onLineChecker()) {
+      GET_LOCATION(context);
+    }
+  }
+
+  // Future<void> initFirebase() async {
+  //   LoginModel user = await getUserLoginData();
+  //   FirebaseCrashlytics.instance.setUserIdentifier(
+  //       (user.branch?.branchName ?? "-") +
+  //           "|" +
+  //           (user.branch?.branchId ?? "-"));
+  // }
+
+  syncAllData() {
+    dBsync().syncAllDB();
   }
 
   // _initializeServices() async {
@@ -104,9 +137,8 @@ class _HomePageState extends State<HomePage> {
       });
     } catch (e) {
       // An error occurred during initialization
-      setState(() {
-        _progressMessage = "Error Inisialisasi Face Recognition";
-      });
+
+      _progressMessage = "Error Inisialisasi Face Recognition";
     }
   }
 
@@ -123,18 +155,15 @@ class _HomePageState extends State<HomePage> {
     if (_loading_init) {
       return Scaffold(
         body: Center(
-          
-          child: 
-          
-          Column(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-               Lottie.asset(
-                      'assets/lottie/gear.json',
-                      width: 400,
-                      height: 400,
-                      fit: BoxFit.fill,
-                    ),
+              Lottie.asset(
+                'assets/lottie/gear.json',
+                width: 400,
+                height: 400,
+                fit: BoxFit.fill,
+              ),
               Text(_progressMessage),
             ],
           ),
@@ -142,9 +171,8 @@ class _HomePageState extends State<HomePage> {
       );
     } else {
       return Scaffold(
-        body: 
-        SingleChildScrollView(
-          child: Column(
+          body: SingleChildScrollView(
+        child: Column(
           children: <Widget>[
             Container(
               height: 295,
@@ -195,145 +223,176 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             Container(
-                height: MediaQuery.of(context).size.height - 295, // Untuk menyesuaikan tinggi GridView
-                    child: GridView.count(
-                      crossAxisCount: itemPerRow,
-                      
-                      childAspectRatio: 1,
-                      crossAxisSpacing: 5,
-                      padding: EdgeInsets.all(13),
-                      children: <Widget>[
-                        new HomeMenu(
-                          "Absen Masuk",
-                          "assets/images/absent_in.png",
-                          -1,
-                          callback: (p0) {
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => SignIn(MODE: "MASUK")));
-                          },
-                        ),
-                        new HomeMenu(
-                          "Absen Keluar",
-                          "assets/images/absent_out_menu.png",
-                          -1,
-                          callback: (p0) {
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => SignIn(MODE: "KELUAR")));
-                          },
-                        ),
-                                                new HomeMenu(
-                          "History Absensi",
-                          "assets/images/absent_shift.png",
-                          waitingApproval!,
-                          callback: (p0) {
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => HistoryAbsensiMainPage()));
-                          },
-                        ),
-                        new HomeMenu(
-                          "Daftar Karyawan",
-                          "assets/images/absent_personal.png",
-                          -1,
-                          callback: (p0) {
-                             PinInputDialog.show(context, (p0) {
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => ListKaryawan()));
-                             });
-                          },
-                        ),
+                height: MediaQuery.of(context).size.height -
+                    295, // Untuk menyesuaikan tinggi GridView
+                child: GridView.count(
+                  crossAxisCount: itemPerRow,
+                  childAspectRatio: 1,
+                  crossAxisSpacing: 5,
+                  padding: EdgeInsets.all(13),
+                  children: <Widget>[
+                    new HomeMenu(
+                      "Absen Masuk",
+                      "assets/images/absent_in.png",
+                      -1,
+                      callback: (p0) {
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => SignIn(MODE: "MASUK")));
+                      },
+                    ),
+                    new HomeMenu(
+                      "Absen Keluar",
+                      "assets/images/absent_out_menu.png",
+                      -1,
+                      callback: (p0) {
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => SignIn(MODE: "KELUAR")));
+                      },
+                    ),
+                    new HomeMenu(
+                      "History Absensi",
+                      "assets/images/absent_shift.png",
+                      waitingApproval!,
+                      callback: (p0) {
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => HistoryAbsensiMainPage()));
+                      },
+                    ),
+                    // new HomeMenu(
+                    //   "Daftar Karyawan",
+                    //   "assets/images/absent_personal.png",
+                    //   -1,
+                    //   callback: (p0) {
+                    //     PinInputDialog.show(context, (p0) {
+                    //       Navigator.of(context).push(MaterialPageRoute(
+                    //           builder: (context) => PageListKaryawan()));
+                    //     });
+                    //   },
+                    // ),
 
-                        new HomeMenu(
-                          "Approval",
-                          "assets/images/absent_approval.png",
-                          waitingApproval!,
-                          callback: (p0) {
-                            PinInputDialog.show(context, (p0) {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => approval_main_page()));
-                              // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
-                            });
-                          },
-                        ),
+                    new HomeMenu(
+                      "Menu Admin",
+                      "assets/images/admin_menu.png",
+                      -1,
+                      callback: (p0) {
+                        PinInputDialog.show(context, (p0) {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => MenuAdmin()));
+                        });
+                      },
+                    ),
 
-                        // new HomeMenu(
-                        //   "Relief",
-                        //   "assets/images/absent_approval.png",
-                        //   waitingApproval!,
-                        //   callback: (p0) {
-                        //     PinInputDialog.show(context, (p0) {
-                        //       Navigator.of(context).push(MaterialPageRoute(
-                        //           builder: (context) => ReliefPage()));
-                        //       // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
-                        //     });
-                        //   },
-                        // ),
-                        // new HomeMenu(
-                        //   "Testing Button",
-                        //   "assets/images/absent_register.png",
-                        //   -1,
-                        //   callback: (p0) {
-                        //     // Navigator.push(context, MaterialPageRoute( builder: (BuildContext context) => ForceUpgrade(isLoged: true,currentVersion: "1.0.0",latestVersion: "1.0.0",)));
-                        //     Navigator.push(
-                        //         context,
-                        //         MaterialPageRoute(
-                        //             builder: (BuildContext context) =>
-                        //                 SwitchSupperAttendance()));
-                        //   },
-                        // ),
+                    // new HomeMenu(
+                    //   "Rig Status History",
+                    //   "assets/images/absent_personal.png",
+                    //   -1,
+                    //   callback: (p0) {
+                    //     PinInputDialog.show(context, (p0) {
+                    //       Navigator.of(context).push(MaterialPageRoute(
+                    //           builder: (context) => rigStatusHistory()));
+                    //     });
+                    //   },
+                    // ),
 
+                    // new HomeMenu(
+                    //   "Approval",
+                    //   "assets/images/absent_approval.png",
+                    //   waitingApproval!,
+                    //   callback: (p0) {
+                    //     PinInputDialog.show(context, (p0) {
+                    //       Navigator.of(context).push(MaterialPageRoute(
+                    //           builder: (context) => approval_main_page()));
+                    //       // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
+                    //     });
+                    //   },
+                    // ),
 
-                        // new HomeMenu("Shift", "assets/images/absent_shift.png",-1, callback: (p0) {
-                        //   Navigator.push(context, MaterialPageRoute( builder: (BuildContext context) => ScheduleListPage()));
-                        //   },
-                        // ),
+                    // new HomeMenu(
+                    //   "Relief",
+                    //   "assets/images/absent_approval.png",
+                    //   waitingApproval!,
+                    //   callback: (p0) {
+                    //     PinInputDialog.show(context, (p0) {
+                    //       Navigator.of(context).push(MaterialPageRoute(
+                    //           builder: (context) => ReliefPage()));
+                    //       // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
+                    //     });
+                    //   },
+                    // ),
 
-                        //   buildMenuCard(MdiIcons.accountArrowLeft, "ABSEN", "MASUK", (){
-                        //     showAlert(
-                        //         context: context,
-                        //         body: "Apakah anda berada di lokasi kantor?",
-                        //         actions: [
-                        //           AlertAction(text: 'IYA', onPressed: () => Navigator.of(context).push(
-                        //               MaterialPageRoute(builder: (context) => WFOPage(WFOPageType.WFO))
-                        //           )),
-                        //           AlertAction(text: 'TIDAK', onPressed: () => Navigator.of(context).push(
-                        //               MaterialPageRoute(builder: (context) => WFHPage(WFHPageType.WOO))
-                        //           ))
-                        //         ]
-                        //     );
-                        //   }),
-                        //   /*buildMenuCard(MdiIcons.toolboxOutline, "WORK", "OUT OF OFFICE", ()=>Navigator.of(context).push(
-                        //   MaterialPageRoute(builder: (context) => WFHPage(WFHPageType.WOO))
-                        // )),*/
-                        //   buildMenuCard(MdiIcons.accountArrowRight, "ABSEN", "KELUAR", () => Navigator.of(context).push(
-                        //       MaterialPageRoute(builder: (context) => WFHPage(WFHPageType.WFH))
-                        //   )),
-                        //   buildMenuCard(MdiIcons.accountDetailsOutline, "ABSENSI", "PERSONAL", ()=> Navigator.of(context).push(
-                        //       MaterialPageRoute(builder: (context) => AbsenceListPage())
-                        //   )),
-                        //   //buildMenuCard(MdiIcons.accountGroupOutline, "ABSENSI", "KARYAWAN", (){}),
-                        //   buildMenuCardWithBadge(MdiIcons.clipboardCheckMultipleOutline, "APPROVAL", "ABSENSI", () async{
-                        //     await Navigator.of(context).push(
-                        //         MaterialPageRoute(builder: (context) => ApprovalListPage())
-                        //     );
-                        //     countWaiting();
-                        //   }, waitingApproval!),
-                        //   buildMenuCard(MdiIcons.faceRecognition  , "DAFTAR", "WAJAH", ()=> Navigator.of(context).push(
-                        //       MaterialPageRoute(builder: (context) => AbsenceListPage())
-                        //   )),
-                        //   buildMenuCard(MdiIcons.timetable  , "JADWAL", "SHIFT", ()=> Navigator.of(context).push(
-                        //       MaterialPageRoute(builder: (context) => ScheduleListPage())
-                        //   )),
-                        // buildMenuCard(MdiIcons.playlistEdit, "WORKING", "REPORT",()=>Navigator.of(context).push(
-                        //   MaterialPageRoute(builder: (context) => WorkListPage())
-                        // )),
-                        // buildMenuCard(MdiIcons.googleClassroom, "MEETING", " ", ()=>Navigator.of(context).push(
-                        //   MaterialPageRoute(builder: (context) => MeetingPage())
-                        // )),
-                      ],
-                    ))
+                    // new HomeMenu(
+                    //   "Dinas Khusus",
+                    //   "assets/images/absent_approval.png",
+                    //   waitingApproval!,
+                    //   callback: (p0) {
+                    //     Navigator.of(context).push(
+                    //         MaterialPageRoute(builder: (context) => DKPage()));
+                    //     // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
+                    //   },
+                    // ),
+
+                    // new HomeMenu(
+                    //   "Testing Button",
+                    //   "assets/images/absent_register.png",
+                    //   -1,
+                    //   callback: (p0) async {
+                    //     // Navigator.push(context, MaterialPageRoute( builder: (BuildContext context) => ForceUpgrade(isLoged: true,currentVersion: "1.0.0",latestVersion: "1.0.0",)));
+                    //     bool? granted = await showLocationPermissionDialog(context);
+                    //   },
+                    // ),
+
+                    // new HomeMenu("Shift", "assets/images/absent_shift.png",-1, callback: (p0) {
+                    //   Navigator.push(context, MaterialPageRoute( builder: (BuildContext context) => ScheduleListPage()));
+                    //   },
+                    // ),
+
+                    //   buildMenuCard(MdiIcons.accountArrowLeft, "ABSEN", "MASUK", (){
+                    //     showAlert(
+                    //         context: context,
+                    //         body: "Apakah anda berada di lokasi kantor?",
+                    //         actions: [
+                    //           AlertAction(text: 'IYA', onPressed: () => Navigator.of(context).push(
+                    //               MaterialPageRoute(builder: (context) => WFOPage(WFOPageType.WFO))
+                    //           )),
+                    //           AlertAction(text: 'TIDAK', onPressed: () => Navigator.of(context).push(
+                    //               MaterialPageRoute(builder: (context) => WFHPage(WFHPageType.WOO))
+                    //           ))
+                    //         ]
+                    //     );
+                    //   }),
+                    //   /*buildMenuCard(MdiIcons.toolboxOutline, "WORK", "OUT OF OFFICE", ()=>Navigator.of(context).push(
+                    //   MaterialPageRoute(builder: (context) => WFHPage(WFHPageType.WOO))
+                    // )),*/
+                    //   buildMenuCard(MdiIcons.accountArrowRight, "ABSEN", "KELUAR", () => Navigator.of(context).push(
+                    //       MaterialPageRoute(builder: (context) => WFHPage(WFHPageType.WFH))
+                    //   )),
+                    //   buildMenuCard(MdiIcons.accountDetailsOutline, "ABSENSI", "PERSONAL", ()=> Navigator.of(context).push(
+                    //       MaterialPageRoute(builder: (context) => AbsenceListPage())
+                    //   )),
+                    //   //buildMenuCard(MdiIcons.accountGroupOutline, "ABSENSI", "KARYAWAN", (){}),
+                    //   buildMenuCardWithBadge(MdiIcons.clipboardCheckMultipleOutline, "APPROVAL", "ABSENSI", () async{
+                    //     await Navigator.of(context).push(
+                    //         MaterialPageRoute(builder: (context) => ApprovalListPage())
+                    //     );
+                    //     countWaiting();
+                    //   }, waitingApproval!),
+                    //   buildMenuCard(MdiIcons.faceRecognition  , "DAFTAR", "WAJAH", ()=> Navigator.of(context).push(
+                    //       MaterialPageRoute(builder: (context) => AbsenceListPage())
+                    //   )),
+                    //   buildMenuCard(MdiIcons.timetable  , "JADWAL", "SHIFT", ()=> Navigator.of(context).push(
+                    //       MaterialPageRoute(builder: (context) => ScheduleListPage())
+                    //   )),
+                    // buildMenuCard(MdiIcons.playlistEdit, "WORKING", "REPORT",()=>Navigator.of(context).push(
+                    //   MaterialPageRoute(builder: (context) => WorkListPage())
+                    // )),
+                    // buildMenuCard(MdiIcons.googleClassroom, "MEETING", " ", ()=>Navigator.of(context).push(
+                    //   MaterialPageRoute(builder: (context) => MeetingPage())
+                    // )),
+                  ],
+                ))
           ],
-        ),)
-      );
+        ),
+      ));
     }
   }
 
@@ -427,16 +486,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _setItemPerRow() {
-  if (MediaQuery.of(context).orientation == Orientation.landscape) {
-    setState(() {
-      itemPerRow = 5; // Mengatur nilai itemPerRow jika orientasi adalah landscape
-    });
-  } else {
-    setState(() {
-      itemPerRow = 3; // Mengatur nilai itemPerRow jika orientasi adalah portrait (opsional)
-    });
+    if (MediaQuery.of(context).orientation == Orientation.landscape) {
+      setState(() {
+        itemPerRow =
+            5; // Mengatur nilai itemPerRow jika orientasi adalah landscape
+      });
+    } else {
+      setState(() {
+        itemPerRow =
+            3; // Mengatur nilai itemPerRow jika orientasi adalah portrait (opsional)
+      });
+    }
   }
-}
 
   @override
   void dispose() {

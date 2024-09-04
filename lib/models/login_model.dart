@@ -19,7 +19,8 @@ class LoginModel {
 
   factory LoginModel.fromMap(Map<String, dynamic> map) {
     var superAttendenceList = map['super_attendence'] as List<dynamic>;
-    List<SuperIntendent> superAttendence = superAttendenceList.map((e) => SuperIntendent.fromJson(e)).toList();
+    List<SuperIntendent> superAttendence =
+        superAttendenceList.map((e) => SuperIntendent.fromJson(e)).toList();
 
     return LoginModel(
       accessToken: map['access_token'],
@@ -58,12 +59,16 @@ class Branch {
   final String branchName;
   final String branchLocation;
   final String branchGeofencing;
+  final String? tolerance;
+  final String? is_catering;
 
   Branch({
     required this.branchId,
     required this.branchName,
     required this.branchLocation,
     required this.branchGeofencing,
+    required this.tolerance,
+    required this.is_catering,
   });
 
   Map<String, dynamic> toMap() {
@@ -72,15 +77,18 @@ class Branch {
       'branch_name': branchName,
       'branch_location': branchLocation,
       'branch_geofencing': branchGeofencing,
+      'tolerance': tolerance ?? "0",
+      'is_catering': is_catering ?? "0"
     };
   }
 
   factory Branch.fromMap(Map<String, dynamic> map) {
     return Branch(
-      branchId: map['branch_id'],
-      branchName: map['branch_name'],
-      branchLocation: map['branch_location'],
-      branchGeofencing: map['branch_geofencing'],
-    );
+        branchId: map['branch_id'],
+        branchName: map['branch_name'],
+        branchLocation: map['branch_location'],
+        branchGeofencing: map['branch_geofencing'],
+        tolerance: map['tolerance'],
+        is_catering: map['is_catering']);
   }
 }
