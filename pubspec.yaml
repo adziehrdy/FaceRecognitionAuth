@@ -83,6 +83,7 @@ dependencies:
   audioplayers: ^6.1.0
   flutter_cached_pdfview: ^0.4.2
   timeline_tile: ^2.0.0
+  geekyants_flutter_gauges: ^1.0.4
 
   
 

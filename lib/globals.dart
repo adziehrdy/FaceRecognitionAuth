@@ -1275,6 +1275,36 @@ int laplacian(imglib.Image bitmap) {
   return score;
 }
 
+int lightDetection(imglib.Image bitmap) {
+  int width = bitmap.width;
+  int height = bitmap.height;
+  int totalBrightness = 0;
+
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      // Mengambil nilai piksel
+      int pixel = bitmap.getPixel(x, y);
+
+      // Memecah piksel menjadi komponen RGB
+      int r = imglib.getRed(pixel);
+      int g = imglib.getGreen(pixel);
+      int b = imglib.getBlue(pixel);
+
+      // Menghitung brightness berdasarkan rata-rata komponen RGB
+      int brightness = (r + g + b) ~/ 3;
+
+      // Menambahkan nilai brightness ke total
+      totalBrightness += brightness;
+    }
+  }
+
+  // Menghitung rata-rata brightness seluruh gambar
+  int averageBrightness = totalBrightness ~/ (width * height);
+
+  return averageBrightness *
+      3; // Nilai ini bisa diinterpretasikan sebagai intensitas cahaya
+}
+
 bool isTodayChecker(DateTime dateToday, String dateCompare) {
   if (dateCompare.contains(formatDateForFilter(dateToday))) {
     return true;
@@ -1286,6 +1316,8 @@ bool isTodayChecker(DateTime dateToday, String dateCompare) {
 Future<bool> onLineChecker() async {
   return await InternetConnectionChecker().hasConnection;
 }
+
+
 
 
 

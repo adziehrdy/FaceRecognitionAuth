@@ -17,6 +17,7 @@ import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/face_detector_service.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:flutter/material.dart';
+import 'package:geekyants_flutter_gauges/geekyants_flutter_gauges.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 
 import 'db/databse_helper_employee.dart';
@@ -38,6 +39,14 @@ class SignUpState extends State<SignUp> {
   Image? faceDetectedJPG;
   Size? imageSize;
   CameraImage? img;
+  int blurScore = 0;
+  int maxBlurScore = 700;
+  int lightScore = 0;
+  Color blurIndicatorColor = Colors.red;
+  Color lightIndicatorColor = Colors.red;
+
+  int blurThreshold = 450;
+  int lightThreshold = 300;
 
   bool _detectingFaces = false;
   bool pictureTaken = false;
@@ -53,7 +62,7 @@ class SignUpState extends State<SignUp> {
 
   // service injection
   FaceDetectorService _faceDetectorService = locator<FaceDetectorService>();
-  CameraService _cameraService = locator<CameraService>();
+  CameraService _cameraService = CameraService(isSignupMode: true);
   MLService _mlService = locator<MLService>();
 
   UserRepo repo = UserRepo();
@@ -139,7 +148,7 @@ class SignUpState extends State<SignUp> {
           faceDetected = _faceDetectorService.faces[0];
 
           if (_faceDetectorService.faces.isNotEmpty) {
-            setState(() {
+            setState(() async {
               if (_faceDetectorService.faces[0].headEulerAngleY! >
                       CONSTANT_VAR.headEulerY ||
                   _faceDetectorService.faces[0].headEulerAngleY! <
@@ -148,11 +157,26 @@ class SignUpState extends State<SignUp> {
                       CONSTANT_VAR.headEulerX ||
                   _faceDetectorService.faces[0].headEulerAngleX! <
                       -CONSTANT_VAR.headEulerX) {
+                setState(() {
+                  blurScore = 0;
+                  lightScore = 0;
+                });
+
                 canRegister = true;
               } else {
-                setState(() {
-                  canRegister = false;
-                });
+                await blurCheck(image);
+                await lightCheck(image);
+
+                if (blurScore >= blurThreshold &&
+                    lightScore >= lightThreshold) {
+                  setState(() {
+                    canRegister = false;
+                  });
+                } else {
+                  setState(() {
+                    canRegister = true;
+                  });
+                }
               }
             });
 
@@ -231,6 +255,46 @@ class SignUpState extends State<SignUp> {
 
   _onBackPressed() {
     Navigator.of(context).pop();
+  }
+
+  blurCheck(image) async {
+    int laplaceScore = await laplacian(
+        _mlService.cropFace(image, _faceDetectorService.faces[0]));
+    print("BLURR SCORE " + laplaceScore.toString());
+
+    setState(() {
+      if (laplaceScore >= blurThreshold) {
+        blurIndicatorColor = Colors.green;
+      } else {
+        blurIndicatorColor = Colors.red;
+      }
+
+      if (laplaceScore >= maxBlurScore) {
+        blurScore = maxBlurScore;
+      } else {
+        blurScore = laplaceScore;
+      }
+    });
+  }
+
+  lightCheck(image) async {
+    int light = await lightDetection(
+        _mlService.cropFace(image, _faceDetectorService.faces[0]));
+    print("LIGHT SCORE " + light.toString());
+
+    setState(() {
+      if (light >= lightThreshold) {
+        lightIndicatorColor = Colors.green;
+      } else {
+        lightIndicatorColor = Colors.red;
+      }
+
+      if (light >= 500) {
+        lightScore = 500;
+      } else {
+        lightScore = light;
+      }
+    });
   }
 
 /////===============
@@ -323,9 +387,113 @@ class SignUpState extends State<SignUp> {
         body: Stack(
           children: [
             body,
-            CameraHeader(
-              widget.user.employee_name ?? "NO NAME",
-              onBackPressed: _onBackPressed,
+            Column(
+              children: [
+                CameraHeader(
+                  widget.user.employee_name ?? "NO NAME",
+                  onBackPressed: _onBackPressed,
+                ),
+              ],
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(vertical: 100, horizontal: 50),
+              child: Positioned(
+                  left: 0, // Posisi gauge di sisi kanan
+                  top:
+                      0, // Anda bisa atur top untuk mengatur jaraknya dari atas
+                  bottom: 0, // Mengisi seluruh tinggi layar
+                  child: Row(
+                    children: [
+                      LinearGauge(
+                        gaugeOrientation: GaugeOrientation.vertical,
+                        linearGaugeBoxDecoration: LinearGaugeBoxDecoration(
+                            linearGaugeValueColor: blurIndicatorColor,
+                            borderRadius: 30,
+                            thickness: 10,
+                            backgroundColor: Colors.white),
+                        start: 0,
+                        end: 500,
+                        customLabels: [
+                          CustomRulerLabel(text: "Gelap", value: 0),
+                          CustomRulerLabel(
+                              text: "Cukup", value: lightThreshold.toDouble()),
+                          CustomRulerLabel(text: "Terang", value: 500)
+                        ],
+                        steps: 1,
+                        pointers: [
+                          WidgetPointer(
+                              pointerPosition: PointerPosition.left,
+                              value: lightScore.toDouble(),
+                              child: Icon(
+                                Icons.arrow_forward_outlined,
+                                color: Colors.blue,
+                              ))
+                        ],
+                        valueBar: [
+                          ValueBar(
+                            value: lightScore.toDouble(),
+                            color: lightIndicatorColor,
+                          )
+                        ],
+                        rulers: RulerStyle(
+                          textStyle:
+                              TextStyle(color: Colors.black, fontSize: 12),
+                          primaryRulerColor: Colors.blue,
+                          secondaryRulerColor: Colors.blue,
+                          showLabel: true,
+                          labelOffset: 10,
+                          rulerPosition: RulerPosition.left,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 10,
+                      ),
+                      LinearGauge(
+                        gaugeOrientation: GaugeOrientation.vertical,
+                        linearGaugeBoxDecoration: LinearGaugeBoxDecoration(
+                            linearGaugeValueColor: blurIndicatorColor,
+                            borderRadius: 30,
+                            thickness: 10,
+                            backgroundColor: Colors.white),
+                        start: 0,
+                        end: maxBlurScore.toDouble(),
+                        customLabels: [
+                          CustomRulerLabel(text: "Foto Blur", value: 0),
+                          CustomRulerLabel(
+                              text: "Tidak Blur",
+                              value: blurThreshold.toDouble()),
+                          CustomRulerLabel(
+                              text: "Foto Jelas",
+                              value: maxBlurScore.toDouble())
+                        ],
+                        steps: 1,
+                        pointers: [
+                          WidgetPointer(
+                              pointerPosition: PointerPosition.right,
+                              value: blurScore.toDouble(),
+                              child: Icon(
+                                Icons.arrow_back_outlined,
+                                color: Colors.blue,
+                              ))
+                        ],
+                        valueBar: [
+                          ValueBar(
+                            value: blurScore.toDouble(),
+                            color: blurIndicatorColor,
+                          )
+                        ],
+                        rulers: RulerStyle(
+                          textStyle:
+                              TextStyle(color: Colors.black, fontSize: 12),
+                          primaryRulerColor: Colors.blue,
+                          secondaryRulerColor: Colors.blue,
+                          showLabel: true,
+                          labelOffset: 10,
+                          rulerPosition: RulerPosition.right,
+                        ),
+                      ),
+                    ],
+                  )),
             )
           ],
         ),
@@ -436,7 +604,7 @@ class SignUpState extends State<SignUp> {
                   CustomPaint(
                     child: Center(
                       child: Container(
-                        padding: EdgeInsets.all(120),
+                        padding: EdgeInsets.all(130),
                         child: Image.asset("assets/images/face.png"),
                       ),
                     ),
