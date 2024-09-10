@@ -23,7 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image/image.dart' as img;
 import 'package:image/image.dart' as imglib;
 import 'package:internet_connection_checker/internet_connection_checker.dart';
@@ -34,7 +34,6 @@ import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
 // import 'package:trust_location/trust_location.dart';
-import 'package:unique_identifier/unique_identifier.dart';
 
 import 'pages/db/databse_helper_employee.dart';
 import 'pages/db/databse_helper_employee_relief.dart';
@@ -837,11 +836,11 @@ Future<String> getDeviceId() async {
   String? deviceId;
 
   if (Platform.isAndroid) {
-    deviceId = await UniqueIdentifier.serial;
+    var androidInfo = await deviceInfo.androidInfo;
+    deviceId = androidInfo.serialNumber;
   } else if (Platform.isIOS) {
     IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-    deviceId =
-        iosInfo.identifierForVendor; // Gunakan salah satu ID yang tersedia
+    deviceId = iosInfo.identifierForVendor;
   }
   if (deviceId != null) {
     return deviceId;
@@ -1301,8 +1300,8 @@ int lightDetection(imglib.Image bitmap) {
   // Menghitung rata-rata brightness seluruh gambar
   int averageBrightness = totalBrightness ~/ (width * height);
 
-  return averageBrightness *
-      3; // Nilai ini bisa diinterpretasikan sebagai intensitas cahaya
+  return (averageBrightness * 3) +
+      100; // Nilai ini bisa diinterpretasikan sebagai intensitas cahaya
 }
 
 bool isTodayChecker(DateTime dateToday, String dateCompare) {

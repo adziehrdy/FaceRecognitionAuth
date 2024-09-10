@@ -16,7 +16,7 @@ class CONSTANT_VAR {
   static double DEFAULT_TRESHOLD = 0.75;
   static int LAMA_JAM_BEKERJA = 9;
   static int CUT_OFF_PERIODE = 16;
-  static int headEulerY = 5;
+  static int headEulerY = 10;
   static int headEulerX = 10;
 
   // static String SHIFT_RIG_DUMMY =

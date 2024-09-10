@@ -4,10 +4,11 @@ import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:face_net_authentication/constants/constants.dart';
+import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/services/image_converter.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -33,26 +34,31 @@ class MLService {
         delegate = GpuDelegateV2(
           options: GpuDelegateOptionsV2(
             isPrecisionLossAllowed: false,
-            inferencePreference: TfLiteGpuInferenceUsage.fastSingleAnswer,
-            inferencePriority1: TfLiteGpuInferencePriority.minLatency,
-            inferencePriority2: TfLiteGpuInferencePriority.auto,
-            inferencePriority3: TfLiteGpuInferencePriority.auto,
+            // inferencePreference: TfLiteGpuInferenceUsage.fastSingleAnswer,
+            // inferencePriority1: TfLiteGpuInferencePriority.minLatency,
+            // inferencePriority2: TfLiteGpuInferencePriority.auto,
+            // inferencePriority3: TfLiteGpuInferencePriority.auto,
           ),
         );
       } else if (Platform.isIOS) {
         delegate = GpuDelegate(
           options: GpuDelegateOptions(
-              allowPrecisionLoss: true,
-              waitType: TFLGpuDelegateWaitType.active),
+            allowPrecisionLoss: true,
+            // waitType: TFLGpuDelegateWaitType.active
+          ),
         );
       }
-      var interpreterOptions = InterpreterOptions()..addDelegate(delegate);
+      // var interpreterOptions = InterpreterOptions()..addDelegate(delegate);
 
-      this._interpreter = await Interpreter.fromAsset('mobilefacenet.tflite',
-          options: interpreterOptions);
+      // this._interpreter = await Interpreter.fromAsset(
+      //     'assets/MobileFaceNetv2.tflite',
+      //     options: interpreterOptions);
+
+      this._interpreter =
+          await Interpreter.fromAsset('assets/mobilefacenet.tflite');
     } catch (e) {
-      print('Failed to load model.');
-      print(e);
+      showToast('Failed Load FR Model, Mohon Hubungi Admin');
+      showToast(e.toString());
     }
   }
 
@@ -83,37 +89,41 @@ class MLService {
   }
 
   imglib.Image cropFace(CameraImage image, Face faceDetected) {
+    // Konversi CameraImage ke imglib.Image
     imglib.Image convertedImage = _convertCameraImage(image);
 
-    double x;
-    double y;
-    double h;
-    double w;
+    // Dapatkan koordinat bounding box dari deteksi wajah
+    double x = faceDetected.boundingBox.left - 10.0;
+    double y = faceDetected.boundingBox.top - 10.0;
+    double w = faceDetected.boundingBox.width + 10.0;
+    double h = faceDetected.boundingBox.height + 10.0;
 
-    if (landscape_mode) {
-      x = faceDetected.boundingBox.left - 10.0;
-      y = faceDetected.boundingBox.top - 10.0;
-      h = faceDetected.boundingBox.width + 10.0;
-      w = faceDetected.boundingBox.height + 10.0;
-    } else {
-      x = faceDetected.boundingBox.left - 10.0;
-      y = faceDetected.boundingBox.top - 10.0;
-      w = faceDetected.boundingBox.width + 10.0;
-      h = faceDetected.boundingBox.height + 10.0;
-    }
+    // Pastikan rasio aspek 1x1 berdasarkan tinggi
+    // Gunakan ukuran yang lebih besar antara lebar dan tinggi
+    double maxSize = h > w ? h : w;
 
-    return imglib.copyCrop(
-        convertedImage, x.round(), y.round(), w.round(), h.round());
+    // Pastikan crop tidak keluar dari batas gambar asli
+    double cropX = x < 0 ? 0 : x;
+    double cropY = y < 0 ? 0 : y;
+    double cropW = (cropX + maxSize) > convertedImage.width
+        ? convertedImage.width - cropX
+        : maxSize;
+    double cropH = (cropY + maxSize) > convertedImage.height
+        ? convertedImage.height - cropY
+        : maxSize;
+
+    // Lakukan crop gambar menggunakan ukuran yang dihitung
+    return imglib.copyCrop(convertedImage, cropX.round(), cropY.round(),
+        cropW.round(), cropH.round());
   }
 
+// Fungsi konversi CameraImage ke imglib.Image (tetap sama)
   imglib.Image _convertCameraImage(CameraImage image) {
     var img = convertToImage(image);
     if (landscape_mode) {
-      var img1 = imglib.copyRotate(img, 0);
-      return img1;
+      return imglib.copyRotate(img, 0);
     } else {
-      var img1 = imglib.copyRotate(img, -90);
-      return img1;
+      return imglib.copyRotate(img, -90);
     }
   }
 

@@ -18,7 +18,7 @@ import 'package:face_net_authentication/services/face_detector_service.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:flutter/material.dart';
 import 'package:geekyants_flutter_gauges/geekyants_flutter_gauges.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 
 import 'db/databse_helper_employee.dart';
 
@@ -387,6 +387,12 @@ class SignUpState extends State<SignUp> {
         body: Stack(
           children: [
             body,
+            Positioned(
+              top: 50,
+              left: 50,
+              child:
+                  indicatorWidget(), // Gauge indicators displayed on top left
+            ),
             Column(
               children: [
                 CameraHeader(
@@ -395,106 +401,6 @@ class SignUpState extends State<SignUp> {
                 ),
               ],
             ),
-            Container(
-              padding: EdgeInsets.symmetric(vertical: 100, horizontal: 50),
-              child: Positioned(
-                  left: 0, // Posisi gauge di sisi kanan
-                  top:
-                      0, // Anda bisa atur top untuk mengatur jaraknya dari atas
-                  bottom: 0, // Mengisi seluruh tinggi layar
-                  child: Row(
-                    children: [
-                      LinearGauge(
-                        gaugeOrientation: GaugeOrientation.vertical,
-                        linearGaugeBoxDecoration: LinearGaugeBoxDecoration(
-                            linearGaugeValueColor: blurIndicatorColor,
-                            borderRadius: 30,
-                            thickness: 10,
-                            backgroundColor: Colors.white),
-                        start: 0,
-                        end: 500,
-                        customLabels: [
-                          CustomRulerLabel(text: "Gelap", value: 0),
-                          CustomRulerLabel(
-                              text: "Cukup", value: lightThreshold.toDouble()),
-                          CustomRulerLabel(text: "Terang", value: 500)
-                        ],
-                        steps: 1,
-                        pointers: [
-                          WidgetPointer(
-                              pointerPosition: PointerPosition.left,
-                              value: lightScore.toDouble(),
-                              child: Icon(
-                                Icons.arrow_forward_outlined,
-                                color: Colors.blue,
-                              ))
-                        ],
-                        valueBar: [
-                          ValueBar(
-                            value: lightScore.toDouble(),
-                            color: lightIndicatorColor,
-                          )
-                        ],
-                        rulers: RulerStyle(
-                          textStyle:
-                              TextStyle(color: Colors.black, fontSize: 12),
-                          primaryRulerColor: Colors.blue,
-                          secondaryRulerColor: Colors.blue,
-                          showLabel: true,
-                          labelOffset: 10,
-                          rulerPosition: RulerPosition.left,
-                        ),
-                      ),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      LinearGauge(
-                        gaugeOrientation: GaugeOrientation.vertical,
-                        linearGaugeBoxDecoration: LinearGaugeBoxDecoration(
-                            linearGaugeValueColor: blurIndicatorColor,
-                            borderRadius: 30,
-                            thickness: 10,
-                            backgroundColor: Colors.white),
-                        start: 0,
-                        end: maxBlurScore.toDouble(),
-                        customLabels: [
-                          CustomRulerLabel(text: "Foto Blur", value: 0),
-                          CustomRulerLabel(
-                              text: "Tidak Blur",
-                              value: blurThreshold.toDouble()),
-                          CustomRulerLabel(
-                              text: "Foto Jelas",
-                              value: maxBlurScore.toDouble())
-                        ],
-                        steps: 1,
-                        pointers: [
-                          WidgetPointer(
-                              pointerPosition: PointerPosition.right,
-                              value: blurScore.toDouble(),
-                              child: Icon(
-                                Icons.arrow_back_outlined,
-                                color: Colors.blue,
-                              ))
-                        ],
-                        valueBar: [
-                          ValueBar(
-                            value: blurScore.toDouble(),
-                            color: blurIndicatorColor,
-                          )
-                        ],
-                        rulers: RulerStyle(
-                          textStyle:
-                              TextStyle(color: Colors.black, fontSize: 12),
-                          primaryRulerColor: Colors.blue,
-                          secondaryRulerColor: Colors.blue,
-                          showLabel: true,
-                          labelOffset: 10,
-                          rulerPosition: RulerPosition.right,
-                        ),
-                      ),
-                    ],
-                  )),
-            )
           ],
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
@@ -505,6 +411,90 @@ class SignUpState extends State<SignUp> {
                 reload: _reload,
               )
             : Container());
+  }
+
+  Widget landscapeLayout(BuildContext context) {
+    double height = MediaQuery.of(context).size.height;
+    // Kode untuk tampilan landscape
+    return Transform.scale(
+      scale: 1.0,
+      child: AspectRatio(
+        aspectRatio: MediaQuery.of(context).size.aspectRatio,
+        child: OverflowBox(
+          alignment: Alignment.center,
+          child: FittedBox(
+            fit: BoxFit.fitWidth,
+            child: Stack(
+              children: [
+                Container(
+                  width: height *
+                      _cameraService.cameraController!.value.aspectRatio,
+                  height: height,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: <Widget>[
+                      CameraPreview(_cameraService.cameraController!),
+                      CustomPaint(
+                        child: Center(
+                          child: Container(
+                            padding: EdgeInsets.all(130),
+                            child: Image.asset("assets/images/face.png"),
+                          ),
+                        ),
+                        painter: FacePainter(
+                          face: faceDetected,
+                          imageSize: imageSize!,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget portraitLayout(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+    // Kode untuk tampilan potret
+    return Transform.scale(
+      scale: 1.0,
+      child: AspectRatio(
+        aspectRatio: MediaQuery.of(context).size.aspectRatio,
+        child: OverflowBox(
+          alignment: Alignment.center,
+          child: FittedBox(
+            fit: BoxFit.fitHeight,
+            child: Container(
+              width: width,
+              height:
+                  width * _cameraService.cameraController!.value.aspectRatio,
+              child: Stack(
+                fit: StackFit.expand,
+                children: <Widget>[
+                  CameraPreview(_cameraService.cameraController!),
+                  CustomPaint(
+                    child: Center(
+                      child: Container(
+                        padding: EdgeInsets.all(90),
+                        child: Image.asset("assets/images/face.png"),
+                      ),
+                    ),
+                    painter: FacePainter(
+                      face: faceDetected,
+                      imageSize: imageSize!,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future enroll_face(context) async {
@@ -582,83 +572,97 @@ class SignUpState extends State<SignUp> {
     }
   }
 
-  Widget landscapeLayout(BuildContext context) {
-    double height = MediaQuery.of(context).size.height;
-    // Kode untuk tampilan landscape
-    return Transform.scale(
-      scale: 1.0,
-      child: AspectRatio(
-        aspectRatio: MediaQuery.of(context).size.aspectRatio,
-        child: OverflowBox(
-          alignment: Alignment.center,
-          child: FittedBox(
-            fit: BoxFit.fitWidth,
-            child: Container(
-              width:
-                  height * _cameraService.cameraController!.value.aspectRatio,
-              height: height,
-              child: Stack(
-                fit: StackFit.expand,
-                children: <Widget>[
-                  CameraPreview(_cameraService.cameraController!),
-                  CustomPaint(
-                    child: Center(
-                      child: Container(
-                        padding: EdgeInsets.all(130),
-                        child: Image.asset("assets/images/face.png"),
-                      ),
-                    ),
-                    painter: FacePainter(
-                      face: faceDetected,
-                      imageSize: imageSize!,
-                    ),
-                  ),
-                ],
+  Widget indicatorWidget() {
+    return Container(
+        width: 160,
+        height: 400,
+        child: Row(
+          children: [
+            LinearGauge(
+              gaugeOrientation: GaugeOrientation.vertical,
+              linearGaugeBoxDecoration: LinearGaugeBoxDecoration(
+                  linearGaugeValueColor: blurIndicatorColor,
+                  borderRadius: 30,
+                  thickness: 10,
+                  backgroundColor: Colors.white),
+              start: 0,
+              end: 500,
+              customLabels: [
+                CustomRulerLabel(text: "Gelap", value: 0),
+                CustomRulerLabel(
+                    text: "Cukup", value: lightThreshold.toDouble()),
+                CustomRulerLabel(text: "Terang", value: 500)
+              ],
+              steps: 1,
+              pointers: [
+                WidgetPointer(
+                    pointerPosition: PointerPosition.left,
+                    value: lightScore.toDouble(),
+                    child: Icon(
+                      Icons.arrow_forward_outlined,
+                      color: Colors.blue,
+                    ))
+              ],
+              valueBar: [
+                ValueBar(
+                  value: lightScore.toDouble(),
+                  color: lightIndicatorColor,
+                )
+              ],
+              rulers: RulerStyle(
+                textStyle: TextStyle(color: Colors.black, fontSize: 12),
+                primaryRulerColor: Colors.blue,
+                secondaryRulerColor: Colors.blue,
+                showLabel: true,
+                labelOffset: 10,
+                rulerPosition: RulerPosition.left,
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget portraitLayout(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
-    // Kode untuk tampilan potret
-    return Transform.scale(
-      scale: 1.0,
-      child: AspectRatio(
-        aspectRatio: MediaQuery.of(context).size.aspectRatio,
-        child: OverflowBox(
-          alignment: Alignment.center,
-          child: FittedBox(
-            fit: BoxFit.fitHeight,
-            child: Container(
-              width: width,
-              height:
-                  width * _cameraService.cameraController!.value.aspectRatio,
-              child: Stack(
-                fit: StackFit.expand,
-                children: <Widget>[
-                  CameraPreview(_cameraService.cameraController!),
-                  CustomPaint(
-                    child: Center(
-                      child: Container(
-                        padding: EdgeInsets.all(90),
-                        child: Image.asset("assets/images/face.png"),
-                      ),
-                    ),
-                    painter: FacePainter(
-                      face: faceDetected,
-                      imageSize: imageSize!,
-                    ),
-                  ),
-                ],
+            SizedBox(
+              width: 10,
+            ),
+            LinearGauge(
+              gaugeOrientation: GaugeOrientation.vertical,
+              linearGaugeBoxDecoration: LinearGaugeBoxDecoration(
+                  linearGaugeValueColor: blurIndicatorColor,
+                  borderRadius: 30,
+                  thickness: 10,
+                  backgroundColor: Colors.white),
+              start: 0,
+              end: maxBlurScore.toDouble(),
+              customLabels: [
+                CustomRulerLabel(text: "Foto Blur", value: 0),
+                CustomRulerLabel(
+                    text: "Tidak Blur", value: blurThreshold.toDouble()),
+                CustomRulerLabel(
+                    text: "Foto Jelas", value: maxBlurScore.toDouble())
+              ],
+              steps: 1,
+              pointers: [
+                WidgetPointer(
+                    pointerPosition: PointerPosition.right,
+                    value: blurScore.toDouble(),
+                    child: Icon(
+                      Icons.arrow_back_outlined,
+                      color: Colors.blue,
+                    ))
+              ],
+              valueBar: [
+                ValueBar(
+                  value: blurScore.toDouble(),
+                  color: blurIndicatorColor,
+                )
+              ],
+              rulers: RulerStyle(
+                textStyle: TextStyle(color: Colors.black, fontSize: 12),
+                primaryRulerColor: Colors.blue,
+                secondaryRulerColor: Colors.blue,
+                showLabel: true,
+                labelOffset: 10,
+                rulerPosition: RulerPosition.right,
               ),
             ),
-          ),
-        ),
-      ),
-    );
+          ],
+        ));
   }
 }
