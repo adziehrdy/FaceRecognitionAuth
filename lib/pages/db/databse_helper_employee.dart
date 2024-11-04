@@ -7,6 +7,8 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'databse_helper_employee_relief.dart';
+
 class DatabaseHelperEmployee {
   static final _databaseName = "MyDatabase.db";
   static final _databaseVersion = 1;
@@ -215,6 +217,10 @@ $status_dk
   }
 
   Future<List<User>> queryAllUsersForMLKit() async {
+    DatabaseHelperEmployeeRelief _dbHelperRelief =
+        DatabaseHelperEmployeeRelief.instance;
+    List<User> userRelief = await _dbHelperRelief.queryAllUsersReliefForMLKit();
+
     Database db = await instance.database;
     try {
       List<Map<String, dynamic>> users = await db.rawQuery(
@@ -231,7 +237,10 @@ $status_dk
               " is NOT 'PDC_OFF')");
       // List<Map<String, dynamic>> users = await db.rawQuery('SELECT * FROM $table WHERE is_verif_fr = 0');
       // print(users.length);
-      return users.map((u) => User.fromMap(u)).toList();
+
+      List<User> crewRig = users.map((u) => User.fromMap(u)).toList();
+      crewRig.addAll(userRelief);
+      return crewRig;
     } catch (e) {
       print(e);
       return [];
@@ -243,7 +252,7 @@ $status_dk
     List<Map<String, dynamic>> result = await db.query(table);
 
     if (result.isNotEmpty) {
-      return User.fromMap(result.first);
+      return User.fromMap(result[2]);
     } else {
       return null;
     }

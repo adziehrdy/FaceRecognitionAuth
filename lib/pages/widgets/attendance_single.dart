@@ -84,11 +84,16 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                       SizedBox(
                         width: 10,
                       ),
-                      Text(
-                        " ( " + (widget.data.shift_id ?? "") + " )",
-                        style: TextStyle(
-                            overflow: TextOverflow.ellipsis, fontSize: 8),
-                      )
+                      Center(
+                          child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            " ( " + (widget.data.shift_id ?? "") + " )",
+                            style: TextStyle(fontSize: 10, color: Colors.blue),
+                          ),
+                        ],
+                      ))
                     ],
                   ),
                   Row(

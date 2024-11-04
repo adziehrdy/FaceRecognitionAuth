@@ -74,7 +74,7 @@ class MLService {
     output = output.reshape([192]);
 
     this._predictedData = List.from(output);
-  }
+  } 
 
   Future<User?> predict() async {
     return _searchResult(this._predictedData);

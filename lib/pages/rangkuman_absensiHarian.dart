@@ -1,6 +1,6 @@
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/attendance.dart';
-import 'package:face_net_authentication/pages/widgets/attendance_single.dart';
+import 'package:face_net_authentication/pages/widgets/absensi_rangkuman_single.dart';
 import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
 import 'package:face_net_authentication/repo/attendance_repos.dart';
 import 'package:flutter/material.dart';
@@ -8,12 +8,12 @@ import 'package:sn_progress_dialog/progress_dialog.dart';
 
 import 'db/databse_helper_absensi.dart';
 
-class HistoryAbsensi extends StatefulWidget {
+class RangkumanAbsensiHarian extends StatefulWidget {
   @override
-  _HistoryAbsensiState createState() => _HistoryAbsensiState();
+  _RangkumanAbsensiHarianState createState() => _RangkumanAbsensiHarianState();
 }
 
-class _HistoryAbsensiState extends State<HistoryAbsensi> {
+class _RangkumanAbsensiHarianState extends State<RangkumanAbsensiHarian> {
   List<Attendance> _attendanceList = [];
   List<Attendance> _filteredAttendanceList = [];
   String _searchText = "";
@@ -119,7 +119,6 @@ class _HistoryAbsensiState extends State<HistoryAbsensi> {
                   setState(() {
                     _isSearchVisible = !_isSearchVisible;
                     if (!_isSearchVisible) {
-                      // Reset pencarian jika search bar disembunyikan
                       _searchText = "";
                       _filterAttendanceList(_searchText);
                     }
@@ -128,45 +127,19 @@ class _HistoryAbsensiState extends State<HistoryAbsensi> {
               ),
               IconButton(
                   onPressed: () {
-                    setState(() {});
-                    if (!_isLocked) {
-                      setState(() {
-                        _isLocked = !_isLocked;
-                        showToast("Pin Akses Terkunci");
-                      });
-                    } else {
-                      PinInputDialog.show(
-                        context,
-                        (p0) {
-                          setState(() {
-                            _isLocked = !_isLocked;
-                            showToast("Pin Akses Terbuka");
-                          });
-                        },
-                      );
-                    }
+                    setState(() {
+                      _isLocked = !_isLocked;
+                    });
                   },
                   icon: _isLocked
                       ? Icon(Icons.lock, color: Colors.red)
                       : Icon(Icons.lock_open, color: Colors.green)),
-              ElevatedButton(
-                onPressed: () {
-                  PinInputDialog.show(context, (p0) {
-                    _showConfirmationDialog();
-                  });
-                },
-                child: Row(children: [
-                  Icon(Icons.cloud_circle),
-                  SizedBox(width: 10),
-                  Text("Upload Absensi"),
-                  SizedBox(width: 10),
-                ]),
-              ),
             ],
           )
         ],
       ),
       body: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Search Bar hanya muncul jika tombol search diaktifkan
           if (_isSearchVisible)
@@ -188,40 +161,41 @@ class _HistoryAbsensiState extends State<HistoryAbsensi> {
                 ),
               ),
             ),
+          // Menampilkan data dalam 2 kolom menggunakan GridView
           Expanded(
             child: _filteredAttendanceList.isEmpty
                 ? Center(child: Text('Data absensi tidak ditemukan'))
-                : ListView.builder(
+                : GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2, // Menampilkan 2 kolom
+                    ),
                     itemCount: _filteredAttendanceList.length,
                     itemBuilder: (context, index) {
-                      return Column(
-                        children: [
-                          AttendanceSingle(
-                            data: _filteredAttendanceList[index],
-                            onDelete: (tipe_absen) async {
-                              PinInputDialog.show(context, (p0) async {
-                                try {
-                                  await _deleteEntryAndRefresh(
-                                      _filteredAttendanceList[index],
-                                      tipe_absen);
-                                  setState(() {
-                                    _loadData();
-                                  });
+                      return Container(
+                        child: absensi_rangkuman_single(
+                          data: _filteredAttendanceList[index],
+                          onDelete: (tipe_absen) async {
+                            PinInputDialog.show(context, (p0) async {
+                              try {
+                                await _deleteEntryAndRefresh(
+                                    _filteredAttendanceList[index], tipe_absen);
+                                setState(() {
+                                  _loadData();
+                                });
 
-                                  showToastShort("Terhapus");
-                                } catch (e) {
-                                  showToastShort("Data Sudah Terhapus");
-                                }
-                              });
-                            },
-                            onUpdate: () {
-                              setState(() {
-                                _loadData();
-                              });
-                            },
-                            isLocked: _isLocked,
-                          ),
-                        ],
+                                showToastShort("Terhapus");
+                              } catch (e) {
+                                showToastShort("Data Sudah Terhapus");
+                              }
+                            });
+                          },
+                          onUpdate: () {
+                            setState(() {
+                              _loadData();
+                            });
+                          },
+                          isLocked: _isLocked,
+                        ),
                       );
                     },
                   ),

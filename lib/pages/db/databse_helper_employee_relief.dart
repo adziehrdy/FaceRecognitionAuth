@@ -228,7 +228,7 @@ $status_dk
     }
   }
 
-  Future<List<User>> queryAllUsersForMLKit() async {
+  Future<List<User>> queryAllUsersReliefForMLKit() async {
     Database db = await instance.database;
     try {
       List<Map<String, dynamic>> users = await db.rawQuery(

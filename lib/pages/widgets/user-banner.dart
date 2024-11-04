@@ -188,14 +188,16 @@ class _UserBannerState extends State<UserBanner> {
                             inactiveTrackColor: Colors.redAccent,
                             value: isCatering,
                             onChanged: (value) {
-                              setState(() {
-                                isCatering = !isCatering;
-                                saveRigCateringStatus();
-                                if (isCatering) {
-                                  showToast("Catering Aktif");
-                                } else {
-                                  showToast("Catering Tidak Aktif");
-                                }
+                              PinInputDialog.show(context, (p0) async {
+                                setState(() {
+                                  isCatering = !isCatering;
+                                  saveRigCateringStatus();
+                                  if (isCatering) {
+                                    showToast("Catering Aktif");
+                                  } else {
+                                    showToast("Catering Tidak Aktif");
+                                  }
+                                });
                               });
                             },
                           )

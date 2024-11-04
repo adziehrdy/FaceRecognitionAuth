@@ -6,6 +6,7 @@ import 'dart:io';
 import 'dart:math' as mt;
 
 import 'package:audioplayers/audioplayers.dart';
+import 'dart:ui' as ui;
 import 'package:camera/camera.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -1131,7 +1132,7 @@ Future<List<User>> getAllEmployeeAndRelief() async {
   //FOR RELIEF
   DatabaseHelperEmployeeRelief _dbHelperRelief =
       DatabaseHelperEmployeeRelief.instance;
-  List<User> userRelief = await _dbHelperRelief.queryAllUsersForMLKit();
+  List<User> userRelief = await _dbHelperRelief.queryAllUsersReliefForMLKit();
   for (User user in userRelief) {
     if (reliefChecker(user.relief_start_date, user.relief_end_date)) {
       users.add(user);
@@ -1314,6 +1315,24 @@ bool isTodayChecker(DateTime dateToday, String dateCompare) {
 
 Future<bool> onLineChecker() async {
   return await InternetConnectionChecker().hasConnection;
+}
+
+Future<Uint8List> createBlueImage() async {
+  // Membuat gambar 100x100
+  final recorder = ui.PictureRecorder();
+  final canvas =
+      Canvas(recorder, Rect.fromPoints(Offset(0, 0), Offset(100, 100)));
+
+  // Mengisi seluruh gambar dengan warna biru
+  final paint = Paint()..color = Colors.blue;
+  canvas.drawRect(Rect.fromLTWH(0, 0, 100, 100), paint);
+
+  final picture = recorder.endRecording();
+  final img = await picture.toImage(100, 100);
+  final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+
+  // Menghasilkan Uint8List
+  return byteData!.buffer.asUint8List();
 }
 
 
