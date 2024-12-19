@@ -43,10 +43,12 @@ class DatabaseHelperAbsensi {
   static final String approval_status_out = "approval_status_out";
   static final String branch_status_id = "branch_status_id";
   static final String attendance_location_id = "attendance_location_id";
+  static final String custom_or = "custom_or";
 
   DatabaseHelperAbsensi._privateConstructor();
 
   static Database? _database;
+  int latestDB_version = 3;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -56,11 +58,8 @@ class DatabaseHelperAbsensi {
 
   Future<Database> _initDatabase() async {
     String path = await getDatabasesPath();
-    return await openDatabase(
-      '$path/attendance.db',
-      version: 2,
-      onCreate: _onCreate,
-    );
+    return await openDatabase('$path/attendance.db',
+        version: latestDB_version, onCreate: _onCreate, onUpgrade: _onUpgrade);
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -99,6 +98,16 @@ class DatabaseHelperAbsensi {
         $attendance_location_id TEXT
       )
     ''');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < latestDB_version) {
+      // Jika database di-upgrade ke versi 3
+      await db.execute('''
+      ALTER TABLE $tableName ADD COLUMN $custom_or TEXT DEFAULT NULL
+    ''');
+      // Tambahkan perintah ALTER TABLE untuk setiap kolom baru
+    }
   }
 
   Future<String> insertAttendance(Attendance attendance, String MODE,
@@ -459,6 +468,41 @@ class DatabaseHelperAbsensi {
     });
   }
 
+  Future<List<Attendance>> getHistoryAbsensiAll() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps =
+        await db.rawQuery('SELECT * FROM $tableName');
+    return List.generate(maps.length, (i) {
+      return Attendance.fromMap(maps[i]);
+    });
+  }
+
+  Future<List<Attendance>> getHistoryAbsensiByShift(String filterShift) async {
+    DateTime today = DateTime.now();
+    DateTime yesterday = today.subtract(Duration(days: 1));
+
+    // Format DateTime menjadi string 'yyyy-MM-dd'
+    String todayStr =
+        "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+    String yesterdayStr =
+        "${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}";
+
+    final db = await database;
+    List<Map<String, dynamic>> maps;
+
+    if (filterShift == "PDC_MALAM") {
+      maps = await db.rawQuery(
+          'SELECT * FROM $tableName WHERE $columnShift_id = ? AND ($columnCheckInActual LIKE ? OR $columnCheckInActual LIKE ?)',
+          [filterShift, '%$todayStr%', '%$yesterdayStr%']);
+    } else {
+      maps = await db.rawQuery(
+          'SELECT * FROM $tableName WHERE $columnShift_id = ? AND $columnCheckInActual LIKE ?',
+          [filterShift, '%$todayStr%']);
+    }
+
+    return maps.map((map) => Attendance.fromMap(map)).toList();
+  }
+
   Future<List<Attendance>> getHistoryAbsensiTerUpload() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.rawQuery(
@@ -592,5 +636,21 @@ class DatabaseHelperAbsensi {
       }
     }
     return null;
+  }
+
+  Future<void> updateCustomOR(int attendanceId, String? OR) async {
+    final db = await database;
+    try {
+      await db.update(
+        tableName,
+        {
+          custom_or: OR,
+        },
+        where: 'attendance_id = ?',
+        whereArgs: [attendanceId],
+      );
+    } catch (e) {
+      showToast("error saat Update OR - " + e.toString());
+    }
   }
 }

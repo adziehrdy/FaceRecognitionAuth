@@ -147,14 +147,22 @@ class _FrDetectedPageState extends State<FrDetectedPage> {
   }
 
   Future<void> startTimer() async {
-    Future.delayed(Duration(seconds: 1), () {
+    Future.delayed(Duration(seconds: 1), () async {
       if (_counter > 1) {
         setState(() {
           _counter--;
         });
         startTimer();
       } else {
-        Navigator.pop(context);
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+
+        bool isSingleAbsensi = prefs.getBool("SINGLE_ATTENDANCE_MODE") ?? false;
+
+        if (isSingleAbsensi) {
+          Navigator.popUntil(context, (route) => route.isFirst);
+        } else {
+          Navigator.pop(context);
+        }
       }
     });
   }

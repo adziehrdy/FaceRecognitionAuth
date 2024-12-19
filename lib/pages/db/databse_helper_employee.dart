@@ -247,12 +247,34 @@ $status_dk
     }
   }
 
+  Future<List<User>> queryAllEmployeeByShift(String shift_filter) async {
+    DatabaseHelperEmployeeRelief _dbHelperRelief =
+        DatabaseHelperEmployeeRelief.instance;
+    List<User> userRelief = await _dbHelperRelief
+        .queryAllUsersReliefForRangkumanHarian(shift_filter);
+
+    Database db = await instance.database;
+    try {
+      List<Map<String, dynamic>> users = await db
+          .rawQuery('SELECT * FROM $table WHERE $shift_id = "$shift_filter"');
+      // List<Map<String, dynamic>> users = await db.rawQuery('SELECT * FROM $table WHERE is_verif_fr = 0');
+      // print(users.length);
+
+      List<User> crewRig = users.map((u) => User.fromMap(u)).toList();
+      crewRig.addAll(userRelief);
+      return crewRig;
+    } catch (e) {
+      print(e);
+      return [];
+    }
+  }
+
   Future<User?> getFirstUser() async {
     Database db = await instance.database;
     List<Map<String, dynamic>> result = await db.query(table);
 
     if (result.isNotEmpty) {
-      return User.fromMap(result[2]);
+      return User.fromMap(result[6]);
     } else {
       return null;
     }

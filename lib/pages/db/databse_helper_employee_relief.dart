@@ -257,4 +257,27 @@ $status_dk
       return [];
     }
   }
+
+  Future<List<User>> queryAllUsersReliefForRangkumanHarian(
+      String shift_filter) async {
+    Database db = await instance.database;
+    try {
+      List<Map<String, dynamic>> users = await db
+          .rawQuery('SELECT * FROM $table WHERE $shift_id = "$shift_filter"');
+
+      // List<Map<String, dynamic>> users = await db.rawQuery('SELECT * FROM $table WHERE is_verif_fr = 0');
+      // print(users.length);
+      List<User> userFiltered = [];
+      List<User> users_unfilter = users.map((u) => User.fromMap(u)).toList();
+      for (User usr in users_unfilter) {
+        if (reliefChecker(usr.relief_start_date, usr.relief_end_date)) {
+          userFiltered.add(usr);
+        }
+      }
+      return userFiltered;
+    } catch (e) {
+      print(e);
+      return [];
+    }
+  }
 }

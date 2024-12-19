@@ -481,6 +481,11 @@ String formatDateOnly(DateTime dateTime) {
   return formatter.format(dateTime);
 }
 
+String formatDateFriendly(DateTime dateTime) {
+  DateFormat formatter = DateFormat("dd MMM");
+  return formatter.format(dateTime);
+}
+
 String uint8listToString(Uint8List uint8listData) {
   return base64.encode(uint8listData);
 }

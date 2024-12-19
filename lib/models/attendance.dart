@@ -35,6 +35,7 @@ class Attendance {
   String? approval_status_out;
   String? branch_status_id;
   String? attendance_location_id;
+  String? custom_or;
 
   Attendance();
 
@@ -85,6 +86,7 @@ class Attendance {
     shift_id = map['shift_id'];
     approval_status_in = map['approval_status_in'];
     approval_status_out = map['approval_status_out'];
+    custom_or = map['custom_or'];
   }
 
   Map<String, dynamic> toCreateMap() {
@@ -137,6 +139,7 @@ class Attendance {
     map['shift_id'] = shift_id;
     map['approval_status_in'] = approval_status_in;
     map['approval_status_out'] = approval_status_out;
+    map['custom_or'] = custom_or;
 
     return map;
   }
@@ -180,6 +183,8 @@ class Attendance {
     if (attendance_location_id != null)
       map['attendance_location_id'] = attendance_location_id;
     map["company_id"] = companyId;
+    if (custom_or != null) map['custom_or'] = custom_or;
+    map["custom_or"] = custom_or;
 
     // SEND APP VERSION
     map["app_version"] = app_version;
@@ -248,4 +253,40 @@ class Attendance {
     if (status == "LUPA CO") return "LUPA ABSEN PULANG";
     return status;
   }
+
+  Attendance.withData({
+    this.attendanceId,
+    this.employee_id,
+    this.attendanceDate,
+    this.checkIn,
+    this.checkInActual,
+    this.checkInStatus,
+    this.checkOut,
+    this.checkOutActual,
+    this.checkOutStatus,
+    this.attendanceTypeIn,
+    this.attendanceLocationIn,
+    this.attendanceAddressIn,
+    this.attendanceNoteIn,
+    this.attendanceTypeOut,
+    this.attendanceLocationOut,
+    this.attendanceAddressOut,
+    this.attendanceNoteOut,
+    this.attendancePhotoIn,
+    this.attendancePhotoOut,
+    this.companyId,
+    this.approvals,
+    this.branchName,
+    this.employee_name,
+    this.type_absensi,
+    this.note_status,
+    this.is_uploaded,
+    this.approval_employee_id,
+    this.shift_id,
+    this.approval_status_in,
+    this.approval_status_out,
+    this.branch_status_id,
+    this.attendance_location_id,
+    this.custom_or,
+  });
 }

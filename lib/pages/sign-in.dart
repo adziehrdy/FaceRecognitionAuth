@@ -4,6 +4,8 @@ import 'package:camera/camera.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/models/user.dart';
+import 'package:face_net_authentication/pages/Catering/catering_history.dart';
+import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/pages/fr_detected_page.dart';
 import 'package:face_net_authentication/pages/widgets/camera_detection_preview.dart';
 import 'package:face_net_authentication/pages/widgets/camera_header.dart';
@@ -13,6 +15,7 @@ import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/face_detector_service.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:intl/intl.dart' as intl;
@@ -286,7 +289,14 @@ class SignInState extends State<SignIn> {
                 textAlign: TextAlign.center,
                 maxLines: 2,
               ),
-            )
+            ),
+            kDebugMode == true
+                ? ElevatedButton(
+                    onPressed: () {
+                      bypassAttendance();
+                    },
+                    child: Text("Bypass"))
+                : SizedBox.shrink()
           ]),
         ],
       ),
@@ -353,5 +363,44 @@ class SignInState extends State<SignIn> {
   void resumeCameraAndMLKit() async {
     _cameraService.cameraController?.resumePreview();
     _frameFaces();
+  }
+
+  bypassAttendance() async {
+    enable_recognize_process = false;
+    //  await _cameraService.takePicture();
+    DatabaseHelperEmployee dbHelperUser = DatabaseHelperEmployee.instance;
+    User? bypassUser = await dbHelperUser.getFirstUser();
+    getDateTimeNow();
+    pauseCameraAndMLKit();
+    imglib.Image blackImage = imglib.Image(100, 100);
+
+    // Mengisi gambar dengan warna hitam
+    for (int y = 0; y < 100; y++) {
+      for (int x = 0; x < 100; x++) {
+        blackImage.setPixel(x, y, 0xFF000000); // Warna hitam (ARGB)
+      }
+    }
+    await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FrDetectedPage(
+            // employee_name: user.employee_name!,
+            textJamAbsensi: textJamAbsensi!,
+            jamAbsensi: jamAbsensi!,
+            alamat: alamat,
+            lat: lat.toString(),
+            long: long.toString(),
+            // company_id: user.company_id!,
+            // employee_id: user.employee_id!,
+            type_absensi: widget.MODE,
+            faceImage: convertImagelibToUint8List(blackImage),
+            user: bypassUser!,
+          ),
+        ));
+
+    // _reload();
+
+    resumeCameraAndMLKit();
+    enable_recognize_process = true;
   }
 }

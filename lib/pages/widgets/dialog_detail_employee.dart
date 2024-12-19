@@ -118,6 +118,17 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
               (widget.user_detail.employee_name ?? "-").toUpperCase(),
               style: TextStyle(fontSize: 21, fontWeight: FontWeight.w600),
             ),
+            Divider(),
+            Text(
+              (widget.user_detail.employee_position ?? "-"),
+              maxLines: 2,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey),
+            ),
+            Divider(),
+
             Text(
               (widget.user_detail.employee_id ?? "-") +
                   " - " +
@@ -128,7 +139,11 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
                   fontWeight: FontWeight.w600,
                   color: Colors.grey),
             ),
-            Divider(),
+
+            SizedBox(
+              height: 10,
+            ),
+
             Text(
               shift_id,
               maxLines: 2,

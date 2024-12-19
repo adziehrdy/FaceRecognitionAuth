@@ -29,7 +29,7 @@ class _HistoryAbsensiMainPageState extends State<HistoryAbsensiMainPage> {
   int _currentIndex = 0;
   final List<Widget> _pages = [
     HistoryAbsensi(),
-    // RangkumanAbsensiHarian(),
+    RangkumanAbsensiHarian(),
     HistoryAbsensiUploaded(),
   ];
   @override
@@ -48,10 +48,10 @@ class _HistoryAbsensiMainPageState extends State<HistoryAbsensiMainPage> {
             icon: Icon(Icons.history),
             label: 'History Absensi',
           ),
-          // BottomNavigationBarItem(
-          //   icon: Icon(Icons.face_retouching_natural),
-          //   label: 'Rangkuman Harian',
-          // ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.face_retouching_natural),
+            label: 'Rangkuman Harian',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.cloud_upload),
             label: 'History Absensi Terupload',

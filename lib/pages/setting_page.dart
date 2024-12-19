@@ -17,10 +17,12 @@ class _SettingPageState extends State<SettingPage> {
   late TextEditingController _delayController;
   late bool landscapeMode;
 
+  bool isSingleAbsensi = false;
 
   @override
   void initState() {
     super.initState();
+    _check_is_single_mode_absensi();
     _loadThreshold();
     _thresholdController = TextEditingController();
     _loadDelayTimeout();
@@ -29,13 +31,18 @@ class _SettingPageState extends State<SettingPage> {
   }
 
   _loadThreshold() async {
-
-
     LoginModel loginData = await getUserLoginData();
     SharedPreferences prefs = await SharedPreferences.getInstance();
     _threshold = await prefs.getDouble('threshold') ?? 0.8;
     setState(() {
       _thresholdController.text = _threshold.toStringAsFixed(1);
+    });
+  }
+
+  _check_is_single_mode_absensi() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isSingleAbsensi = prefs.getBool("SINGLE_ATTENDANCE_MODE") ?? false;
     });
   }
 
@@ -47,14 +54,13 @@ class _SettingPageState extends State<SettingPage> {
     });
   }
 
-    _loadLandscapeMode() async {
+  _loadLandscapeMode() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    
+
     setState(() async {
-     landscapeMode = await prefs.getBool('LANDSCAPE_MODE') ?? false;
+      landscapeMode = await prefs.getBool('LANDSCAPE_MODE') ?? false;
     });
   }
-
 
   _saveDelayTimeout() async {
     int newDelayTimeout = int.parse(_delayController.text);
@@ -72,7 +78,8 @@ class _SettingPageState extends State<SettingPage> {
           content: SingleChildScrollView(
             child: ListBody(
               children: <Widget>[
-                Text('Anda yakin ingin menyimpan perubahan dan merestart aplikasi?'),
+                Text(
+                    'Anda yakin ingin menyimpan perubahan dan merestart aplikasi?'),
               ],
             ),
           ),
@@ -99,7 +106,7 @@ class _SettingPageState extends State<SettingPage> {
   }
 
   Future<void> _restartApp() async {
-     Restart.restartApp();
+    Restart.restartApp();
   }
 
   @override
@@ -142,8 +149,8 @@ class _SettingPageState extends State<SettingPage> {
               divisions: 15,
               label: _delayTimeout.toString(),
             ),
-                        SizedBox(height: 20),
-            
+            SizedBox(height: 20),
+
             SizedBox(height: 20),
             // Row(children: [
             //   Text("Mode Landscape"),
@@ -155,8 +162,33 @@ class _SettingPageState extends State<SettingPage> {
             //     });
             //   },)
             // ],),
-                        SizedBox(height: 20),
-                                    
+
+            Row(
+              children: [
+                Text("Mode Single Absensi"),
+                IconButton(
+                    onPressed: () {
+                      showToast(
+                          "Jika diaktifkan maka setelah absensi otomatis akan langsung kembali ke menu utama");
+                    },
+                    icon: Icon(Icons.info)),
+                Switch(
+                  value: isSingleAbsensi,
+                  onChanged: (value) async {
+                    SharedPreferences prefs =
+                        await SharedPreferences.getInstance();
+                    prefs.setBool("SINGLE_ATTENDANCE_MODE", value);
+                    setState(() {
+                      setState(() {
+                        isSingleAbsensi = value;
+                      });
+                    });
+                  },
+                )
+              ],
+            ),
+            SizedBox(height: 20),
+
             ElevatedButton(
               onPressed: () async {
                 await _showConfirmationDialog(context);
@@ -164,20 +196,29 @@ class _SettingPageState extends State<SettingPage> {
               child: Text('Simpan dan Restart Aplikasi'),
             ),
 
-            SizedBox(height: 150,),
-            Center(child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.info,color: Colors.blue,),
-                TextButton(
-                  onPressed: () async {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) => userguide_view()) );
-                  },
-                  child: Text('USER GUIDE PENGGUNAAN APLIKASI'),
-                ),
-              ],
-            ),),
-            
+            SizedBox(
+              height: 150,
+            ),
+            Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.info,
+                    color: Colors.blue,
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => userguide_view()));
+                    },
+                    child: Text('USER GUIDE PENGGUNAAN APLIKASI'),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

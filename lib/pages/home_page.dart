@@ -5,6 +5,7 @@ import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/pages/Dinas%20Khusus/DK_page.dart';
 import 'package:face_net_authentication/pages/List%20Karyawan/page_list_karyawan.dart';
 import 'package:face_net_authentication/pages/Rig%20Status%20History/rigStatusHistory.dart';
+import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
 import 'package:face_net_authentication/pages/history_absensi_mainPage.dart';
 import 'package:face_net_authentication/pages/menu_admin.dart';
 import 'package:face_net_authentication/pages/register_pin.dart';
@@ -103,6 +104,7 @@ class _HomePageState extends State<HomePage> {
 
   syncAllData() {
     dBsync().syncAllDB();
+    DatabaseHelperAbsensi helperAbsensi = DatabaseHelperAbsensi.instance;
   }
 
   // _initializeServices() async {
