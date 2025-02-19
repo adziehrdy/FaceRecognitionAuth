@@ -95,7 +95,8 @@ class DatabaseHelperAbsensi {
         $approval_status_in TEXT,
         $approval_status_out TEXT,
         $branch_status_id TEXT,
-        $attendance_location_id TEXT
+        $attendance_location_id TEXT,
+        $custom_or TEXT
       )
     ''');
   }
