@@ -8,7 +8,7 @@ class Branch {
   int? branchGeofencing;
   String? branchTz;
 
-  Branch.fromMap(Map<String, dynamic> map){
+  Branch.fromMap(Map<String, dynamic> map) {
     branchId = map['branch_id'];
     branchName = map['branch_name'];
     branchLocation = map['branch_location'];
