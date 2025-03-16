@@ -2,10 +2,18 @@ import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/models/login_model.dart';
+import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/Dinas%20Khusus/DK_page.dart';
 import 'package:face_net_authentication/pages/List%20Karyawan/page_list_karyawan.dart';
+import 'package:face_net_authentication/pages/MealSheet/face_detection_view.dart';
+import 'package:face_net_authentication/pages/MealSheet/meal_attendance_page.dart';
+import 'package:face_net_authentication/pages/MealSheet/mealsheet_func.dart';
+import 'package:face_net_authentication/pages/MealSheet/mealsheet_List.dart';
+import 'package:face_net_authentication/pages/MealSheet/mealsheet_historyPage.dart';
+import 'package:face_net_authentication/pages/MealSheet/success_mealsheet_page.dart';
 import 'package:face_net_authentication/pages/Rig%20Status%20History/rigStatusHistory.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
+import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/pages/history_absensi_mainPage.dart';
 import 'package:face_net_authentication/pages/menu_admin.dart';
 import 'package:face_net_authentication/pages/register_pin.dart';
@@ -107,6 +115,14 @@ class _HomePageState extends State<HomePage> {
     DatabaseHelperAbsensi helperAbsensi = DatabaseHelperAbsensi.instance;
   }
 
+  Future<void> getEmployeeAtFirstTime() async {
+    DatabaseHelperEmployee dbhEmployee = DatabaseHelperEmployee.instance;
+    List<User> users = await dbhEmployee.queryAllUsers();
+    if (users.isEmpty) {
+      await fetch_employee(context);
+    }
+  }
+
   // _initializeServices() async {
 
   //   await _mlService.initialize();
@@ -137,6 +153,8 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _loading_init = false;
       });
+
+      getEmployeeAtFirstTime();
     } catch (e) {
       // An error occurred during initialization
 
@@ -233,33 +251,36 @@ class _HomePageState extends State<HomePage> {
                   crossAxisSpacing: 5,
                   padding: EdgeInsets.all(13),
                   children: <Widget>[
-                    new HomeMenu(
-                      "Absen Masuk",
-                      "assets/images/absent_in.png",
-                      -1,
-                      callback: (p0) {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => SignIn(MODE: "MASUK")));
-                      },
-                    ),
-                    new HomeMenu(
-                      "Absen Keluar",
-                      "assets/images/absent_out_menu.png",
-                      -1,
-                      callback: (p0) {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => SignIn(MODE: "KELUAR")));
-                      },
-                    ),
-                    new HomeMenu(
-                      "History Absensi",
-                      "assets/images/absent_shift.png",
-                      waitingApproval!,
-                      callback: (p0) {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => HistoryAbsensiMainPage()));
-                      },
-                    ),
+                    if (CONSTANT_VAR.ATTENDANCE_MENU) ...[
+                      HomeMenu(
+                        "Absen Masuk",
+                        "assets/images/absent_in.png",
+                        -1,
+                        callback: (p0) {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => SignIn(MODE: "MASUK")));
+                        },
+                      ),
+                      HomeMenu(
+                        "Absen Keluar",
+                        "assets/images/absent_out_menu.png",
+                        -1,
+                        callback: (p0) {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => SignIn(MODE: "KELUAR")));
+                        },
+                      ),
+                      HomeMenu(
+                        "History Absensi",
+                        "assets/images/absent_shift.png",
+                        waitingApproval!,
+                        callback: (p0) {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => HistoryAbsensiMainPage()));
+                        },
+                      ),
+                    ],
+
                     // new HomeMenu(
                     //   "Daftar Karyawan",
                     //   "assets/images/absent_personal.png",
@@ -272,6 +293,27 @@ class _HomePageState extends State<HomePage> {
                     //   },
                     // ),
 
+                    if (CONSTANT_VAR.MEALSHEET_MENU) ...[
+                      new HomeMenu(
+                        "Meal Sheet",
+                        "assets/images/food.png",
+                        -1,
+                        callback: (p0) {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => MealAttendancePage()));
+                        },
+                      ),
+                      new HomeMenu(
+                        "Meal Sheet History",
+                        "assets/images/rig_history.png",
+                        -1,
+                        callback: (p0) {
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => MealHistoryPage()));
+                        },
+                      )
+                    ],
+
                     new HomeMenu(
                       "Menu Admin",
                       "assets/images/admin_menu.png",
@@ -283,6 +325,35 @@ class _HomePageState extends State<HomePage> {
                         });
                       },
                     ),
+
+                    // new HomeMenu(
+                    //   "Success MealSheet",
+                    //   "assets/images/absent_in.png",
+                    //   -1,
+                    //   callback: (p0) {
+                    //     Navigator.of(context).push(MaterialPageRoute(
+                    //         builder: (context) => successMealSheetPage(
+                    //               jamAbsensi: DateTime.now(),
+                    //               user: User(
+                    //                   employee_id: "110796",
+                    //                   employee_name: "ADZIE HADI RACHMADI"),
+                    //               faceImage: dummyFaceImage(),
+                    //             )));
+                    //   },
+                    // ),
+
+                    // new HomeMenu(
+                    //   "FR TEST",
+                    //   "assets/images/absent_in.png",
+                    //   -1,
+                    //   callback: (p0) {
+                    //     Navigator.of(context).push(MaterialPageRoute(
+                    //       builder: (context) => FaceDetectorView(
+                    //         MODE: "MASUK",
+                    //       ),
+                    //     ));
+                    //   },
+                    // ),
 
                     // new HomeMenu(
                     //   "Rig Status History",

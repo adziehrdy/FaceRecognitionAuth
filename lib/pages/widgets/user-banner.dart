@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/catering_history_model.dart';
 import 'package:face_net_authentication/models/login_model.dart';
@@ -111,98 +112,121 @@ class _UserBannerState extends State<UserBanner> {
                       SizedBox(
                         width: 30,
                       ),
-                      InkWell(
-                        onTap: () {},
-                        child: Row(
-                          children: [
-                            Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: InkWell(
-                                  child: Card(
-                                    child: Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 20, vertical: 5),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                          Text(
-                                            "STATUS RIG :",
-                                            style: TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 9,
-                                                fontStyle: FontStyle.italic,
-                                                overflow:
-                                                    TextOverflow.ellipsis),
-                                          ),
-                                          Text(
-                                            (status_rig?.statusBranch ?? "-"),
-                                            style: TextStyle(
-                                                color: Colors.red,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                overflow:
-                                                    TextOverflow.ellipsis),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  onTap: () async {
-                                    PinInputDialog.show(context, (p0) async {
-                                      await showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return dialog_change_rig_status(
-                                            onStatusSelected: (selectedStatus) {
-                                              setState(() {
-                                                saveRigStatus(selectedStatus);
-                                                setState(() {
-                                                  isCatering = false;
-                                                  saveRigCateringStatus();
-                                                });
+                      CONSTANT_VAR.ATTENDANCE_MENU
+                          ? Row(
+                              children: [
+                                InkWell(
+                                  onTap: () {},
+                                  child: Row(
+                                    children: [
+                                      Padding(
+                                          padding:
+                                              const EdgeInsets.only(left: 8.0),
+                                          child: InkWell(
+                                            child: Card(
+                                              child: Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                    horizontal: 20,
+                                                    vertical: 5),
+                                                child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: <Widget>[
+                                                    Text(
+                                                      "STATUS RIG :",
+                                                      style: TextStyle(
+                                                          color: Colors.black,
+                                                          fontSize: 9,
+                                                          fontStyle:
+                                                              FontStyle.italic,
+                                                          overflow: TextOverflow
+                                                              .ellipsis),
+                                                    ),
+                                                    Text(
+                                                      (status_rig
+                                                              ?.statusBranch ??
+                                                          "-"),
+                                                      style: TextStyle(
+                                                          color: Colors.red,
+                                                          fontSize: 18,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          overflow: TextOverflow
+                                                              .ellipsis),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            onTap: () async {
+                                              PinInputDialog.show(context,
+                                                  (p0) async {
+                                                await showDialog(
+                                                  context: context,
+                                                  builder:
+                                                      (BuildContext context) {
+                                                    return dialog_change_rig_status(
+                                                      onStatusSelected:
+                                                          (selectedStatus) {
+                                                        setState(() {
+                                                          saveRigStatus(
+                                                              selectedStatus);
+                                                          setState(() {
+                                                            isCatering = false;
+                                                            saveRigCateringStatus();
+                                                          });
+                                                        });
+                                                      },
+                                                    );
+                                                  },
+                                                );
                                               });
                                             },
-                                          );
-                                        },
-                                      );
-                                    });
-                                  },
-                                )),
-                          ],
-                        ),
-                      ),
-                      SizedBox(
-                        width: 10,
-                      ),
-                      Column(
-                        children: [
-                          Text(
-                            "Catering",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          Switch(
-                            inactiveThumbColor: Colors.white,
-                            inactiveTrackColor: Colors.redAccent,
-                            value: isCatering,
-                            onChanged: (value) {
-                              PinInputDialog.show(context, (p0) async {
-                                setState(() {
-                                  isCatering = !isCatering;
-                                  saveRigCateringStatus();
-                                  if (isCatering) {
-                                    showToast("Catering Aktif");
-                                  } else {
-                                    showToast("Catering Tidak Aktif");
-                                  }
-                                });
-                              });
-                            },
-                          )
-                        ],
-                      )
+                                          )),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 10,
+                                ),
+                                Column(
+                                  children: [
+                                    Text(
+                                      "Catering",
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    Switch(
+                                      inactiveThumbColor: Colors.white,
+                                      inactiveTrackColor: Colors.redAccent,
+                                      value: isCatering,
+                                      onChanged: (value) {
+                                        PinInputDialog.show(context,
+                                            (p0) async {
+                                          setState(() {
+                                            isCatering = !isCatering;
+                                            saveRigCateringStatus();
+                                            if (isCatering) {
+                                              showToast("Catering Aktif");
+                                            } else {
+                                              showToast("Catering Tidak Aktif");
+                                            }
+                                          });
+                                        });
+                                      },
+                                    )
+                                  ],
+                                )
+                              ],
+                            )
+                          : SizedBox(),
+                      CONSTANT_VAR.MEALSHEET_MENU
+                          ? Text(
+                              "FOOD AND LODGING\nSERVICES",
+                              style: TextStyle(color: Colors.white),
+                            )
+                          : SizedBox()
                     ],
                   ),
                   Row(

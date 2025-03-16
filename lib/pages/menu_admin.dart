@@ -1,3 +1,4 @@
+import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/pages/Catering/catering_page.dart';
 import 'package:face_net_authentication/pages/Rig%20Status%20History/rigStatusHistory.dart';
 import 'package:face_net_authentication/pages/history_absensi_mainPage.dart';
@@ -78,50 +79,49 @@ class _MenuAdminState extends State<MenuAdmin> {
             //   },
             // ),
 
-            new HomeMenu(
-              "Relief",
-              "assets/images/relief.png",
-              waitingApproval!,
-              callback: (p0) {
-                Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => ReliefPage()));
-                // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
-                ;
-              },
-            ),
-
-            new HomeMenu(
-              "Dinas Khusus",
-              "assets/images/DK.png",
-              waitingApproval!,
-              callback: (p0) {
-                Navigator.of(context)
-                    .push(MaterialPageRoute(builder: (context) => DKPage()));
-                // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
-              },
-            ),
-
-            new HomeMenu(
-              "Rig Status History",
-              "assets/images/rig_history.png",
-              waitingApproval!,
-              callback: (p0) {
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => RigStatusHistory()));
-                // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
-              },
-            ),
-
-            new HomeMenu(
-              "Catering",
-              "assets/images/food.png",
-              waitingApproval!,
-              callback: (p0) {
-                Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => CateringPage()));
-                // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
-              },
-            ),
+            if (CONSTANT_VAR.ATTENDANCE_MENU) ...[
+              new HomeMenu(
+                "Relief",
+                "assets/images/relief.png",
+                waitingApproval!,
+                callback: (p0) {
+                  Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => ReliefPage()));
+                  // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
+                  ;
+                },
+              ),
+              new HomeMenu(
+                "Dinas Khusus",
+                "assets/images/DK.png",
+                waitingApproval!,
+                callback: (p0) {
+                  Navigator.of(context)
+                      .push(MaterialPageRoute(builder: (context) => DKPage()));
+                  // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
+                },
+              ),
+              new HomeMenu(
+                "Rig Status History",
+                "assets/images/rig_history.png",
+                waitingApproval!,
+                callback: (p0) {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (context) => RigStatusHistory()));
+                  // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
+                },
+              ),
+              new HomeMenu(
+                "Catering",
+                "assets/images/food.png",
+                waitingApproval!,
+                callback: (p0) {
+                  Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => CateringPage()));
+                  // Navigator.of(context).push(MaterialPageRoute(builder: (context) => RegisterPin()));
+                },
+              )
+            ]
 
             // new HomeMenu(
             //   "Testing Button",

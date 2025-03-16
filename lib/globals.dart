@@ -486,6 +486,11 @@ String formatDateFriendly(DateTime dateTime) {
   return formatter.format(dateTime);
 }
 
+String formatHourOnly(DateTime dateTime) {
+  DateFormat formatter = DateFormat("HH:mm");
+  return formatter.format(dateTime);
+}
+
 String uint8listToString(Uint8List uint8listData) {
   return base64.encode(uint8listData);
 }
@@ -991,66 +996,6 @@ String formatRupiah(int number) {
   return 'Rp. $result';
 }
 
-Future<List<bool>> refreshEmployee(BuildContext context) async {
-  LoginModel loginData = await getUserLoginData();
-  String branchID = loginData.branch!.branchId;
-  List<User> user_list = [];
-  List<bool> selected = [];
-  DatabaseHelperEmployee _dataBaseHelper = DatabaseHelperEmployee.instance;
-  UserRepo userRepo = UserRepo();
-  ProgressDialog progressDialog = ProgressDialog(context: context);
-  progressDialog.show(max: 100, msg: 'Fetching data...');
-  String? jsonKaryawan = await userRepo
-      .apiGetAllEmployeeByBranch(branchID)
-      .onError((error, stackTrace) {
-    progressDialog.close();
-  });
-
-  if (jsonKaryawan != null) {
-    // jsonKaryawan = DummyJson;
-    print(jsonKaryawan);
-    try {
-      List<dynamic> jsonDataList = jsonDecode(jsonKaryawan);
-
-      user_list.clear();
-      _dataBaseHelper.deleteAll();
-
-      int totalItems = jsonDataList.length;
-      int processedItems = 0;
-
-      try {
-        for (var jsonData in jsonDataList) {
-          var person = User.fromMap(jsonData);
-          await _dataBaseHelper.insert(person);
-
-          processedItems++;
-          progressDialog.update(
-            value: ((processedItems / totalItems) * 100).toInt(),
-            msg: 'Updating data... ($processedItems/$totalItems)',
-          );
-          selected.add(false);
-        }
-      } catch (e) {
-        await _dataBaseHelper.deleteAll();
-
-        print(e.toString());
-      }
-
-      return selected;
-      // await loadUserData();
-    } catch (e) {
-      print(e);
-      progressDialog.close();
-    } finally {
-      progressDialog.close();
-    }
-  } else {
-    showToast('Terjadi kesalahan saat mengambil data karyawan');
-    progressDialog.close();
-  }
-  return selected;
-}
-
 bool DKStatusChecker(String? startDate, String? endDate) {
   if (startDate != null || endDate != null) {
     final start = DateFormat("yyyy-MM-dd").parse(startDate!);
@@ -1340,21 +1285,6 @@ Future<Uint8List> createBlueImage() async {
   return byteData!.buffer.asUint8List();
 }
 
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
 // Image imageFromCameraImage(CameraImage cameraImage) {
 //   final width = cameraImage.width;
 //   final height = cameraImage.height;
@@ -1399,5 +1329,62 @@ Future<Uint8List> createBlueImage() async {
 //   return Image(image: MemoryImage(Uint8List.fromList(imgData)));
 // }
 
+Future<List<bool>> fetch_employee(BuildContext context) async {
+  LoginModel loginData = await getUserLoginData();
+  String branchID = loginData.branch!.branchId;
+  List<User> user_list = [];
+  List<bool> selected = [];
+  DatabaseHelperEmployee _dataBaseHelper = DatabaseHelperEmployee.instance;
+  UserRepo userRepo = UserRepo();
+  ProgressDialog progressDialog = ProgressDialog(context: context);
+  progressDialog.show(max: 100, msg: 'Fetching data...');
+  String? jsonKaryawan = await userRepo
+      .apiGetAllEmployeeByBranch(branchID)
+      .onError((error, stackTrace) {
+    progressDialog.close();
+  });
 
-  
+  if (jsonKaryawan != null) {
+    // jsonKaryawan = DummyJson;
+    print(jsonKaryawan);
+    try {
+      List<dynamic> jsonDataList = jsonDecode(jsonKaryawan);
+
+      user_list.clear();
+      _dataBaseHelper.deleteAll();
+
+      int totalItems = jsonDataList.length;
+      int processedItems = 0;
+
+      try {
+        for (var jsonData in jsonDataList) {
+          var person = User.fromMap(jsonData);
+          await _dataBaseHelper.insert(person);
+
+          processedItems++;
+          progressDialog.update(
+            value: ((processedItems / totalItems) * 100).toInt(),
+            msg: 'Updating data... ($processedItems/$totalItems)',
+          );
+          selected.add(false);
+        }
+      } catch (e) {
+        await _dataBaseHelper.deleteAll();
+
+        print(e.toString());
+      }
+
+      return selected;
+      // await loadUserData();
+    } catch (e) {
+      print(e);
+      progressDialog.close();
+    } finally {
+      progressDialog.close();
+    }
+  } else {
+    showToast('Terjadi kesalahan saat mengambil data karyawan');
+    progressDialog.close();
+  }
+  return selected;
+}

@@ -271,7 +271,7 @@ class _DKPageState extends State<DKPage> {
 
       bool result = await DKRepo().approvalDK(id, payload);
       if (result == true) {
-        await refreshEmployee(context);
+        await fetch_employee(context);
         showToast("Dinas Khusus telah di " + type);
         getListDK();
       } else {

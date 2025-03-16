@@ -19,6 +19,14 @@ class CONSTANT_VAR {
   static int headEulerY = 10;
   static int headEulerX = 10;
 
+  //MEAL
+  static int MEAL_SUBSTACT_FOR_DEBUG = -2;
+
+  //MENU VISIBILITY
+
+  static bool ATTENDANCE_MENU = false;
+  static bool MEALSHEET_MENU = true;
+
   // static String SHIFT_RIG_DUMMY =
   //     '[{"status_branch_id":"7","branch_id":"ADMIN_DEMO","status_branch":"MAINTANCE","duration":"12","shift":[{"id":"PDC_PAGI","checkin":"19:00","checkout":"07:00"},{"id":"PDC_MALAM","checkin":"07:00","checkout":"19:00"},{"id":"PDC_ONCALL","checkin":"07:00","checkout":"07:00"}]},{"status_branch_id":"8","branch_id":"ADMIN_DEMO","status_branch":"IDLE","duration":"12","shift":[{"id":"PDC_PAGI","checkin":"19:00","checkout":"07:00"},{"id":"PDC_MALAM","checkin":"07:00","checkout":"19:00"},{"id":"PDC_ONCALL","checkin":"07:00","checkout":"07:00"}]},{"status_branch_id":"9","branch_id":"ADMIN_DEMO","status_branch":"OPERATION","duration":"12","shift":[{"id":"PDC_PAGI","checkin":"19:00","checkout":"07:00"},{"id":"PDC_MALAM","checkin":"07:00","checkout":"19:00"},{"id":"PDC_ONCALL","checkin":"07:00","checkout":"07:00"}]},{"status_branch_id":"10","branch_id":"ADMIN_DEMO","status_branch":"MOVING","duration":"12","shift":[{"id":"PDC_PAGI","checkin":"19:00","checkout":"07:00"},{"id":"PDC_MALAM","checkin":"07:00","checkout":"19:00"},{"id":"PDC_ONCALL","checkin":"07:00","checkout":"07:00"}]}]';
 }

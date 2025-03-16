@@ -181,7 +181,8 @@ class SignUpState extends State<SignUp> {
             });
 
             if (_saving) {
-              _mlService.setCurrentPrediction(image, faceDetected);
+              _mlService.setCurrentPrediction(
+                  image, _faceDetectorService.faces[0]);
               setState(() {
                 _saving = false;
               });
@@ -404,7 +405,9 @@ class SignUpState extends State<SignUp> {
           ],
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        floatingActionButton: !canRegister
+        // floatingActionButton: !canRegister
+        //BYPASS REGISTER CHECKER
+        floatingActionButton: true
             ? AuthActionButton(
                 onPressed: onShot,
                 isLogin: false,
@@ -520,6 +523,8 @@ class SignUpState extends State<SignUp> {
 
       ImagePhoto =
           convertImagelibToBase64JPG(_mlService.cropFace(img!, faceDetected!));
+
+      print(ImagePhoto);
 
       //JIKA HASIL PREDICTED ERROR
 

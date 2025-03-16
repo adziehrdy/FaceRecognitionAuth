@@ -74,7 +74,7 @@ class MLService {
     output = output.reshape([192]);
 
     this._predictedData = List.from(output);
-  } 
+  }
 
   Future<User?> predict() async {
     return _searchResult(this._predictedData);
@@ -147,6 +147,9 @@ class MLService {
     if (users.isEmpty) {
       users = await getAlluser();
     }
+
+    String frTemplateBase64 = encode_FR_ToBase64(predictedData);
+    print("== BASE64 FACE TEMPLATE " + frTemplateBase64);
 
     double minDist = 999;
     double currDist = 0.0;

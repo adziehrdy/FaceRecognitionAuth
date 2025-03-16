@@ -46,7 +46,7 @@ class User {
   String? dk_end_date;
   String? status_dk;
 
-  User({required this.employee_id});
+  User({required this.employee_id, required this.employee_name});
 
   User.fromMap(Map<String, dynamic> map) {
     try {

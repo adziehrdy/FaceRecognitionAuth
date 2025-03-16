@@ -45,7 +45,7 @@ class _ListKaryawanState extends State<ListKaryawan> {
                   showConfirmationDialog(
                     context,
                     () async {
-                      await refreshEmployee(context);
+                      await fetch_employee(context);
                       loadUserData();
                     },
                   );

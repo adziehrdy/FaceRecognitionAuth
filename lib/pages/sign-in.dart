@@ -105,31 +105,35 @@ class SignInState extends State<SignIn> {
 
   Future<void> _predictFacesDetect({@required CameraImage? image}) async {
     assert(image != null, 'Image is null');
-    await _faceDetectorService.detectFacesFromImage(image!);
+    if (image != null) {
+      await _faceDetectorService.detectFacesFromImage(image!);
 
-    if (_faceDetectorService.faceDetected) {
+      if (_faceDetectorService.faceDetected) {
 //---------
 
-      if (_faceDetectorService.faces[0].headEulerAngleY! >
-              CONSTANT_VAR.headEulerY ||
-          _faceDetectorService.faces[0].headEulerAngleY! <
-              -CONSTANT_VAR.headEulerY ||
-          _faceDetectorService.faces[0].headEulerAngleX! >
-              CONSTANT_VAR.headEulerX ||
-          _faceDetectorService.faces[0].headEulerAngleX! <
-              -CONSTANT_VAR.headEulerX) {
-        print("=== POSISI MUKA TIDAK BAGUS=== ");
-      } else {
-        _mlService.setCurrentPrediction(image, _faceDetectorService.faces[0]);
+        if (_faceDetectorService.faces[0].headEulerAngleY! >
+                CONSTANT_VAR.headEulerY ||
+            _faceDetectorService.faces[0].headEulerAngleY! <
+                -CONSTANT_VAR.headEulerY ||
+            _faceDetectorService.faces[0].headEulerAngleX! >
+                CONSTANT_VAR.headEulerX ||
+            _faceDetectorService.faces[0].headEulerAngleX! <
+                -CONSTANT_VAR.headEulerX) {
+          print("=== POSISI MUKA TIDAK BAGUS=== ");
+        } else {
+          _mlService.setCurrentPrediction(image, _faceDetectorService.faces[0]);
 
-        //SET FACE
+          //SET FACE
 
-        print("POSISI MUKA BAGUS");
-        RECONIZE_FACE(image);
-      }
+          print("POSISI MUKA BAGUS");
+          RECONIZE_FACE(image);
+        }
 // RECONIZE_FACE();
 
-      //--------
+        //--------
+      }
+    } else {
+      print("Image Is Null");
     }
     if (mounted) setState(() {});
   }
