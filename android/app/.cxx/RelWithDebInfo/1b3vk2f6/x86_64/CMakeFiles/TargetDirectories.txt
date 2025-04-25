@@ -1,0 +1,2 @@
+/Users/adziehrdy/Documents/RENTAS/SmartCheck Multiple/FaceRecognitionAuth/android/app/.cxx/RelWithDebInfo/1b3vk2f6/x86_64/CMakeFiles/rebuild_cache.dir
+/Users/adziehrdy/Documents/RENTAS/SmartCheck Multiple/FaceRecognitionAuth/android/app/.cxx/RelWithDebInfo/1b3vk2f6/x86_64/CMakeFiles/edit_cache.dir

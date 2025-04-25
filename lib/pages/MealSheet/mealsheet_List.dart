@@ -132,7 +132,7 @@ class _MealHistoryListState extends State<MealHistoryList> {
                                       size: 20,
                                     ),
                                     color: Colors.grey,
-                                    onPressed: () {
+                                    onPressed: () async {
                                       Dialog simpleDialog = Dialog(
                                         shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.circular(
@@ -163,10 +163,11 @@ class _MealHistoryListState extends State<MealHistoryList> {
                                           ),
                                         ),
                                       );
-                                      showDialog(
+                                      await showDialog(
                                           context: context,
                                           builder: (BuildContext context) =>
                                               simpleDialog);
+                                      initData();
                                     },
                                   )
                                 ],
@@ -264,7 +265,7 @@ class _MealHistoryListState extends State<MealHistoryList> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(Icons.fastfood_rounded, color: Colors.white, size: 15),
+          Icon(Icons.fastfood_rounded, color: Colors.white, size: 14),
           SizedBox(
             width: 2,
           ),
@@ -273,7 +274,7 @@ class _MealHistoryListState extends State<MealHistoryList> {
               name,
               style: TextStyle(
                   color: Colors.white,
-                  fontSize: 11,
+                  fontSize: 9,
                   fontWeight: FontWeight.bold),
             ),
           ),
@@ -664,6 +665,7 @@ class _MealHistoryListState extends State<MealHistoryList> {
                                   .updateAccomodation(record_id, null);
                               if (status == "SUCCESS") {
                                 showToast("Akomodasi Telah Dihapus");
+                                Navigator.pop(context);
                                 Navigator.pop(context);
                               }
                             },

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:camera/camera.dart';
@@ -38,17 +36,13 @@ class FaceDetectorService {
       allBytes.putUint8List(plane.bytes);
     }
     final bytes = allBytes.done().buffer.asUint8List();
-    InputImageFormat format = InputImageFormat.nv21;
-    if (Platform.isIOS) {
-      format = InputImageFormat.bgra8888;
-    }
 
     // Create the InputImageMetadata using image properties
     final InputImageMetadata metadata = InputImageMetadata(
       size: Size(image.width.toDouble(), image.height.toDouble()),
       rotation:
           _cameraService.cameraRotation ?? InputImageRotation.rotation0deg,
-      format: format,
+      format: InputImageFormat.nv21,
       bytesPerRow: image.planes[0]
           .bytesPerRow, // Assuming the first plane holds the row stride
     );
@@ -60,11 +54,7 @@ class FaceDetectorService {
     );
 
     // Process the image to detect faces
-    try {
-      _faces = await _faceDetector.processImage(_firebaseVisionImage);
-    } catch (e) {
-      print("DETECTION ERROR CAUSE" + e.toString());
-    }
+    _faces = await _faceDetector.processImage(_firebaseVisionImage);
   }
 
   Future<List<Face>> detect(
@@ -110,7 +100,7 @@ class FaceDetectorService {
     );
   }
 
-  ///for new version - for backup
+  ///for new version
   // Future<void> detectFacesFromImage(CameraImage image) async {
   //   // InputImageData _firebaseImageMetadata = InputImageData(
   //   //   imageRotation: _cameraService.cameraRotation ?? InputImageRotation.rotation0deg,
@@ -126,37 +116,37 @@ class FaceDetectorService {
   //   //     },
   //   //   ).toList(),
   //   // );
-
+  //
   //   final WriteBuffer allBytes = WriteBuffer();
   //   for (Plane plane in image.planes) {
   //     allBytes.putUint8List(plane.bytes);
   //   }
   //   final bytes = allBytes.done().buffer.asUint8List();
-
-  //   final Size imageSize =
-  //       Size(image.width.toDouble(), image.height.toDouble());
-
-  //   InputImageRotation imageRotation =
-  //       _cameraService.cameraRotation ?? InputImageRotation.rotation0deg;
-
-  //   final plane = image.planes.first;
-
-  //   InputImageFormat format = InputImageFormat.nv21;
-  //   if (Platform.isIOS) {
-  //     format = InputImageFormat.bgra8888;
-  //   }
-
-  //   final inputImageData = InputImageMetadata(
-  //       size: imageSize,
-  //       rotation: imageRotation,
-  //       format: format,
-  //       bytesPerRow: plane.bytesPerRow);
-
+  //
+  //   final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
+  //
+  //   InputImageRotation imageRotation = _cameraService.cameraRotation ?? InputImageRotation.rotation0deg;
+  //
+  //   final inputImageData = InputImageData(
+  //     size: imageSize,
+  //     imageRotation: imageRotation,
+  //     inputImageFormat: InputImageFormat.yuv420,
+  //     planeData: image.planes.map(
+  //           (Plane plane) {
+  //         return InputImagePlaneMetadata(
+  //           bytesPerRow: plane.bytesPerRow,
+  //           height: plane.height,
+  //           width: plane.width,
+  //         );
+  //       },
+  //     ).toList(),
+  //   );
+  //
   //   InputImage _firebaseVisionImage = InputImage.fromBytes(
   //     bytes: bytes,
-  //     metadata: inputImageData,
+  //     inputImageData: inputImageData,
   //   );
-
+  //
   //   _faces = await _faceDetector.processImage(_firebaseVisionImage);
   // }
 

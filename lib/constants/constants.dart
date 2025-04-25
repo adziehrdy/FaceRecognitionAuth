@@ -20,7 +20,7 @@ class CONSTANT_VAR {
   static int headEulerX = 10;
 
   //MEAL
-  static int MEAL_SUBSTACT_FOR_DEBUG = -2;
+  static int MEAL_SUBSTACT_FOR_DEBUG = -3;
 
   //MENU VISIBILITY
 

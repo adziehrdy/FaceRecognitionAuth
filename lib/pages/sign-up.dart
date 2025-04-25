@@ -79,16 +79,15 @@ class SignUpState extends State<SignUp> {
   @override
   void dispose() {
     _cameraService.dispose();
+    _mlService.dispose();
+    _faceDetectorService.dispose();
     super.dispose();
   }
 
   _start() async {
     setState(() => _initializing = true);
-
     await _cameraService.initialize();
-
     setState(() => _initializing = false);
-
     _frameFaces();
   }
 
@@ -178,15 +177,13 @@ class SignUpState extends State<SignUp> {
                   });
                 }
               }
+              if (_saving) {
+                _mlService.setCurrentPrediction(image, faceDetected);
+                setState(() {
+                  _saving = false;
+                });
+              }
             });
-
-            if (_saving) {
-              _mlService.setCurrentPrediction(
-                  image, _faceDetectorService.faces[0]);
-              setState(() {
-                _saving = false;
-              });
-            }
           } else {
             dataQueue.clear();
             print("AVERAGE LIVENESS = CLEANED");
@@ -405,9 +402,7 @@ class SignUpState extends State<SignUp> {
           ],
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-        // floatingActionButton: !canRegister
-        //BYPASS REGISTER CHECKER
-        floatingActionButton: true
+        floatingActionButton: !canRegister
             ? AuthActionButton(
                 onPressed: onShot,
                 isLogin: false,
@@ -523,8 +518,6 @@ class SignUpState extends State<SignUp> {
 
       ImagePhoto =
           convertImagelibToBase64JPG(_mlService.cropFace(img!, faceDetected!));
-
-      print(ImagePhoto);
 
       //JIKA HASIL PREDICTED ERROR
 

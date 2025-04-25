@@ -1,0 +1,28 @@
+{
+  "buildFiles": [
+    "/Users/adziehrdy/Flutter SDK/flutter/packages/flutter_tools/gradle/src/main/groovy/CMakeLists.txt"
+  ],
+  "cleanCommandsComponents": [
+    [
+      "/Users/adziehrdy/Library/Android/sdk/cmake/3.18.1/bin/ninja",
+      "-C",
+      "/Users/adziehrdy/Documents/RENTAS/SmartCheck Multiple/FaceRecognitionAuth/android/app/.cxx/RelWithDebInfo/1b3vk2f6/x86_64",
+      "clean"
+    ]
+  ],
+  "buildTargetsCommandComponents": [
+    "/Users/adziehrdy/Library/Android/sdk/cmake/3.18.1/bin/ninja",
+    "-C",
+    "/Users/adziehrdy/Documents/RENTAS/SmartCheck Multiple/FaceRecognitionAuth/android/app/.cxx/RelWithDebInfo/1b3vk2f6/x86_64",
+    "{LIST_OF_TARGETS_TO_BUILD}"
+  ],
+  "libraries": {},
+  "toolchains": {
+    "toolchain": {
+      "cCompilerExecutable": "/Users/adziehrdy/Library/Android/sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang.lld",
+      "cppCompilerExecutable": "/Users/adziehrdy/Library/Android/sdk/ndk/23.1.7779620/toolchains/llvm/prebuilt/darwin-x86_64/bin/clang++.lld"
+    }
+  },
+  "cFileExtensions": [],
+  "cppFileExtensions": []
+}

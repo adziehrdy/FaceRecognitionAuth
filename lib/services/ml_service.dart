@@ -148,9 +148,6 @@ class MLService {
       users = await getAlluser();
     }
 
-    String frTemplateBase64 = encode_FR_ToBase64(predictedData);
-    print("== BASE64 FACE TEMPLATE " + frTemplateBase64);
-
     double minDist = 999;
     double currDist = 0.0;
     User? predictedResult;
