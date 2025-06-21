@@ -1,14 +1,21 @@
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/login_model.dart';
+import 'package:face_net_authentication/models/master_register_model.dart';
+import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/Catering/catering_history.dart';
 import 'package:face_net_authentication/pages/MealSheet/database_helper_mealsheet.dart';
 import 'package:face_net_authentication/pages/MealSheet/database_helper_mealsheet_visitor.dart';
 import 'package:face_net_authentication/pages/MealSheet/mealsheet_model.dart';
 import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
+import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/pages/history_absensi.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import 'package:multi_select_flutter/chip_display/multi_select_chip_display.dart';
+import 'package:multi_select_flutter/dialog/multi_select_dialog_field.dart';
+import 'package:multi_select_flutter/util/multi_select_item.dart';
+import 'package:multi_select_flutter/util/multi_select_list_type.dart';
 
 class MealHistoryListVisitor extends StatefulWidget {
   const MealHistoryListVisitor({Key? key}) : super(key: key);
@@ -19,12 +26,20 @@ class MealHistoryListVisitor extends StatefulWidget {
 DatabaseHelperMealsheetVisitor databaseHelperMealsheetVisitor =
     DatabaseHelperMealsheetVisitor.instance;
 List<MealSheetVisitorModel> Historydata = [];
+List<User> _allEmployees = [];
+List<User> _selectedEmployees = [];
 
 class _MealHistoryListVisitorState extends State<MealHistoryListVisitor> {
   @override
   initState() {
     super.initState();
     initData();
+    _loadEmployees();
+  }
+
+  Future<void> _loadEmployees() async {
+    _allEmployees = await DatabaseHelperEmployee.instance.queryAllUsers();
+    setState(() {});
   }
 
   initData() {
@@ -771,6 +786,8 @@ class _InvitedFormState extends State<InvitedForm> {
   final TextEditingController _branchIdController = TextEditingController();
   final TextEditingController _departmentController = TextEditingController();
   final TextEditingController _costCenterController = TextEditingController();
+  final TextEditingController _purposeController = TextEditingController();
+  final TextEditingController _GLAccountController = TextEditingController();
 
   final TextEditingController _notesController = TextEditingController();
   final TextEditingController _jumlahOrangController = TextEditingController();
@@ -986,10 +1003,54 @@ class _InvitedFormState extends State<InvitedForm> {
                           validator: _validateNotNull,
                         ),
                         TextFormField(
+                          controller: _GLAccountController,
+                          decoration: InputDecoration(labelText: "GL Account"),
+                          keyboardType: TextInputType.text,
+                          validator: _validateNotNull,
+                        ),
+                        TextFormField(
+                          controller: _purposeController,
+                          decoration: InputDecoration(labelText: "Purpose"),
+                          keyboardType: TextInputType.text,
+                          validator: _validateNotNull,
+                        ),
+                        TextFormField(
                           controller: _notesController,
                           decoration: InputDecoration(labelText: "Notes"),
                         ),
                       ] else ...[
+                        if (widget.mode == "invited")
+                          MultiSelectDialogField<User>(
+                            items: _allEmployees
+                                .map((user) => MultiSelectItem<User>(
+                                    user, user.employee_name ?? "-"))
+                                .toList(),
+                            title: Text("Pilih Karyawan"),
+                            buttonText: Text("Pilih Karyawan"),
+                            selectedColor: Colors.blue,
+                            listType: MultiSelectListType.LIST,
+                            onConfirm: (List<User> selected) {
+                              setState(() {
+                                _selectedEmployees = selected;
+                                _nameController.text = selected
+                                    .map((e) => e.employee_name)
+                                    .join(', ');
+                              });
+                            },
+                            chipDisplay: MultiSelectChipDisplay(
+                              onTap: (value) {
+                                setState(() {
+                                  _selectedEmployees.remove(value);
+                                });
+                              },
+                            ),
+                            validator: (values) {
+                              if (values == null || values.isEmpty) {
+                                return "Harus pilih minimal satu karyawan";
+                              }
+                              return null;
+                            },
+                          ),
                         TextFormField(
                           controller: _companyController,
                           decoration:
@@ -1012,6 +1073,18 @@ class _InvitedFormState extends State<InvitedForm> {
                           controller: _costCenterController,
                           decoration: InputDecoration(labelText: "Cost Center"),
                           keyboardType: TextInputType.phone,
+                          validator: _validateNotNull,
+                        ),
+                        TextFormField(
+                          controller: _GLAccountController,
+                          decoration: InputDecoration(labelText: "GL Account"),
+                          keyboardType: TextInputType.text,
+                          validator: _validateNotNull,
+                        ),
+                        TextFormField(
+                          controller: _purposeController,
+                          decoration: InputDecoration(labelText: "Purpose"),
+                          keyboardType: TextInputType.text,
                           validator: _validateNotNull,
                         ),
                         TextFormField(
@@ -1062,6 +1135,8 @@ class _InvitedFormState extends State<InvitedForm> {
                                 brachID: loginData.branch!.branchId,
                                 department: _departmentController.text,
                                 constCenter: _costCenterController.text,
+                                purpose: _purposeController.text,
+                                notes: _notesController.text,
                                 initDate: DateTime.now(),
                                 guestType: widget.mode,
                                 type: _selectedType,

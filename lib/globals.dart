@@ -5,7 +5,7 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:math' as mt;
 
-import 'package:audioplayers/audioplayers.dart';
+// import 'package:audioplayers/audioplayers.dart';
 import 'dart:ui' as ui;
 import 'package:camera/camera.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -1093,13 +1093,13 @@ Future<List<User>> getAllEmployeeAndRelief() async {
 }
 
 successSound() async {
-  try {
-    final player = AudioPlayer();
-    await player.setVolume(0.4);
-    await player.play(AssetSource("sound/success_sound.mp3"));
-  } catch (e) {
-    print(e.toString());
-  }
+  // try {
+  //   final player = AudioPlayer();
+  //   await player.setVolume(0.4);
+  //   await player.play(AssetSource("sound/success_sound.mp3"));
+  // } catch (e) {
+  //   print(e.toString());
+  // }
 }
 
 imglib.Image cropFaceANTISPOOF(CameraImage image, Face faceDetected) {

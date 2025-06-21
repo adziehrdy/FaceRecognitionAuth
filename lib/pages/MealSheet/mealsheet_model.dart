@@ -119,6 +119,7 @@ class MealSheetVisitorModel {
   final String constCenter;
   final int person_count;
   final String? notes;
+  final String purpose;
   final int isUploaded;
 
   MealSheetVisitorModel({
@@ -145,6 +146,7 @@ class MealSheetVisitorModel {
     required this.type,
     required this.person_count,
     this.notes,
+    required this.purpose,
     this.isUploaded = 0,
   });
 
@@ -181,6 +183,7 @@ class MealSheetVisitorModel {
       department: map['department'],
       constCenter: map['cost_center'],
       person_count: map['person_count'],
+      purpose: map['purpose'],
       notes: map['notes'],
       isUploaded: map['is_uploaded'] ?? 0,
     );
@@ -210,6 +213,7 @@ class MealSheetVisitorModel {
       'department': department,
       'cost_center': constCenter,
       'person_count': person_count,
+      'purpose': purpose,
       'notes': notes,
       'is_uploaded': isUploaded,
     };
