@@ -180,53 +180,6 @@ class SignUpState extends State<SignUp> {
     });
   }
 
-  // _frameFaces() {
-  //   imageSize = _cameraService.getImageSize();
-
-  //   _cameraService.cameraController?.startImageStream((image) async {
-  //     img = image;
-
-  //     if (_cameraService.cameraController != null) {
-  //       if (_detectingFaces) return;
-
-  //       _detectingFaces = true;
-
-  //       try {
-  //         await _faceDetectorService.detectFacesFromImage(img!);
-
-  //         if (_faceDetectorService.faces.isNotEmpty) {
-  //           print("EYE RIGHT PROBABILITY = "+_faceDetectorService.faces[0].rightEyeOpenProbability.toString());
-  //           print("EYE LEFT PROBABILITY = "+_faceDetectorService.faces[0].leftEyeOpenProbability.toString());
-  //           setState(() {
-  //             if (_faceDetectorService.faces[0].headEulerAngleY! > 10 ||
-  //                 _faceDetectorService.faces[0].headEulerAngleY! < -10) {
-
-  //             } else {
-  //               faceDetected = _faceDetectorService.faces[0];
-  //             }
-  //             // faceDetectedJPG = faceDetected!.detectedFaceAsImage()
-  //           });
-  //           if (_saving) {
-  //             _mlService.setCurrentPrediction(image, faceDetected);
-  //             setState(() {
-  //               _saving = false;
-  //             });
-  //           }
-  //         } else {
-  //           print('face is null');
-  //           setState(() {
-  //             faceDetected = null;
-  //           });
-  //         }
-
-  //         _detectingFaces = false;
-  //       } catch (e) {
-  //         print('Error _faceDetectorService face => $e');
-  //         _detectingFaces = false;
-  //       }
-  //     }
-  //   });
-  // }
 
   _onBackPressed() {
     Navigator.of(context).pop();
