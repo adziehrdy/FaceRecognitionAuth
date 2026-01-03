@@ -12,7 +12,7 @@ import 'package:face_net_authentication/pages/widgets/selectUser.dart';
 import 'package:face_net_authentication/services/image_converter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
@@ -38,17 +38,18 @@ class MLService {
         delegate = GpuDelegateV2(
           options: GpuDelegateOptionsV2(
             isPrecisionLossAllowed: false,
-            inferencePreference: TfLiteGpuInferenceUsage.fastSingleAnswer,
-            inferencePriority1: TfLiteGpuInferencePriority.minLatency,
-            inferencePriority2: TfLiteGpuInferencePriority.auto,
-            inferencePriority3: TfLiteGpuInferencePriority.auto,
+            // inferencePreference: TfLiteGpuInferenceUsage.fastSingleAnswer,
+            // inferencePriority1: TfLiteGpuInferencePriority.minLatency,
+            // inferencePriority2: TfLiteGpuInferencePriority.auto,
+            // inferencePriority3: TfLiteGpuInferencePriority.auto,
           ),
         );
       } else if (Platform.isIOS) {
         delegate = GpuDelegate(
           options: GpuDelegateOptions(
-              allowPrecisionLoss: true,
-              waitType: TFLGpuDelegateWaitType.active),
+            allowPrecisionLoss: true,
+            // waitType: TFLGpuDelegateWaitType.active
+          ),
         );
       }
       var interpreterOptions = InterpreterOptions()..addDelegate(delegate);

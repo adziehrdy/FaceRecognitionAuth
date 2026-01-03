@@ -7,7 +7,6 @@ import 'package:face_net_authentication/testing_absen.dart';
 // import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:kiosk_mode/kiosk_mode.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -22,11 +21,6 @@ void main() async {
   //   return true;
   // };
 
-  watchKioskMode().listen((mode) async {
-    if (mode != KioskMode.enabled) {
-      // await startKioskMode();
-    }
-  });
   await setDeviceOrientationByDevice();
 
   setupServices();
