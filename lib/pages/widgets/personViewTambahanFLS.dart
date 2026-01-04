@@ -4,14 +4,15 @@ import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/pages/sign-up.dart';
 import 'package:face_net_authentication/pages/widgets/dialog_detail_employee.dart';
+import 'package:face_net_authentication/pages/widgets/dialog_detail_employee_relief.dart';
 import 'package:face_net_authentication/repo/global_repos.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
 
-import '../db/databse_helper_employee.dart';
+import '../db/databse_helper_employee_relief.dart';
 
 // ignore: must_be_immutable
-class PersonView extends StatefulWidget {
+class PersonViewTambahanFLS extends StatefulWidget {
   final List<User> personList;
   final Function(int) onUserSelected;
   final List<bool> selected;
@@ -19,7 +20,7 @@ class PersonView extends StatefulWidget {
 
   // final MyHomePageState homePageState;
 
-  const PersonView({
+  const PersonViewTambahanFLS({
     super.key,
     required this.personList,
     required this.onFinish,
@@ -31,12 +32,13 @@ class PersonView extends StatefulWidget {
   final VoidCallback onFinish;
 
   @override
-  _PersonViewState createState() => _PersonViewState();
+  _PersonViewTambahanFLSState createState() => _PersonViewTambahanFLSState();
 }
 
-class _PersonViewState extends State<PersonView> {
+class _PersonViewTambahanFLSState extends State<PersonViewTambahanFLS> {
   TextEditingController _searchController = TextEditingController();
-  DatabaseHelperEmployee _dataBaseHelper = DatabaseHelperEmployee.instance;
+  DatabaseHelperEmployeeRelief _dataBaseHelper =
+      DatabaseHelperEmployeeRelief.instance;
   String _searchText = "";
   List<ShiftRig> listShift = [];
 
@@ -138,7 +140,7 @@ class _PersonViewState extends State<PersonView> {
                         await showDialog(
                           context: context,
                           builder: (BuildContext context) {
-                            return widget_detail_employee(
+                            return widget_detail_employee_relief(
                               user_detail: widget.personList[index],
                             );
                           },
@@ -148,7 +150,8 @@ class _PersonViewState extends State<PersonView> {
                       onLongPress: () {
                         widget.onUserSelected(index);
                         print("LONG PRESS" +
-                            (widget.personList[index].employee_name ?? " * "));
+                            ((widget.personList[index].employee_name ?? " * ") +
+                                "(RELIEF)"));
                         setState(() {
                           selectedPerson[index] = !selectedPerson[index];
                           isAnySelectedChecker();
@@ -219,14 +222,17 @@ class _PersonViewState extends State<PersonView> {
                                       child: Row(
                                         children: [
                                           Text(
-                                            widget.personList[index]
+                                            (widget.personList[index]
                                                     .employee_name!
                                                     .toUpperCase() ??
-                                                "Unknown",
+                                                "Unknown"),
                                             style: TextStyle(
                                                 overflow: TextOverflow.ellipsis,
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 15),
+                                          ),
+                                          SizedBox(
+                                            width: 5,
                                           ),
                                           SizedBox(
                                             width: 10,
@@ -261,7 +267,31 @@ class _PersonViewState extends State<PersonView> {
                                               color: Colors.grey, fontSize: 12),
                                         ),
                                       ],
-                                    )
+                                    ),
+                                    SizedBox(
+                                      height: 5,
+                                    ),
+                                    // Row(
+                                    //   children: [
+                                    //     Text(
+                                    //       "Relief Aktif Pada Tanggal : " +
+                                    //           formatDateString((widget
+                                    //                   .personList[index]
+                                    //                   .relief_start_date ??
+                                    //               " - ")) +
+                                    //           " | Berakhir Tanggal : " +
+                                    //           formatDateString(widget
+                                    //                   .personList[index]
+                                    //                   .relief_end_date ??
+                                    //               " - "),
+                                    //       style: TextStyle(
+                                    //           color: Colors.grey, fontSize: 12),
+                                    //     ),
+                                    //   ],
+                                    // ),
+                                    SizedBox(
+                                      height: 5,
+                                    ),
                                   ],
                                 ),
                               ],
@@ -297,15 +327,62 @@ class _PersonViewState extends State<PersonView> {
                                     ;
                                   },
                                 ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
+                                  onPressed: () async {
+                                    final bool? isConfirmed =
+                                        await showDialog<bool>(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: const Text("Konfirmasi"),
+                                          content: const Text(
+                                            "Apakah Anda yakin ingin menghapus karyawan tambahan ini?",
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.of(context)
+                                                    .pop(false);
+                                              },
+                                              child: const Text("Batal"),
+                                            ),
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Colors.red,
+                                              ),
+                                              onPressed: () {
+                                                Navigator.of(context).pop(true);
+                                              },
+                                              child: const Text("Hapus"),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+
+                                    // Jika user tekan "Hapus"
+                                    if (isConfirmed == true) {
+                                      try {
+                                        await _dataBaseHelper
+                                            .deleteEmployeeRelief(
+                                          widget.personList[index].employee_id,
+                                        );
+
+                                        showToast("Karyawan berhasil dihapus");
+
+                                        widget.onFinish();
+                                      } catch (e) {
+                                        showToast("Gagal menghapus karyawan");
+                                        debugPrint(e.toString());
+                                      }
+                                    }
+                                  },
+                                ),
                               ],
                             ),
-                            // GestureDetector(
-                            //   onLongPress: () => deletePerson(index),
-                            //   child: IconButton(
-                            //     icon: const Icon(Icons.delete),
-                            //     onPressed: () {},
-                            //   ),
-                            // ),
                           ],
                         ),
                       ))));
@@ -528,6 +605,7 @@ class _PersonViewState extends State<PersonView> {
             } else {
               showToastShort("Semua Shift berhasil dirubah");
               selectedPerson = [];
+              widget.onShiftUpdated;
               Navigator.pop(context);
             }
 

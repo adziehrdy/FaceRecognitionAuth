@@ -2,11 +2,13 @@ class LoginModel {
   final String? accessToken;
   final Branch? branch;
   final List<SuperIntendent> superAttendence;
+  final String? deviceType;
 
   LoginModel({
     required this.accessToken,
     required this.branch,
     required this.superAttendence,
+    required this.deviceType,
   });
 
   Map<String, dynamic> toMap() {
@@ -14,6 +16,7 @@ class LoginModel {
       'access_token': accessToken,
       'branch': branch?.toMap(),
       'super_attendence': superAttendence.map((sa) => sa.toMap()).toList(),
+      'device_type': deviceType,
     };
   }
 
@@ -26,6 +29,7 @@ class LoginModel {
       accessToken: map['access_token'],
       branch: map['branch'] != null ? Branch.fromMap(map['branch']) : null,
       superAttendence: superAttendence,
+      deviceType: map['device_type'],
     );
   }
 }

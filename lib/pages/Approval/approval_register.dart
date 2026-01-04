@@ -1,7 +1,8 @@
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+
+import '../db/databse_helper_employee.dart';
 
 class ApprovalRegister extends StatefulWidget {
   const ApprovalRegister({Key? key}) : super(key: key);

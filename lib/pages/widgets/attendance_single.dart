@@ -1,10 +1,14 @@
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/attendance.dart';
-import 'package:face_net_authentication/db/databse_helper_absensi.dart';
+import 'package:face_net_authentication/models/model_rig_shift.dart';
+import 'package:face_net_authentication/pages/Catering/catering_history.dart';
 import 'package:face_net_authentication/pages/widgets/dialog_approval_absensi.dart';
+import 'package:face_net_authentication/pages/widgets/dialog_change_rig_status.dart';
 import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
+import '../db/databse_helper_absensi.dart';
 
 typedef void OnDeleteCallback(String deleteType);
 typedef void OnUpdate();
@@ -83,25 +87,44 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
                       SizedBox(
                         width: 10,
                       ),
-                      Text(
-                        " ( " + (widget.data.shift_id ?? "") + " )",
-                        style: TextStyle(
-                            overflow: TextOverflow.ellipsis, fontSize: 8),
-                      )
+                      Center(
+                          child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            " ( " + (widget.data.shift_id ?? "") + " )",
+                            style: TextStyle(fontSize: 10, color: Colors.blue),
+                          ),
+                        ],
+                      ))
                     ],
                   ),
                   Row(
                     children: [
-                      widget.data.is_uploaded == "0"
-                          ? SizedBox()
+                      widget.data.custom_or != null
+                          ? Container(
+                              height: 25,
+                              child: ElevatedButton(
+                                  style: ButtonStyle(
+                                      backgroundColor: WidgetStatePropertyAll(
+                                          Colors.orange)),
+                                  onPressed: () {
+                                    _change_OR();
+                                  },
+                                  onLongPress: () {
+                                    _showDeleteORConfirmation(context);
+                                  },
+                                  child: Text(
+                                    widget.data.custom_or!,
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 10),
+                                  )),
+                            )
                           : IconButton(
-                              iconSize: 20,
-                              icon: Icon(Icons.cloud_circle),
-                              color: Colors.green,
-                              onPressed: () async {
-                                showToast("Data Ini Sudah Diupload Ke server");
+                              onPressed: () {
+                                _change_OR();
                               },
-                            ),
+                              icon: Icon(Icons.edit_note))
                     ],
                   ),
                 ],
@@ -859,5 +882,86 @@ class _AttendanceSingleState extends State<AttendanceSingle> {
       //   print(e.toString());
       // }
     });
+  }
+
+  _change_OR() async {
+    if (widget.isLocked) {
+      PinInputDialog.show(context, (p0) async {
+        RigStatusShift? statusSelected;
+        await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return dialog_change_rig_status(
+              onStatusSelected: (selectedStatus) async {
+                statusSelected = selectedStatus;
+              },
+            );
+          },
+        );
+
+        if (statusSelected != null) {
+          _dataBaseHelper.updateCustomOR(
+              widget.data.attendanceId!, statusSelected!.statusBranch!);
+          setState(() {
+            widget.onUpdate();
+          });
+        }
+      });
+    } else {
+      RigStatusShift? statusSelected;
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return dialog_change_rig_status(
+            onStatusSelected: (selectedStatus) async {
+              statusSelected = selectedStatus;
+            },
+          );
+        },
+      );
+
+      if (statusSelected != null) {
+        _dataBaseHelper.updateCustomOR(
+            widget.data.attendanceId!, statusSelected!.statusBranch!);
+        setState(() {
+          widget.onUpdate();
+        });
+      }
+    }
+  }
+
+  void _showDeleteORConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Konfirmasi"),
+          content: Text(
+            "Apakah Anda yakin untuk menghapus custom OR?",
+            style: TextStyle(color: Colors.red),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Menutup dialog
+              },
+              child: Text("Tidak"),
+            ),
+            TextButton(
+              onPressed: () {
+                // Tambahkan logika untuk menghapus di sini
+                _dataBaseHelper.updateCustomOR(widget.data.attendanceId!, null);
+                setState(() {
+                  widget.onUpdate();
+                });
+                Navigator.of(context)
+                    .pop(); // Menutup dialog setelah konfirmasi
+              },
+              child: Text("Ya"),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

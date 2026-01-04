@@ -1,11 +1,11 @@
 import 'package:face_net_authentication/constants/constants.dart';
-import 'package:face_net_authentication/db/dbSync.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/pages/Dinas%20Khusus/DK_page.dart';
 import 'package:face_net_authentication/pages/List%20Karyawan/page_list_karyawan.dart';
 import 'package:face_net_authentication/pages/Rig%20Status%20History/rigStatusHistory.dart';
+import 'package:face_net_authentication/pages/db/databse_helper_absensi.dart';
 import 'package:face_net_authentication/pages/history_absensi_mainPage.dart';
 import 'package:face_net_authentication/pages/menu_admin.dart';
 import 'package:face_net_authentication/pages/register_pin.dart';
@@ -25,6 +25,8 @@ import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:lottie/lottie.dart';
+
+import 'db/dbSync.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -102,6 +104,7 @@ class _HomePageState extends State<HomePage> {
 
   syncAllData() {
     dBsync().syncAllDB();
+    DatabaseHelperAbsensi helperAbsensi = DatabaseHelperAbsensi.instance;
   }
 
   // _initializeServices() async {

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/repo/user_repos.dart';
 import 'package:flutter/material.dart';
@@ -56,6 +58,10 @@ class _LoginPageState extends State<LoginPage> {
     // deviceID = await getDeviceId();
 
     deviceID = await FlutterUdid.udid;
+
+    if (Platform.isIOS) {
+      deviceID = deviceID.substring(0, 18);
+    }
 
     setState(() {
       versionLabel = 'v.' + info.version;

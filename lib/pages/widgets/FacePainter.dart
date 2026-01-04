@@ -1,6 +1,7 @@
-import 'package:face_net_authentication/constants/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+
+import '../../constants/constants.dart';
 
 class FacePainter extends CustomPainter {
   FacePainter({required this.imageSize, required this.face});

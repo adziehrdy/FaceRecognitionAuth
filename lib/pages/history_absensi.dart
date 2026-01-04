@@ -1,11 +1,12 @@
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/attendance.dart';
-import 'package:face_net_authentication/db/databse_helper_absensi.dart';
 import 'package:face_net_authentication/pages/widgets/attendance_single.dart';
 import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
 import 'package:face_net_authentication/repo/attendance_repos.dart';
 import 'package:flutter/material.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
+
+import 'db/databse_helper_absensi.dart';
 
 class HistoryAbsensi extends StatefulWidget {
   @override
@@ -14,6 +15,9 @@ class HistoryAbsensi extends StatefulWidget {
 
 class _HistoryAbsensiState extends State<HistoryAbsensi> {
   List<Attendance> _attendanceList = [];
+  List<Attendance> _filteredAttendanceList = [];
+  String _searchText = "";
+  bool _isSearchVisible = false; // Untuk mengatur visibilitas search bar
   bool _isLocked = true;
 
   // Getter untuk mendapatkan nilai variabel isLocked
@@ -29,8 +33,9 @@ class _HistoryAbsensiState extends State<HistoryAbsensi> {
     List<Attendance> newData =
         await DatabaseHelperAbsensi.instance.getHistoryAbsensi();
     setState(() {
-      _attendanceList =
-          newData.reversed.toList(); // Replace the list instead of adding to it
+      _attendanceList = newData.reversed.toList();
+      _filteredAttendanceList =
+          _attendanceList; // Menampilkan semua data saat pertama kali load
     });
   }
 
@@ -81,6 +86,24 @@ class _HistoryAbsensiState extends State<HistoryAbsensi> {
         .updateIsUploaded(entryToUpdate.attendanceId!);
   }
 
+  void _filterAttendanceList(String searchText) {
+    if (searchText.isEmpty) {
+      setState(() {
+        _filteredAttendanceList =
+            _attendanceList; // Tampilkan semua data jika kosong
+      });
+    } else {
+      setState(() {
+        _filteredAttendanceList = _attendanceList.where((attendance) {
+          return attendance.employee_name!
+                  .toLowerCase()
+                  .contains(searchText.toLowerCase()) ||
+              attendance.checkInActual.toString().contains(searchText);
+        }).toList();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,6 +112,20 @@ class _HistoryAbsensiState extends State<HistoryAbsensi> {
         actions: <Widget>[
           Row(
             children: [
+              // Tombol untuk menampilkan atau menyembunyikan search bar
+              IconButton(
+                icon: Icon(_isSearchVisible ? Icons.close : Icons.search),
+                onPressed: () {
+                  setState(() {
+                    _isSearchVisible = !_isSearchVisible;
+                    if (!_isSearchVisible) {
+                      // Reset pencarian jika search bar disembunyikan
+                      _searchText = "";
+                      _filterAttendanceList(_searchText);
+                    }
+                  });
+                },
+              ),
               IconButton(
                   onPressed: () {
                     setState(() {});
@@ -110,16 +147,8 @@ class _HistoryAbsensiState extends State<HistoryAbsensi> {
                     }
                   },
                   icon: _isLocked
-                      ? Icon(
-                          Icons.lock,
-                          color: Colors.red,
-                        )
-                      : Icon(
-                          Icons.lock_open,
-                          color: Colors.green,
-                        )),
-              // isLoked ? Icon(Icons.lock,color: Colors.grey,): Icon(Icons.lock_open,color: Colors.blue,),
-              // SizedBox(width: 15),
+                      ? Icon(Icons.lock, color: Colors.red)
+                      : Icon(Icons.lock_open, color: Colors.green)),
               ElevatedButton(
                 onPressed: () {
                   PinInputDialog.show(context, (p0) {
@@ -128,57 +157,77 @@ class _HistoryAbsensiState extends State<HistoryAbsensi> {
                 },
                 child: Row(children: [
                   Icon(Icons.cloud_circle),
-                  SizedBox(
-                    width: 10,
-                  ),
+                  SizedBox(width: 10),
                   Text("Upload Absensi"),
-                  SizedBox(
-                    width: 10,
-                  ),
+                  SizedBox(width: 10),
                 ]),
               ),
             ],
           )
         ],
       ),
-      body: _attendanceList.isEmpty
-          ? Center(
-              child: Text('Data absensi yang belum di upload kosong'),
-            )
-          : ListView.builder(
-              itemCount: _attendanceList.length,
-              itemBuilder: (context, index) {
-                return Column(
-                  children: [
-                    AttendanceSingle(
-                      data: _attendanceList[index],
-                      onDelete: (tipe_absen) async {
-                        PinInputDialog.show(context, (p0) async {
-                          try {
-                            await _deleteEntryAndRefresh(
-                                _attendanceList[index], tipe_absen);
-                            setState(() {
-                              _loadData();
-                            });
-
-                            showToastShort("Terhapus");
-                          } catch (e) {
-                            showToastShort("Data Sudah Terhapus");
-                          }
-                        });
-                      },
-                      onUpdate: () {
-                        setState(() {
-                          _loadData();
-                        });
-                      },
-                      isLocked:
-                          isLocked, // Menggunakan getter untuk mengakses isLocked
-                    ),
-                  ],
-                );
-              },
+      body: Column(
+        children: [
+          // Search Bar hanya muncul jika tombol search diaktifkan
+          if (_isSearchVisible)
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    _searchText = value;
+                    _filterAttendanceList(_searchText);
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: 'Cari Absensi',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
             ),
+          Expanded(
+            child: _filteredAttendanceList.isEmpty
+                ? Center(child: Text('Data absensi tidak ditemukan'))
+                : ListView.builder(
+                    itemCount: _filteredAttendanceList.length,
+                    itemBuilder: (context, index) {
+                      return Column(
+                        children: [
+                          AttendanceSingle(
+                            data: _filteredAttendanceList[index],
+                            onDelete: (tipe_absen) async {
+                              PinInputDialog.show(context, (p0) async {
+                                try {
+                                  await _deleteEntryAndRefresh(
+                                      _filteredAttendanceList[index],
+                                      tipe_absen);
+                                  setState(() {
+                                    _loadData();
+                                  });
+
+                                  showToastShort("Terhapus");
+                                } catch (e) {
+                                  showToastShort("Data Sudah Terhapus");
+                                }
+                              });
+                            },
+                            onUpdate: () {
+                              setState(() {
+                                _loadData();
+                              });
+                            },
+                            isLocked: _isLocked,
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
     );
   }
 

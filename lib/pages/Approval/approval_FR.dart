@@ -1,6 +1,6 @@
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/db/databse_helper_employee.dart';
+import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/repo/user_repos.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';

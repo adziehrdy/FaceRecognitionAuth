@@ -1,5 +1,3 @@
-import 'package:face_net_authentication/db/database_helper_rig_status_history.dart';
-import 'package:face_net_authentication/db/dbSync.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/pages/Catering/catering_history.dart';
 import 'package:face_net_authentication/pages/widgets/dialog_change_rig_status.dart';
@@ -11,6 +9,8 @@ import 'package:timeline_tile/timeline_tile.dart';
 import '../../models/model_rig_shift.dart';
 import '../../models/rig_status_history_model.dart';
 import '../../services/shared_preference_helper.dart';
+import '../db/database_helper_rig_status_history.dart';
+import '../db/dbSync.dart';
 
 class RigStatusHistory extends StatefulWidget {
   @override

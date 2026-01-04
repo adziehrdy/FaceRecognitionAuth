@@ -1,5 +1,7 @@
+import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/pages/List%20Karyawan/list_karyawan.dart';
 import 'package:face_net_authentication/pages/List%20Karyawan/list_karyawan_relief.dart';
+import 'package:face_net_authentication/pages/List%20Karyawan/list_karyawan_tambahan_fls.dart';
 import 'package:flutter/material.dart';
 
 class PageListKaryawan extends StatefulWidget {
@@ -11,37 +13,61 @@ class PageListKaryawan extends StatefulWidget {
 
 int _currentIndex = 0;
 List<Widget> _pages = [];
+String deviceRole = "";
 
 class _PageListKaryawanState extends State<PageListKaryawan> {
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    setState(() {
-      _currentIndex = 0;
-    });
-    _pages = [ListKaryawan(), ListKaryawanRelief()];
+    loadData();
   }
 
+  Future<void> loadData() async {
+    final role = await getDeviceRole();
+
+    setState(() {
+      deviceRole = role;
+      _currentIndex = 0;
+
+      if (deviceRole == "FLS") {
+        _pages = [ListKaryawan(), ListKaryawanTambahanFLS()];
+      } else {
+        _pages = [ListKaryawan(), ListKaryawanRelief()];
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_pages.isEmpty) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (int index) {
+        onTap: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
         items: [
-          BottomNavigationBarItem(
+          const BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Crew Rig',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_add),
-            label: 'Crew Rig Relief',
-          ),
+          deviceRole == "FLS"
+              ? const BottomNavigationBarItem(
+                  icon: Icon(Icons.person_add),
+                  label: 'Crew Rig Tambahan',
+                )
+              : const BottomNavigationBarItem(
+                  icon: Icon(Icons.person_add),
+                  label: 'Crew Rig Relief',
+                ),
         ],
       ),
     );

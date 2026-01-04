@@ -95,6 +95,7 @@ class User {
       dk_end_date = map['dk_end_date'];
       status_dk = map['status_dk'];
     } catch (e) {
+      showToast(e.toString());
       log(e.toString());
     }
 

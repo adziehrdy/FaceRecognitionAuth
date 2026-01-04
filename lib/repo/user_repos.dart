@@ -141,6 +141,7 @@ class UserRepo {
           await prefs.setString('LOGIN_DATA', json.encode(data.toMap()));
           await prefs.setString('TOKEN', data.accessToken!);
           await prefs.setBool('IS_LOGIN', true);
+          await prefs.setString('DEVICE_ROLE', data.deviceType ?? "MPS");
 
           bool? hasRigShift = await GlobalRepo().hitAllMasterRigStatus(context);
 

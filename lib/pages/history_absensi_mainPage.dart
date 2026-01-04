@@ -1,5 +1,6 @@
 import 'package:face_net_authentication/pages/history_absensi.dart';
 import 'package:face_net_authentication/pages/history_absensi_uploaded.dart';
+import 'package:face_net_authentication/pages/rangkuman_absensiHarian.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -28,12 +29,12 @@ class _HistoryAbsensiMainPageState extends State<HistoryAbsensiMainPage> {
   int _currentIndex = 0;
   final List<Widget> _pages = [
     HistoryAbsensi(),
+    RangkumanAbsensiHarian(),
     HistoryAbsensiUploaded(),
   ];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -46,6 +47,10 @@ class _HistoryAbsensiMainPageState extends State<HistoryAbsensiMainPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.history),
             label: 'History Absensi',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.face_retouching_natural),
+            label: 'Rangkuman Harian',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.cloud_upload),

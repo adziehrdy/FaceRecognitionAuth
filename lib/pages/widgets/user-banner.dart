@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:face_net_authentication/db/database_helper_catering_status.dart';
-import 'package:face_net_authentication/db/dbSync.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/catering_history_model.dart';
 import 'package:face_net_authentication/models/login_model.dart';
@@ -14,8 +12,10 @@ import 'package:face_net_authentication/pages/widgets/pin_input_dialog.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
 
-import '../../db/database_helper_rig_status_history.dart';
 import '../../models/rig_status_history_model.dart';
+import '../db/database_helper_catering_status.dart';
+import '../db/database_helper_rig_status_history.dart';
+import '../db/dbSync.dart';
 
 class UserBanner extends StatefulWidget {
   const UserBanner({Key? key}) : super(key: key);
@@ -29,6 +29,7 @@ class _UserBannerState extends State<UserBanner> {
   String activeSuperAttendace = "-";
   RigStatusShift? status_rig;
   bool isCatering = false;
+  String deviceRole = "MPS";
 
   @override
   void initState() {
@@ -42,6 +43,7 @@ class _UserBannerState extends State<UserBanner> {
     userInfo = await getUserLoginData();
     status_rig = await SpGetSelectedStatusRig();
     isCatering = await getCateringToday();
+    deviceRole = await getDeviceRole();
 
     activeSuperAttendace = await getActiveSuperIntendentName();
 
@@ -112,112 +114,127 @@ class _UserBannerState extends State<UserBanner> {
                         width: 30,
                       ),
                       InkWell(
-                        onTap: () {},
-                        child: Row(
-                          children: [
-                            Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: InkWell(
-                                  child: Card(
-                                    child: Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 20, vertical: 5),
-                                      child: Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                          Text(
-                                            "STATUS RIG :",
-                                            style: TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 9,
-                                                fontStyle: FontStyle.italic,
-                                                overflow:
-                                                    TextOverflow.ellipsis),
+                          onTap: () {},
+                          child: deviceRole == "MPS"
+                              ? Row(
+                                  children: [
+                                    Padding(
+                                        padding:
+                                            const EdgeInsets.only(left: 8.0),
+                                        child: InkWell(
+                                          child: Card(
+                                            child: Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  horizontal: 20, vertical: 5),
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: <Widget>[
+                                                  Text(
+                                                    "STATUS RIG :",
+                                                    style: TextStyle(
+                                                        color: Colors.black,
+                                                        fontSize: 9,
+                                                        fontStyle:
+                                                            FontStyle.italic,
+                                                        overflow: TextOverflow
+                                                            .ellipsis),
+                                                  ),
+                                                  Text(
+                                                    (status_rig?.statusBranch ??
+                                                        "-"),
+                                                    style: TextStyle(
+                                                        color: Colors.red,
+                                                        fontSize: 18,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        overflow: TextOverflow
+                                                            .ellipsis),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
                                           ),
-                                          Text(
-                                            (status_rig?.statusBranch ?? "-"),
-                                            style: TextStyle(
-                                                color: Colors.red,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                overflow:
-                                                    TextOverflow.ellipsis),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  onTap: () async {
-                                    PinInputDialog.show(context, (p0) async {
-                                      await showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return dialog_change_rig_status(
-                                            onStatusSelected: (selectedStatus) {
-                                              setState(() {
-                                                saveRigStatus(selectedStatus);
-                                                setState(() {
-                                                  isCatering = false;
-                                                  saveRigCateringStatus();
-                                                });
-                                              });
-                                            },
-                                          );
-                                        },
-                                      );
-                                    });
-                                  },
-                                )),
-                          ],
-                        ),
-                      ),
+                                          onTap: () async {
+                                            PinInputDialog.show(context,
+                                                (p0) async {
+                                              await showDialog(
+                                                context: context,
+                                                builder:
+                                                    (BuildContext context) {
+                                                  return dialog_change_rig_status(
+                                                    onStatusSelected:
+                                                        (selectedStatus) {
+                                                      setState(() {
+                                                        saveRigStatus(
+                                                            selectedStatus);
+                                                        setState(() {
+                                                          isCatering = false;
+                                                          saveRigCateringStatus();
+                                                        });
+                                                      });
+                                                    },
+                                                  );
+                                                },
+                                              );
+                                            });
+                                          },
+                                        )),
+                                  ],
+                                )
+                              : SizedBox()),
                       SizedBox(
                         width: 10,
                       ),
-                      Column(
-                        children: [
-                          Text(
-                            "Catering",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          Switch(
-                            inactiveThumbColor: Colors.white,
-                            inactiveTrackColor: Colors.redAccent,
-                            value: isCatering,
-                            onChanged: (value) {
-                              setState(() {
-                                isCatering = !isCatering;
-                                saveRigCateringStatus();
-                                if (isCatering) {
-                                  showToast("Catering Aktif");
-                                } else {
-                                  showToast("Catering Tidak Aktif");
-                                }
-                              });
-                            },
-                          )
-                        ],
-                      )
+                      deviceRole == "MPS"
+                          ? Column(
+                              children: [
+                                Text(
+                                  "Catering",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                Switch(
+                                  inactiveThumbColor: Colors.white,
+                                  inactiveTrackColor: Colors.redAccent,
+                                  value: isCatering,
+                                  onChanged: (value) {
+                                    PinInputDialog.show(context, (p0) async {
+                                      setState(() {
+                                        isCatering = !isCatering;
+                                        saveRigCateringStatus();
+                                        if (isCatering) {
+                                          showToast("Catering Aktif");
+                                        } else {
+                                          showToast("Catering Tidak Aktif");
+                                        }
+                                      });
+                                    });
+                                  },
+                                )
+                              ],
+                            )
+                          : SizedBox()
                     ],
                   ),
                   Row(
                     children: [
-                      IconButton(
-                          onPressed: () async {
-                            await showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return dialog_rig_info();
+                      deviceRole == "MPS"
+                          ? IconButton(
+                              onPressed: () async {
+                                await showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return dialog_rig_info();
+                                  },
+                                );
                               },
-                            );
-                          },
-                          icon: Icon(
-                            Icons.info,
-                            color: Colors.white,
-                          )),
+                              icon: Icon(
+                                Icons.info,
+                                color: Colors.white,
+                              ))
+                          : SizedBox(),
                       IconButton(
                           onPressed: () {
                             PinInputDialog.show(

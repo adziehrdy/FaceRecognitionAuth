@@ -2,12 +2,13 @@ import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/model_master_shift.dart';
 import 'package:face_net_authentication/models/model_rig_shift.dart';
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/repo/global_repos.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:flutter/material.dart';
 // import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:pinput/pinput.dart';
+
+import '../db/databse_helper_employee.dart';
 
 class widget_detail_employee extends StatefulWidget {
   final User user_detail;
@@ -117,6 +118,17 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
               (widget.user_detail.employee_name ?? "-").toUpperCase(),
               style: TextStyle(fontSize: 21, fontWeight: FontWeight.w600),
             ),
+            Divider(),
+            Text(
+              (widget.user_detail.employee_position ?? "-"),
+              maxLines: 2,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey),
+            ),
+            Divider(),
+
             Text(
               (widget.user_detail.employee_id ?? "-") +
                   " - " +
@@ -127,7 +139,11 @@ class _widget_detail_employeeState extends State<widget_detail_employee> {
                   fontWeight: FontWeight.w600,
                   color: Colors.grey),
             ),
-            Divider(),
+
+            SizedBox(
+              height: 10,
+            ),
+
             Text(
               shift_id,
               maxLines: 2,

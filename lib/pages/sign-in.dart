@@ -1,22 +1,27 @@
 import 'dart:async';
 
 import 'package:camera/camera.dart';
-import 'package:face_net_authentication/constants/constants.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/models/user.dart';
+import 'package:face_net_authentication/pages/Catering/catering_history.dart';
+import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/pages/fr_detected_page.dart';
 import 'package:face_net_authentication/pages/widgets/camera_detection_preview.dart';
 import 'package:face_net_authentication/pages/widgets/camera_header.dart';
+import 'package:face_net_authentication/pages/widgets/signin_form.dart';
 import 'package:face_net_authentication/pages/widgets/single_picture.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
 import 'package:face_net_authentication/services/face_detector_service.dart';
 import 'package:face_net_authentication/services/ml_service.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:intl/intl.dart' as intl;
 import 'package:one_clock/one_clock.dart';
+
+import '../constants/constants.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({Key? key, required this.MODE}) : super(key: key);
@@ -49,8 +54,6 @@ class SignInState extends State<SignIn> {
   String? textJamAbsensi;
 
   Image? DetectedFaceImage;
-
-  User? lastUser;
 
   @override
   void initState() {
@@ -122,16 +125,9 @@ class SignInState extends State<SignIn> {
         //SET FACE
 
         print("POSISI MUKA BAGUS");
-        imglib.Image faceImageCrop =
-            _mlService.cropFace(image, _faceDetectorService.faces[0]);
-        int blurScore = laplacian(faceImageCrop);
-
-        print("BLURR SCORE = " + blurScore.toString());
-        if (blurScore >= 100) {
-          RECONIZE_FACE(image);
-        }
+        RECONIZE_FACE(image);
       }
-      // RECONIZE_FACE();
+// RECONIZE_FACE();
 
       //--------
     }
@@ -153,54 +149,44 @@ class SignInState extends State<SignIn> {
   RECONIZE_FACE(CameraImage image) async {
     if (enable_recognize_process) {
       if (_faceDetectorService.faceDetected) {
-        User? user = await _mlService.predict(context);
-
+        User? user = await _mlService.predict();
         if (user != null) {
-          if (lastUser == null) {
-            lastUser = user;
-          } else {
-            if (lastUser == user) {
-              lastUser = null;
-              enable_recognize_process = false;
-              //  await _cameraService.takePicture();
-              getDateTimeNow();
-              pauseCameraAndMLKit();
-              imglib.Image faceImage =
-                  _mlService.cropFace(image, _faceDetectorService.faces[0]);
+          enable_recognize_process = false;
+          //  await _cameraService.takePicture();
+          getDateTimeNow();
+          pauseCameraAndMLKit();
+          imglib.Image faceImage =
+              _mlService.cropFace(image, _faceDetectorService.faces[0]);
 
-              //  //TESTING ABSENSI
+          //  //TESTING ABSENSI
 
-              //  textJamAbsensi = "2024-02-11 07:30:00";
-              //  jamAbsensi = DateTime.parse(textJamAbsensi!);
+          //  textJamAbsensi = "2024-01-04 01:51:46";
+          //  jamAbsensi = DateTime.parse(textJamAbsensi!);
 
-              //  //TESTING ABSENSI
+          //  //TESTING ABSENSI
 
-              await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => FrDetectedPage(
-                      // employee_name: user.employee_name!,
-                      textJamAbsensi: textJamAbsensi!,
-                      jamAbsensi: jamAbsensi!,
-                      alamat: alamat,
-                      lat: lat.toString(),
-                      long: long.toString(),
-                      // company_id: user.company_id!,
-                      // employee_id: user.employee_id!,
-                      type_absensi: widget.MODE,
-                      faceImage: convertImagelibToUint8List(faceImage),
-                      user: user,
-                    ),
-                  ));
+          await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FrDetectedPage(
+                  // employee_name: user.employee_name!,
+                  textJamAbsensi: textJamAbsensi!,
+                  jamAbsensi: jamAbsensi!,
+                  alamat: alamat,
+                  lat: lat.toString(),
+                  long: long.toString(),
+                  // company_id: user.company_id!,
+                  // employee_id: user.employee_id!,
+                  type_absensi: widget.MODE,
+                  faceImage: convertImagelibToUint8List(faceImage),
+                  user: user,
+                ),
+              ));
 
-              // _reload();
+          // _reload();
 
-              resumeCameraAndMLKit();
-              enable_recognize_process = true;
-            } else {
-              lastUser = user;
-            }
-          }
+          resumeCameraAndMLKit();
+          enable_recognize_process = true;
         }
         // namaReconized = user?.employee_name ?? "UNRECONIZE";
 
@@ -303,7 +289,14 @@ class SignInState extends State<SignIn> {
                 textAlign: TextAlign.center,
                 maxLines: 2,
               ),
-            )
+            ),
+            kDebugMode == true
+                ? ElevatedButton(
+                    onPressed: () {
+                      bypassAttendance();
+                    },
+                    child: Text("Bypass"))
+                : SizedBox.shrink()
           ]),
         ],
       ),
@@ -312,16 +305,16 @@ class SignInState extends State<SignIn> {
     );
   }
 
-  // signInSheet({@required User? user}) => user == null
-  //     ? Container(
-  //         width: MediaQuery.of(context).size.width,
-  //         padding: EdgeInsets.all(20),
-  //         child: Text(
-  //           'User not found 😞',
-  //           style: TextStyle(fontSize: 20),
-  //         ),
-  //       )
-  //     : SignInSheet(user: user);
+  signInSheet({@required User? user}) => user == null
+      ? Container(
+          width: MediaQuery.of(context).size.width,
+          padding: EdgeInsets.all(20),
+          child: Text(
+            'User not found 😞',
+            style: TextStyle(fontSize: 20),
+          ),
+        )
+      : SignInSheet(user: user);
 
   //        void startRecognitionLoop() {
   //   if (!_isRecognizing) {
@@ -372,36 +365,42 @@ class SignInState extends State<SignIn> {
     _frameFaces();
   }
 
-  int laplacian(imglib.Image bitmap) {
-    // Resize the face to a size of 256X256, because the shape of the placeholder that needs feed data below is (1, 256, 256, 3)
-    imglib.Image bitmapScale =
-        imglib.copyResizeCropSquare(bitmap, bitmap.height);
+  bypassAttendance() async {
+    enable_recognize_process = false;
+    //  await _cameraService.takePicture();
+    DatabaseHelperEmployee dbHelperUser = DatabaseHelperEmployee.instance;
+    User? bypassUser = await dbHelperUser.getFirstUser();
+    getDateTimeNow();
+    pauseCameraAndMLKit();
+    imglib.Image blackImage = imglib.Image(100, 100);
 
-    var laplace = [
-      [0, 1, 0],
-      [1, -4, 1],
-      [0, 1, 0]
-    ];
-    int size = laplace.length;
-    var img = imglib.grayscale(bitmapScale);
-    int height = img.height;
-    int width = img.width;
-
-    int score = 0;
-    for (int x = 0; x < height - size + 1; x++) {
-      for (int y = 0; y < width - size + 1; y++) {
-        int result = 0;
-        // Convolution operation on size*size area
-        for (int i = 0; i < size; i++) {
-          for (int j = 0; j < size; j++) {
-            result += (img.getPixel(x + i, y + j) & 0xFF) * laplace[i][j];
-          }
-        }
-        if (result > 50) {
-          score++;
-        }
+    // Mengisi gambar dengan warna hitam
+    for (int y = 0; y < 100; y++) {
+      for (int x = 0; x < 100; x++) {
+        blackImage.setPixel(x, y, 0xFF000000); // Warna hitam (ARGB)
       }
     }
-    return score;
+    await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FrDetectedPage(
+            // employee_name: user.employee_name!,
+            textJamAbsensi: textJamAbsensi!,
+            jamAbsensi: jamAbsensi!,
+            alamat: alamat,
+            lat: lat.toString(),
+            long: long.toString(),
+            // company_id: user.company_id!,
+            // employee_id: user.employee_id!,
+            type_absensi: widget.MODE,
+            faceImage: convertImagelibToUint8List(blackImage),
+            user: bypassUser!,
+          ),
+        ));
+
+    // _reload();
+
+    resumeCameraAndMLKit();
+    enable_recognize_process = true;
   }
 }

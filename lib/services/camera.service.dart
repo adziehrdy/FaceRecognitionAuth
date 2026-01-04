@@ -14,6 +14,10 @@ class CameraService {
   String? _imagePath;
   String? get imagePath => this._imagePath;
   bool landscape_mode = false;
+  bool isSignupMode;
+
+  // Constructor
+  CameraService({required this.isSignupMode});
 
   Future<void> initialize() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -43,12 +47,22 @@ class CameraService {
   Future _setupCameraController({
     required CameraDescription description,
   }) async {
+    // if (isSignupMode) {
+    //   this._cameraController = CameraController(
+    //     description,
+    //     ResolutionPreset.max,
+    //     enableAudio: false,
+    //   );
+    // } else {
     this._cameraController = CameraController(
       description,
       ResolutionPreset.high,
       enableAudio: false,
     );
+    // }
+
     await _cameraController?.initialize();
+    await _cameraController?.setFocusMode(FocusMode.auto);
   }
 
   InputImageRotation rotationIntToImageRotation(int rotation) {

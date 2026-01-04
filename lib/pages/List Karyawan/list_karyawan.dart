@@ -2,9 +2,10 @@ import 'dart:convert';
 
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/pages/widgets/personview.dart';
 import 'package:flutter/material.dart';
+
+import '../db/databse_helper_employee.dart';
 
 class ListKaryawan extends StatefulWidget {
   const ListKaryawan({Key? key}) : super(key: key);

@@ -7,6 +7,7 @@ import 'package:face_net_authentication/models/appversion_model.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/model_master_branch.dart';
 import 'package:face_net_authentication/models/model_rig_shift.dart';
+import 'package:face_net_authentication/models/user.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -170,9 +171,8 @@ class GlobalRepo {
         return true;
       } else {
         showToast("SHIFT RIG BELUM DITAMBAHKAN, MOHON HUBUNGI ADMIN");
-        
+
         logout(context);
-       
       }
     } else {
       showToast("Failed to retrieve data from MASTER_RIG_STATUS " +
@@ -192,6 +192,35 @@ class GlobalRepo {
       print("Failed to retrieve data from MASTER_BRANCHES ");
       return MasterBranches.listFromJson(
           jsonDecode(await prefs.getString("MASTER_BRANCHES") ?? "[]"));
+    }
+  }
+
+  Future<User?> getKaryawanTambahanFLS(String nik) async {
+    try {
+      Response res = await callApi(
+        ApiMethods.GET,
+        '/master/employee-self/$nik',
+      );
+
+      if (res.statusCode == 200) {
+        // Pastikan response berupa List
+        if (res.data is List && res.data.isNotEmpty) {
+          final Map<String, dynamic> data =
+              Map<String, dynamic>.from(res.data[0]);
+
+          User user = User.fromMap(data);
+          return user;
+        } else {
+          showToast("Data karyawan tidak ditemukan");
+          return null;
+        }
+      } else {
+        showToast("Gagal mengambil data karyawan tambahan FLS");
+        return null;
+      }
+    } catch (e) {
+      showToast("Terjadi kesalahan: $e");
+      return null;
     }
   }
 }

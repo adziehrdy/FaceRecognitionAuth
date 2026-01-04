@@ -4,14 +4,10 @@ import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:face_net_authentication/constants/constants.dart';
-import 'package:face_net_authentication/db/databse_helper_employee.dart';
-import 'package:face_net_authentication/db/databse_helper_employee_relief.dart';
 import 'package:face_net_authentication/globals.dart';
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/pages/widgets/selectUser.dart';
+import 'package:face_net_authentication/pages/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/services/image_converter.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image/image.dart' as imglib;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,7 +24,7 @@ class MLService {
 
   Future initialize() async {
     SharedPreferences pref = await SharedPreferences.getInstance();
-    threshold = CONSTANT_VAR.DEFAULT_TRESHOLD;
+    threshold = pref.getDouble("threshold") ?? CONSTANT_VAR.DEFAULT_TRESHOLD;
 
     landscape_mode = pref.getBool("LANDSCAPE_MODE") ?? false;
 
@@ -52,13 +48,17 @@ class MLService {
           ),
         );
       }
-      var interpreterOptions = InterpreterOptions()..addDelegate(delegate);
+      // var interpreterOptions = InterpreterOptions()..addDelegate(delegate);
 
-      this._interpreter = await Interpreter.fromAsset('mobilefacenet.tflite',
-          options: interpreterOptions);
+      // this._interpreter = await Interpreter.fromAsset(
+      //     'assets/MobileFaceNetv2.tflite',
+      //     options: interpreterOptions);
+
+      this._interpreter =
+          await Interpreter.fromAsset('assets/mobilefacenet.tflite');
     } catch (e) {
-      print('Failed to load model.');
-      print(e);
+      showToast('Failed Load FR Model, Mohon Hubungi Admin');
+      showToast(e.toString());
     }
   }
 
@@ -76,8 +76,8 @@ class MLService {
     this._predictedData = List.from(output);
   }
 
-  Future<User?> predict(context) async {
-    return _searchResult(context, this._predictedData);
+  Future<User?> predict() async {
+    return _searchResult(this._predictedData);
   }
 
   List _preProcess(CameraImage image, Face faceDetected) {
@@ -88,123 +88,42 @@ class MLService {
     return imageAsList;
   }
 
-  // imglib.Image cropFace(CameraImage image, Face faceDetected) {
-  //   imglib.Image convertedImage = _convertCameraImage(image);
-
-  //   double x;
-  //   double y;
-  //   double h;
-  //   double w;
-
-  //   if (landscape_mode) {
-  //     x = faceDetected.boundingBox.left - 10.0;
-  //     y = faceDetected.boundingBox.top - 10.0;
-  //     h = faceDetected.boundingBox.width + 10.0;
-  //     w = faceDetected.boundingBox.height + 10.0;
-  //   } else {
-  //     x = faceDetected.boundingBox.left - 10.0;
-  //     y = faceDetected.boundingBox.top - 10.0;
-  //     w = faceDetected.boundingBox.width + 10.0;
-  //     h = faceDetected.boundingBox.height + 10.0;
-  //   }
-
-  //   imglib.Image croppedImage = imglib.copyCrop(
-  //       convertedImage, x.round(), y.round(), w.round(), h.round());
-
-  //   // // Flip the cropped image horizontally
-  //   // imglib.Image flippedImage = imglib.flipHorizontal(croppedImage);
-
-  //   return croppedImage;
-  // }
-
-  // imglib.Image cropFace(CameraImage image, Face faceDetected) {
-  //   imglib.Image convertedImage = _convertCameraImage(image);
-
-  //   double x, y, w, h;
-
-  //   if (landscape_mode) {
-  //     x = faceDetected.boundingBox.left - 10.0;
-  //     y = faceDetected.boundingBox.top - 10.0;
-  //     w = faceDetected.boundingBox.width + 10.0;
-  //     h = faceDetected.boundingBox.height + 10.0;
-  //   } else {
-  //     x = faceDetected.boundingBox.left - 10.0;
-  //     y = faceDetected.boundingBox.top - 10.0;
-  //     w = faceDetected.boundingBox.width + 10.0;
-  //     h = faceDetected.boundingBox.height + 10.0;
-  //   }
-
-  //   // Crop the image based on the calculated bounding box
-  //   imglib.Image croppedImage = imglib.copyCrop(
-  //       convertedImage, x.round(), y.round(), w.round(), h.round());
-
-  //   // Resize the cropped image to a consistent size of 122x122
-  //   imglib.Image resizedImage =
-  //       imglib.copyResize(croppedImage, width: 122, height: 122);
-
-  //   // If you need to flip the image horizontally, uncomment the next line
-  //   // imglib.Image flippedImage = imglib.flipHorizontal(resizedImage);
-
-  //   return resizedImage; // or return flippedImage if the image is flipped
-  // }
-
   imglib.Image cropFace(CameraImage image, Face faceDetected) {
+    // Konversi CameraImage ke imglib.Image
     imglib.Image convertedImage = _convertCameraImage(image);
 
-    double x, y, w, h;
+    // Dapatkan koordinat bounding box dari deteksi wajah
+    double x = faceDetected.boundingBox.left - 10.0;
+    double y = faceDetected.boundingBox.top - 10.0;
+    double w = faceDetected.boundingBox.width + 10.0;
+    double h = faceDetected.boundingBox.height + 10.0;
 
-    // Determine the original bounding box dimensions
-    x = faceDetected.boundingBox.left - 10.0;
-    y = faceDetected.boundingBox.top - 10.0;
-    w = faceDetected.boundingBox.width + 10.0; // Added 10.0 to both sides
-    h = faceDetected.boundingBox.height + 10.0; // Added 10.0 to both sides
+    // Pastikan rasio aspek 1x1 berdasarkan tinggi
+    // Gunakan ukuran yang lebih besar antara lebar dan tinggi
+    double maxSize = h > w ? h : w;
 
-    // Adjust the bounding box to be a square (1:1 aspect ratio)
-    if (w > h) {
-      // If width is greater, adjust the height to match the width
-      double diff = w - h;
-      y = y - diff / 2; // Center the square
-      h = w;
-    } else if (h > w) {
-      // If height is greater, adjust the width to match the height
-      double diff = h - w;
-      x = x - diff / 2; // Center the square
-      w = h;
-    }
+    // Pastikan crop tidak keluar dari batas gambar asli
+    double cropX = x < 0 ? 0 : x;
+    double cropY = y < 0 ? 0 : y;
+    double cropW = (cropX + maxSize) > convertedImage.width
+        ? convertedImage.width - cropX
+        : maxSize;
+    double cropH = (cropY + maxSize) > convertedImage.height
+        ? convertedImage.height - cropY
+        : maxSize;
 
-    // Ensure the bounding box stays within the image boundaries
-    x = x < 0 ? 0 : x;
-    y = y < 0 ? 0 : y;
-    w = (x + w > convertedImage.width) ? convertedImage.width - x : w;
-    h = (y + h > convertedImage.height) ? convertedImage.height - y : h;
-
-    // Crop the image based on the adjusted bounding box
-    imglib.Image croppedImage = imglib.copyCrop(
-      convertedImage,
-      x.round(),
-      y.round(),
-      w.round(),
-      h.round(),
-    );
-
-    // Resize the cropped image to a consistent size of 122x122 pixels
-    imglib.Image resizedImage =
-        imglib.copyResize(croppedImage, width: 122, height: 122);
-
-    // If you need to flip the image horizontally, uncomment the next line
-    // imglib.Image flippedImage = imglib.flipHorizontal(resizedImage);
-
-    return resizedImage; // or return flippedImage if the image is flipped
+    // Lakukan crop gambar menggunakan ukuran yang dihitung
+    return imglib.copyCrop(convertedImage, cropX.round(), cropY.round(),
+        cropW.round(), cropH.round());
   }
 
+// Fungsi konversi CameraImage ke imglib.Image (tetap sama)
   imglib.Image _convertCameraImage(CameraImage image) {
     var img = convertToImage(image);
     if (landscape_mode) {
-      var img1 = imglib.copyRotate(img, 0);
-      return img1;
+      return imglib.copyRotate(img, 0);
     } else {
-      var img1 = imglib.copyRotate(img, -90);
-      return img1;
+      return imglib.copyRotate(img, -90);
     }
   }
 
@@ -224,22 +143,14 @@ class MLService {
     return convertedBytes.buffer.asFloat32List();
   }
 
-  Future<User?> _searchResult(context, List predictedData) async {
+  Future<User?> _searchResult(List predictedData) async {
     if (users.isEmpty) {
       users = await getAlluser();
     }
 
-    String encodedBase64 = encode_FR_ToBase64(predictedData);
-
-    print("ENCODED FACE = " + encodedBase64);
-
-    int detected = 0;
-
     double minDist = 999;
     double currDist = 0.0;
     User? predictedResult;
-
-    List<User> userOnDistance = [];
 
     // print('users.length=> ${users.length}');
 
@@ -254,49 +165,23 @@ class MLService {
 
         if (currDist <= threshold && currDist < minDist && currDist != 0.0) {
           minDist = currDist;
-          detected = detected + 1;
-          userOnDistance.add(u);
-          print("FR- ON DISTANCE" +
-              (u.employee_name ?? "NO NAME") +
-              " | " +
-              currDist.toString());
+          print("FR- FINAL DISTANCE" + currDist.toString());
           predictedResult = u;
         } else {
           print("FR - SCANNED DISTANCE" + currDist.toString());
         }
       }
     }
-    // if (userOnDistance.length > 0) {
-    //   predictedResult = await Navigator.of(context).push<User>(
-    //     MaterialPageRoute(
-    //       builder: (context) => selecUser(users: userOnDistance),
-    //     ),
-    //   );
-
-    //   // Handle the case when the user does not make a selection.
-    //   if (predictedResult == null) {
-    //     print("User selection was canceled.");
-    //     return null;
-    //   }
-    // } else if (userOnDistance.isNotEmpty) {
-    //   predictedResult = userOnDistance.first;
-    // }
-
-    print("ALL-DETECTED = " + detected.toString());
     return predictedResult;
   }
 
   getAlluser() async {
     DatabaseHelperEmployee _dbHelper = DatabaseHelperEmployee.instance;
+
     users = await _dbHelper.queryAllUsersForMLKit();
 
-    //FOR RELIEF
-    DatabaseHelperEmployeeRelief _dbHelperRelief =
-        DatabaseHelperEmployeeRelief.instance;
-    List<User> userRelief = await _dbHelperRelief.queryAllUsersForMLKit();
-    for (User user in userRelief) {
-      users.add(user);
-    }
+    //ADZIEHRDY
+    // users = await _dbHelper.queryAllUsers();
   }
 
   double _euclideanDistance(List? e1, List? e2) {

@@ -6,16 +6,15 @@ import 'dart:io';
 import 'dart:math' as mt;
 
 import 'package:audioplayers/audioplayers.dart';
+import 'dart:ui' as ui;
 import 'package:camera/camera.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:face_net_authentication/constants/constants.dart';
-import 'package:face_net_authentication/db/databse_helper_employee_relief.dart';
 import 'package:face_net_authentication/models/login_model.dart';
 import 'package:face_net_authentication/models/model_master_shift.dart';
 import 'package:face_net_authentication/models/user.dart';
-import 'package:face_net_authentication/db/databse_helper_employee.dart';
 import 'package:face_net_authentication/pages/force_upgrade.dart';
 import 'package:face_net_authentication/pages/login.dart';
 import 'package:face_net_authentication/repo/custom_exception.dart';
@@ -23,7 +22,6 @@ import 'package:face_net_authentication/repo/user_repos.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:image/image.dart' as img;
@@ -31,23 +29,24 @@ import 'package:image/image.dart' as imglib;
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-// import 'package:location/location.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sn_progress_dialog/progress_dialog.dart';
 // import 'package:trust_location/trust_location.dart';
-import 'package:unique_identifier/unique_identifier.dart';
 
+import 'pages/db/databse_helper_employee.dart';
+import 'pages/db/databse_helper_employee_relief.dart';
 import 'services/image_converter.dart';
 
 String? endpointUrl;
-late String publicUrl;
+String publicUrl = CONSTANT_VAR.BASE_URL_PUBLIC;
 bool bypass_office_location_range = false;
 // StreamSubscription<LocationData>? locationStream;
 
 String token = "";
 
 void showToast(String msg) {
+  log(msg);
   Fluttertoast.showToast(
       msg: msg,
       toastLength: Toast.LENGTH_LONG,
@@ -481,6 +480,11 @@ String formatDateOnly(DateTime dateTime) {
   return formatter.format(dateTime);
 }
 
+String formatDateFriendly(DateTime dateTime) {
+  DateFormat formatter = DateFormat("dd MMM");
+  return formatter.format(dateTime);
+}
+
 String uint8listToString(Uint8List uint8listData) {
   return base64.encode(uint8listData);
 }
@@ -529,6 +533,12 @@ Future<String?> getPIN() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   int active_super_attendance = prefs.getInt("ACTIVE_SUPER_ATTENDANCE") ?? 0;
   return prefs.getString("PIN_" + active_super_attendance.toString());
+}
+
+Future<String> getDeviceRole() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String role = prefs.getString("DEVICE_ROLE") ?? "MPS";
+  return role;
 }
 
 Future<void> checkIsNeedForceUpgrade(BuildContext context) async {
@@ -837,11 +847,11 @@ Future<String> getDeviceId() async {
   String? deviceId;
 
   if (Platform.isAndroid) {
-    deviceId = await UniqueIdentifier.serial;
+    var androidInfo = await deviceInfo.androidInfo;
+    deviceId = androidInfo.serialNumber;
   } else if (Platform.isIOS) {
     IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-    deviceId =
-        iosInfo.identifierForVendor; // Gunakan salah satu ID yang tersedia
+    deviceId = iosInfo.identifierForVendor;
   }
   if (deviceId != null) {
     return deviceId;
@@ -1132,7 +1142,7 @@ Future<List<User>> getAllEmployeeAndRelief() async {
   //FOR RELIEF
   DatabaseHelperEmployeeRelief _dbHelperRelief =
       DatabaseHelperEmployeeRelief.instance;
-  List<User> userRelief = await _dbHelperRelief.queryAllUsersForMLKit();
+  List<User> userRelief = await _dbHelperRelief.queryAllUsersReliefForMLKit();
   for (User user in userRelief) {
     if (reliefChecker(user.relief_start_date, user.relief_end_date)) {
       users.add(user);
@@ -1275,6 +1285,36 @@ int laplacian(imglib.Image bitmap) {
   return score;
 }
 
+int lightDetection(imglib.Image bitmap) {
+  int width = bitmap.width;
+  int height = bitmap.height;
+  int totalBrightness = 0;
+
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      // Mengambil nilai piksel
+      int pixel = bitmap.getPixel(x, y);
+
+      // Memecah piksel menjadi komponen RGB
+      int r = imglib.getRed(pixel);
+      int g = imglib.getGreen(pixel);
+      int b = imglib.getBlue(pixel);
+
+      // Menghitung brightness berdasarkan rata-rata komponen RGB
+      int brightness = (r + g + b) ~/ 3;
+
+      // Menambahkan nilai brightness ke total
+      totalBrightness += brightness;
+    }
+  }
+
+  // Menghitung rata-rata brightness seluruh gambar
+  int averageBrightness = totalBrightness ~/ (width * height);
+
+  return (averageBrightness * 3) +
+      100; // Nilai ini bisa diinterpretasikan sebagai intensitas cahaya
+}
+
 bool isTodayChecker(DateTime dateToday, String dateCompare) {
   if (dateCompare.contains(formatDateForFilter(dateToday))) {
     return true;
@@ -1286,6 +1326,26 @@ bool isTodayChecker(DateTime dateToday, String dateCompare) {
 Future<bool> onLineChecker() async {
   return await InternetConnectionChecker().hasConnection;
 }
+
+Future<Uint8List> createBlueImage() async {
+  // Membuat gambar 100x100
+  final recorder = ui.PictureRecorder();
+  final canvas =
+      Canvas(recorder, Rect.fromPoints(Offset(0, 0), Offset(100, 100)));
+
+  // Mengisi seluruh gambar dengan warna biru
+  final paint = Paint()..color = Colors.blue;
+  canvas.drawRect(Rect.fromLTWH(0, 0, 100, 100), paint);
+
+  final picture = recorder.endRecording();
+  final img = await picture.toImage(100, 100);
+  final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
+
+  // Menghasilkan Uint8List
+  return byteData!.buffer.asUint8List();
+}
+
+
 
 
 

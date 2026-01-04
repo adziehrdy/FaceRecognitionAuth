@@ -1,5 +1,3 @@
-import 'package:face_net_authentication/db/database_helper_catering_status.dart';
-import 'package:face_net_authentication/db/dbSync.dart';
 import 'package:face_net_authentication/models/catering_history_model.dart';
 import 'package:face_net_authentication/pages/widgets/dialog_change_catering_status.dart';
 import 'package:face_net_authentication/services/shared_preference_helper.dart';
@@ -9,6 +7,8 @@ import 'package:timeline_tile/timeline_tile.dart';
 import '../../globals.dart';
 import '../../models/model_rig_shift.dart';
 import '../../repo/catering_history_repo.dart';
+import '../db/database_helper_catering_status.dart';
+import '../db/dbSync.dart';
 
 class CateringHistory extends StatefulWidget {
   const CateringHistory({Key? key}) : super(key: key);

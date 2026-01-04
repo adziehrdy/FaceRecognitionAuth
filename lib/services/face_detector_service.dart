@@ -1,7 +1,6 @@
-import 'package:camera/camera.dart';
 import 'package:face_net_authentication/locator.dart';
 import 'package:face_net_authentication/services/camera.service.dart';
-import 'package:face_net_authentication/services/camera_image_converter.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
@@ -22,36 +21,41 @@ class FaceDetectorService {
         performanceMode: FaceDetectorMode.fast,
       ),
     );
-// ====
-    _faceDetector = FaceDetector(
-        options: FaceDetectorOptions(
-      performanceMode: FaceDetectorMode.fast,
-      enableContours: true,
-      enableLandmarks: true,
-      enableTracking: true,
-      enableClassification: true,
-    ));
-    // /====
+
+    // _faceDetector = FaceDetector(
+    //     options: FaceDetectorOptions(
+    //         performanceMode: FaceDetectorMode.fast,
+    //         enableContours: true,
+    //         enableClassification: true));
   }
 
   Future<void> detectFacesFromImage(CameraImage image) async {
-    final inputImage = CameraImageConverter.toInputImage(
-      image: image,
+    // Combine all the bytes from the image planes
+    final WriteBuffer allBytes = WriteBuffer();
+    for (final Plane plane in image.planes) {
+      allBytes.putUint8List(plane.bytes);
+    }
+    final bytes = allBytes.done().buffer.asUint8List();
+
+    // Create the InputImageMetadata using image properties
+    final InputImageMetadata metadata = InputImageMetadata(
+      size: Size(image.width.toDouble(), image.height.toDouble()),
       rotation:
           _cameraService.cameraRotation ?? InputImageRotation.rotation0deg,
+      format: InputImageFormatValue.fromRawValue(image.format.raw) ??
+          InputImageFormat.yuv_420_888,
+      bytesPerRow: image.planes[0]
+          .bytesPerRow, // Assuming the first plane holds the row stride
     );
 
-    if (inputImage == null) {
-      debugPrint("❌ Gagal convert CameraImage ke InputImage");
-      return;
-    }
+    // Create InputImage using bytes and metadata
+    final InputImage _firebaseVisionImage = InputImage.fromBytes(
+      bytes: bytes,
+      metadata: metadata,
+    );
 
-    try {
-      _faces = await _faceDetector.processImage(inputImage);
-      debugPrint("✅ Detected ${_faces.length} faces");
-    } catch (e) {
-      debugPrint("❌ FACE DETECTOR ERROR: $e");
-    }
+    // Process the image to detect faces
+    _faces = await _faceDetector.processImage(_firebaseVisionImage);
   }
 
   Future<List<Face>> detect(
